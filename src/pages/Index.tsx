@@ -19,8 +19,7 @@ const Index = () => {
             <ClockWidget />
           </div>
 
-          <InfoSystems />
-          <DigitalServices />
+          <DashboardSections />
         </main>
       </div>
     </div>
