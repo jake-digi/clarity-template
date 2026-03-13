@@ -31,91 +31,69 @@ interface SectionProps {
   items: SectionItem[];
 }
 
-const ItemCard = ({ icon: Icon, title }: SectionItem) => (
-  <div className="bg-card rounded-lg p-3 flex items-center gap-2.5 hover:shadow-md transition-shadow cursor-pointer border border-border">
-    <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
-      <Icon className="w-4 h-4 text-icon-primary" strokeWidth={1.5} />
+const ItemCard = ({ icon: Icon, title, category }: SectionItem & { category: string }) => (
+  <div className="bg-card rounded-lg p-5 flex flex-col items-start gap-3 hover:shadow-md transition-shadow cursor-pointer border border-border">
+    <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+      <Icon className="w-6 h-6 text-icon-primary" strokeWidth={1.5} />
     </div>
-    <p className="text-sm font-medium text-foreground">{title}</p>
-  </div>
-);
-
-const SectionGroup = ({ title, items }: SectionProps) => (
-  <div>
-    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{title}</h3>
-    <div className="flex flex-col gap-1.5">
-      {items.map((item) => (
-        <ItemCard key={item.title} {...item} />
-      ))}
+    <div>
+      <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+      <p className="text-xs text-muted-foreground mt-1">{category}</p>
     </div>
   </div>
 );
 
-const sections: SectionProps[] = [
-  {
-    title: "Dashboard",
-    items: [{ icon: LayoutDashboard, title: "Instance Overview" }],
-  },
-  {
-    title: "People Management",
-    items: [
-      { icon: Users, title: "Participants" },
-      { icon: UsersRound, title: "Groups" },
-      { icon: Hotel, title: "Accommodation" },
-    ],
-  },
-  {
-    title: "Case Management",
-    items: [
-      { icon: Briefcase, title: "Case Management" },
-      { icon: AlertTriangle, title: "Strikes Report" },
-    ],
-  },
-  {
-    title: "Operations",
-    items: [
-      { icon: CalendarDays, title: "Timetable" },
-      { icon: UserCog, title: "Coach Management" },
-      { icon: Wrench, title: "Maintenance" },
-      { icon: Megaphone, title: "Announcements" },
-      { icon: FolderOpen, title: "Resources" },
-    ],
-  },
-  {
-    title: "Reporting",
-    items: [
-      { icon: FileBarChart, title: "Participant Reports" },
-      { icon: GitCompareArrows, title: "Cross-Instance Reports" },
-    ],
-  },
-  {
-    title: "System Management",
-    items: [
-      { icon: Building2, title: "Instances" },
-      { icon: Shield, title: "Roles & Permissions" },
-      { icon: History, title: "Audit & History" },
-    ],
-  },
-  {
-    title: "Attendance",
-    items: [{ icon: ClipboardCheck, title: "Audit Log" }],
-  },
+const allItems: (SectionItem & { category: string })[] = [
+  { icon: LayoutDashboard, title: "Instance Overview", category: "Dashboard" },
+  { icon: Users, title: "Participants", category: "People" },
+  { icon: UsersRound, title: "Groups", category: "People" },
+  { icon: Hotel, title: "Accommodation", category: "People" },
+  { icon: Briefcase, title: "Case Management", category: "Cases" },
+  { icon: AlertTriangle, title: "Strikes Report", category: "Cases" },
+  { icon: CalendarDays, title: "Timetable", category: "Operations" },
+  { icon: UserCog, title: "Coach Management", category: "Operations" },
+  { icon: Wrench, title: "Maintenance", category: "Operations" },
+  { icon: Megaphone, title: "Announcements", category: "Operations" },
+  { icon: FolderOpen, title: "Resources", category: "Operations" },
+  { icon: FileBarChart, title: "Participant Reports", category: "Reporting" },
+  { icon: GitCompareArrows, title: "Cross-Instance Reports", category: "Reporting" },
+  { icon: Building2, title: "Instances", category: "System" },
+  { icon: Shield, title: "Roles & Permissions", category: "System" },
+  { icon: History, title: "Audit & History", category: "System" },
+  { icon: ClipboardCheck, title: "Audit Log", category: "Attendance" },
 ];
 
-const row1 = sections.slice(0, 4);
-const row2 = sections.slice(4);
+const row1 = allItems.slice(0, 9);
+const row2 = allItems.slice(9);
+
 const DashboardSections = () => (
-  <div className="space-y-4">
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {row1.map((section) => (
-        <SectionGroup key={section.title} {...section} />
-      ))}
-    </div>
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {row2.map((section) => (
-        <SectionGroup key={section.title} {...section} />
-      ))}
-    </div>
+  <div className="space-y-5">
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-foreground">Management</h2>
+        <a href="#" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+          All systems <ArrowRight className="w-4 h-4" />
+        </a>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-9 gap-3">
+        {row1.map((item) => (
+          <ItemCard key={item.title} {...item} />
+        ))}
+      </div>
+    </section>
+    <section>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-foreground">Reporting & System</h2>
+        <a href="#" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+          All services <ArrowRight className="w-4 h-4" />
+        </a>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+        {row2.map((item) => (
+          <ItemCard key={item.title} {...item} />
+        ))}
+      </div>
+    </section>
   </div>
 );
 
