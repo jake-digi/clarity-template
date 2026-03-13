@@ -1,6 +1,6 @@
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import CurrencyWidget from "@/components/CurrencyWidget";
+import AppDownloadWidget from "@/components/AppDownloadWidget";
 import ClockWidget from "@/components/ClockWidget";
 import HeroCarousel from "@/components/HeroCarousel";
 import CheckpointSections from "@/components/CheckpointSections";
