@@ -1,5 +1,6 @@
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import DashboardOverview from "@/components/DashboardOverview";
 import CheckpointSections from "@/components/CheckpointSections";
 
 const Index = () => {
