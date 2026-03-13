@@ -51,8 +51,59 @@ const SectionGroup = ({ title, items }: SectionProps) => (
   </div>
 );
 
-// sections is defined above (line 59 area in original), slices below it
+const sections: SectionProps[] = [
+  {
+    title: "Dashboard",
+    items: [{ icon: LayoutDashboard, title: "Instance Overview" }],
+  },
+  {
+    title: "People Management",
+    items: [
+      { icon: Users, title: "Participants" },
+      { icon: UsersRound, title: "Groups" },
+      { icon: Hotel, title: "Accommodation" },
+    ],
+  },
+  {
+    title: "Case Management",
+    items: [
+      { icon: Briefcase, title: "Case Management" },
+      { icon: AlertTriangle, title: "Strikes Report" },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { icon: CalendarDays, title: "Timetable" },
+      { icon: UserCog, title: "Coach Management" },
+      { icon: Wrench, title: "Maintenance" },
+      { icon: Megaphone, title: "Announcements" },
+      { icon: FolderOpen, title: "Resources" },
+    ],
+  },
+  {
+    title: "Reporting",
+    items: [
+      { icon: FileBarChart, title: "Participant Reports" },
+      { icon: GitCompareArrows, title: "Cross-Instance Reports" },
+    ],
+  },
+  {
+    title: "System Management",
+    items: [
+      { icon: Building2, title: "Instances" },
+      { icon: Shield, title: "Roles & Permissions" },
+      { icon: History, title: "Audit & History" },
+    ],
+  },
+  {
+    title: "Attendance",
+    items: [{ icon: ClipboardCheck, title: "Audit Log" }],
+  },
+];
 
+const row1 = sections.slice(0, 4);
+const row2 = sections.slice(4);
 const DashboardSections = () => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
