@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const HeroCarousel = () => {
   return (
-    <div className="relative rounded-lg overflow-hidden h-full min-h-[180px] max-h-[240px]">
+    <div className="relative rounded-lg overflow-hidden h-full">
       <img
         src={heroImage}
         alt="Industrial facility"
