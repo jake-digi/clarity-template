@@ -1,11 +1,28 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import DashboardHeader from "@/components/DashboardHeader";
+import DashboardSidebar from "@/components/DashboardSidebar";
+import CurrencyWidget from "@/components/CurrencyWidget";
+import ClockWidget from "@/components/ClockWidget";
+import HeroCarousel from "@/components/HeroCarousel";
+import InfoSystems from "@/components/InfoSystems";
+import DigitalServices from "@/components/DigitalServices";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background flex flex-col">
+      <DashboardHeader />
+      <div className="flex flex-1">
+        <DashboardSidebar />
+        <main className="flex-1 p-6 space-y-6 overflow-auto">
+          {/* Hero section: currency | carousel | clock */}
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_220px] gap-4">
+            <CurrencyWidget />
+            <HeroCarousel />
+            <ClockWidget />
+          </div>
+
+          <InfoSystems />
+          <DigitalServices />
+        </main>
       </div>
     </div>
   );
