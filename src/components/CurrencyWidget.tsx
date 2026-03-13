@@ -15,7 +15,7 @@ const gasPrices = [
 
 const CurrencyWidget = () => {
   return (
-    <div className="bg-card rounded-lg p-4 text-sm">
+    <div className="bg-card rounded-lg p-3 text-sm">
       <p className="text-muted-foreground text-xs mb-2">Central Bank Rate, ₽ as of 03/15/2022</p>
       <div className="space-y-1 mb-3">
         {currencies.map((c) => (
