@@ -9,9 +9,8 @@ const DashboardHeader = () => {
           <img src={jlgbLogo} alt="JLGB" className="h-9 w-auto" />
         </div>
         <nav className="flex items-center gap-6">
-          <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">About Company</a>
-          <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Official Website</a>
-          <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Division Sites</a>
+          <a href="https://www.jlgb.org" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-foreground hover:text-primary transition-colors">JLGB Website</a>
+          <a href="https://www.jlgb.org/component/users/login" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-foreground hover:text-primary transition-colors">FUEL</a>
         </nav>
       </div>
       <div className="flex items-center gap-4">
