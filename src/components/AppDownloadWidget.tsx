@@ -20,42 +20,30 @@ const AppDownloadWidget = () => {
   };
 
   return (
-    <div className="bg-card rounded-lg p-3 text-sm flex flex-col h-full">
-      <div className="flex items-center gap-2 mb-2">
-        <Smartphone className="w-4 h-4 text-icon-primary" />
-        <h3 className="font-semibold text-foreground text-xs">Checkpoint Mobile</h3>
+    <div className="bg-card rounded-lg p-2.5 text-sm flex flex-col h-full overflow-hidden">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <Smartphone className="w-3.5 h-3.5 text-icon-primary" />
+        <h3 className="font-semibold text-foreground text-[11px]">Checkpoint Mobile</h3>
       </div>
 
-      <div className="flex justify-center mb-2">
-        <img src={qrCode} alt="Download Checkpoint App QR Code" className="w-40 h-40" />
-      </div>
-
-      <p className="text-[10px] text-muted-foreground text-center mb-2">
-        Scan to download the app
-      </p>
-
-      <div className="flex flex-col gap-1.5 mb-3">
-        <a
-          href="#"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-accent hover:bg-accent/80 transition-colors text-xs font-medium text-foreground"
-        >
-          <Apple className="w-3.5 h-3.5" />
-          App Store
-        </a>
-        <a
-          href="#"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-accent hover:bg-accent/80 transition-colors text-xs font-medium text-foreground"
-        >
-          <PlayCircle className="w-3.5 h-3.5" />
-          Google Play
-        </a>
+      <div className="flex gap-2 flex-1 min-h-0">
+        <img src={qrCode} alt="Download Checkpoint App QR Code" className="w-20 h-20 rounded" />
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <p className="text-[9px] text-muted-foreground">Scan or download</p>
+          <a href="#" className="flex items-center gap-1.5 px-2 py-1 rounded bg-accent hover:bg-accent/80 transition-colors text-[10px] font-medium text-foreground">
+            <Apple className="w-3 h-3 shrink-0" /> App Store
+          </a>
+          <a href="#" className="flex items-center gap-1.5 px-2 py-1 rounded bg-accent hover:bg-accent/80 transition-colors text-[10px] font-medium text-foreground">
+            <PlayCircle className="w-3 h-3 shrink-0" /> Google Play
+          </a>
+        </div>
       </div>
 
       <Dialog>
         <DialogTrigger asChild>
-          <button className="flex items-center justify-center gap-1.5 w-full px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-xs font-medium mt-auto">
-            <Send className="w-3 h-3" />
-            Send Download Link
+          <button className="flex items-center justify-center gap-1 w-full px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-[10px] font-medium mt-1.5">
+            <Send className="w-2.5 h-2.5" />
+            Send Link
           </button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
