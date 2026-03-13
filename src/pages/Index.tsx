@@ -3,7 +3,8 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import CurrencyWidget from "@/components/CurrencyWidget";
 import ClockWidget from "@/components/ClockWidget";
 import HeroCarousel from "@/components/HeroCarousel";
-import DashboardSections from "@/components/DashboardSections";
+import InfoSystems from "@/components/InfoSystems";
+import DigitalServices from "@/components/DigitalServices";
 
 const Index = () => {
   return (
@@ -19,7 +20,8 @@ const Index = () => {
             <ClockWidget />
           </div>
 
-          <DashboardSections />
+          <InfoSystems />
+          <DigitalServices />
         </main>
       </div>
     </div>
