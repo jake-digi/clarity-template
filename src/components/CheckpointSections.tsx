@@ -45,25 +45,10 @@ const sections: SectionGroup[] = [
     ],
   },
   {
-    title: "Case Management",
+    title: "Case Management & Reporting",
     items: [
       { icon: Briefcase, title: "Case Management", description: "Track and manage cases" },
       { icon: FileWarning, title: "Strikes Report", description: "Incident and strike tracking" },
-    ],
-  },
-  {
-    title: "Operations",
-    items: [
-      { icon: CalendarClock, title: "Timetable", description: "Schedules and time planning" },
-      { icon: Bus, title: "Coach Management", description: "Transport coordination" },
-      { icon: Wrench, title: "Maintenance", description: "Facility maintenance requests" },
-      { icon: Megaphone, title: "Announcements", description: "Broadcast notices and updates" },
-      { icon: FolderOpen, title: "Resources", description: "Shared files and materials" },
-    ],
-  },
-  {
-    title: "Reporting",
-    items: [
       { icon: BarChart3, title: "Participant Reports", description: "Individual participant data" },
       { icon: GitCompareArrows, title: "Cross-Instance Reports", description: "Compare across instances" },
     ],
