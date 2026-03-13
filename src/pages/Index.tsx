@@ -23,6 +23,7 @@ const Index = () => {
 
           <InfoSystems />
           <DigitalServices />
+          <CheckpointSections />
         </main>
       </div>
     </div>
