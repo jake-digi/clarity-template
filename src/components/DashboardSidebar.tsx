@@ -1,14 +1,4 @@
 import { Home, BarChart3, Users, Newspaper, Settings, Waypoints } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
 
 const navItems = [
   { icon: Home, label: "Home" },
@@ -20,36 +10,22 @@ const navItems = [
 ];
 
 const DashboardSidebar = () => {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
-
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarContent className="pt-4">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item, i) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    tooltip={item.label}
-                    isActive={i === 0}
-                    className={
-                      i === 0
-                        ? "bg-accent text-icon-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {!collapsed && <span>{item.label}</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <aside className="w-14 bg-card border-r border-border flex flex-col items-center py-4 gap-2 shrink-0">
+      {navItems.map((item, i) => (
+        <button
+          key={item.label}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+            i === 0
+              ? "bg-accent text-icon-primary"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+          title={item.label}
+        >
+          <item.icon className="w-5 h-5" />
+        </button>
+      ))}
+    </aside>
   );
 };
 
