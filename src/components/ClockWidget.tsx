@@ -16,7 +16,7 @@ const ClockWidget = () => {
   const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 
   return (
-    <div className="bg-card rounded-lg p-4 flex flex-col items-end text-right">
+    <div className="bg-card rounded-lg p-3 flex flex-col items-end text-right">
       <div className="flex items-center gap-2 mb-1">
         <Calendar className="w-5 h-5 text-muted-foreground" />
       </div>
