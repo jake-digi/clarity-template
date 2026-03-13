@@ -1,3 +1,4 @@
+import { SidebarProvider } from "@/components/ui/sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import CurrencyWidget from "@/components/CurrencyWidget";
@@ -8,23 +9,23 @@ import DigitalServices from "@/components/DigitalServices";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <DashboardHeader />
-      <div className="flex flex-1">
+    <SidebarProvider>
+      <div className="min-h-screen bg-background flex w-full">
         <DashboardSidebar />
-        <main className="flex-1 p-6 space-y-6 overflow-auto">
-          {/* Hero section: currency | carousel | clock */}
-          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_220px] gap-4">
-            <CurrencyWidget />
-            <HeroCarousel />
-            <ClockWidget />
-          </div>
-
-          <InfoSystems />
-          <DigitalServices />
-        </main>
+        <div className="flex-1 flex flex-col">
+          <DashboardHeader />
+          <main className="flex-1 p-6 space-y-6 overflow-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_220px] gap-4">
+              <CurrencyWidget />
+              <HeroCarousel />
+              <ClockWidget />
+            </div>
+            <InfoSystems />
+            <DigitalServices />
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
