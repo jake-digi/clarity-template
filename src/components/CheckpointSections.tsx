@@ -83,14 +83,8 @@ const CheckpointSections = () => {
     <div className="space-y-6">
       {sections.map((section) => (
         <section key={section.title}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
-            <a
-              href="#"
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              View all <ArrowRight className="w-4 h-4" />
-            </a>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {section.items.map((item) => (
