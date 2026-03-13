@@ -13,7 +13,7 @@ const Index = () => {
         <DashboardSidebar />
         <main className="flex-1 p-6 space-y-6 overflow-auto">
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_220px] gap-4">
-            <CurrencyWidget />
+            <AppDownloadWidget />
             <HeroCarousel />
             <ClockWidget />
           </div>
