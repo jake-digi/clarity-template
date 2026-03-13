@@ -12,10 +12,9 @@ const Index = () => {
       <div className="flex flex-1">
         <DashboardSidebar />
         <main className="flex-1 p-6 space-y-6 overflow-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_220px] gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-4">
             <AppDownloadWidget />
             <HeroCarousel />
-            <ClockWidget />
           </div>
           <CheckpointSections />
         </main>
