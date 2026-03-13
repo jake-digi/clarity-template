@@ -27,7 +27,7 @@ const AppDownloadWidget = () => {
       </div>
 
       <div className="flex justify-center mb-2">
-        <img src={qrCode} alt="Download Checkpoint App QR Code" className="w-24 h-24" />
+        <img src={qrCode} alt="Download Checkpoint App QR Code" className="w-40 h-40" />
       </div>
 
       <p className="text-[10px] text-muted-foreground text-center mb-2">
