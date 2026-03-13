@@ -5,6 +5,7 @@ import ClockWidget from "@/components/ClockWidget";
 import HeroCarousel from "@/components/HeroCarousel";
 import InfoSystems from "@/components/InfoSystems";
 import DigitalServices from "@/components/DigitalServices";
+import CheckpointSections from "@/components/CheckpointSections";
 
 const Index = () => {
   return (
@@ -22,6 +23,7 @@ const Index = () => {
 
           <InfoSystems />
           <DigitalServices />
+          <CheckpointSections />
         </main>
       </div>
     </div>
