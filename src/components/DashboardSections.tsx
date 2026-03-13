@@ -51,8 +51,7 @@ const SectionGroup = ({ title, items }: SectionProps) => (
   </div>
 );
 
-const row1 = sections.slice(0, 4);
-const row2 = sections.slice(4);
+// sections is defined above (line 59 area in original), slices below it
 
 const DashboardSections = () => (
   <div className="space-y-4">
