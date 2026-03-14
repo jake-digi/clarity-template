@@ -150,6 +150,7 @@ const InstanceDetailPage = () => {
     { value: "overview", label: "Overview", icon: Building2 },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "groups", label: "Groups", icon: FolderTree },
+    { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
   ];
 
