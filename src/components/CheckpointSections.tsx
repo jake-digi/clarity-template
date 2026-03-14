@@ -1,5 +1,5 @@
+import { useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
   Users,
   UserCheck,
   UsersRound,
@@ -26,6 +26,7 @@ interface SectionItem {
   icon: LucideIcon;
   title: string;
   description?: string;
+  path?: string;
 }
 
 interface SectionGroup {
@@ -37,7 +38,7 @@ const sections: SectionGroup[] = [
   {
     title: "Instance Overview",
     items: [
-      { icon: Users, title: "People Management", description: "Manage staff and personnel" },
+      { icon: Users, title: "People Management", description: "Manage staff and personnel", path: "/people" },
       { icon: UserCheck, title: "Participants", description: "Participant records and details" },
       { icon: UsersRound, title: "Groups", description: "Group management and assignments" },
       { icon: BedDouble, title: "Accommodation", description: "Housing and room allocation" },
@@ -63,19 +64,25 @@ const sections: SectionGroup[] = [
   },
 ];
 
-const ItemCard = ({ icon: Icon, title, description }: SectionItem) => (
-  <div className="bg-card rounded-lg p-5 flex flex-col items-start gap-3 hover:shadow-md transition-shadow cursor-pointer border border-border">
-    <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-      <Icon className="w-6 h-6 text-icon-primary" strokeWidth={1.5} />
+const ItemCard = ({ icon: Icon, title, description, path }: SectionItem) => {
+  const navigate = useNavigate();
+  return (
+    <div
+      onClick={() => path && navigate(path)}
+      className="bg-card rounded-lg p-5 flex flex-col items-start gap-3 hover:shadow-md transition-shadow cursor-pointer border border-border"
+    >
+      <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
+        <Icon className="w-6 h-6 text-icon-primary" strokeWidth={1.5} />
+      </div>
+      <div>
+        <h3 className="font-semibold text-foreground text-sm">{title}</h3>
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
+        )}
+      </div>
     </div>
-    <div>
-      <h3 className="font-semibold text-foreground text-sm">{title}</h3>
-      {description && (
-        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
-      )}
-    </div>
-  </div>
-);
+  );
+};
 
 const CheckpointSections = () => {
   return (
