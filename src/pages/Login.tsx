@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import jlgbLogo from "@/assets/jlgb-logo.png";
+import checkpointLogo from "@/assets/checkpoint-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const Login = () => {
       <div className="w-full max-w-sm space-y-8">
         {/* Logo & Title */}
         <div className="text-center space-y-3">
-          <img src={jlgbLogo} alt="JLGB" className="h-16 mx-auto" />
+          <img src={checkpointLogo} alt="CheckPoint" className="h-14 mx-auto" />
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Checkpoint</h1>
             <p className="text-sm text-muted-foreground mt-1">
