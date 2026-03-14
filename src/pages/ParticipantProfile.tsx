@@ -10,48 +10,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ChevronRight, User, MapPin, Calendar, Heart, UtensilsCrossed,
   Building2, Users, AlertTriangle, Pencil, ArrowLeft, Flag,
-  School, Star, Bed, ShieldAlert, ClipboardList, FileText
+  School, Star, Bed, ShieldAlert, ClipboardList, FileText, Clock
 } from "lucide-react";
-
-const statusVariant = (status: string) => {
-  switch (status?.toLowerCase()) {
-    case "active": return "default" as const;
-    case "inactive": return "secondary" as const;
-    case "completed": return "outline" as const;
-    case "withdrawn": return "destructive" as const;
-    default: return "default" as const;
-  }
-};
-
-const InfoRow = ({ label, value, icon: Icon }: { label: string; value: React.ReactNode; icon?: React.ElementType }) => (
-  <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
-    {Icon && <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />}
-    <div className="min-w-0 flex-1">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-      <p className="text-sm text-foreground mt-0.5">{value || "—"}</p>
-    </div>
-  </div>
-);
-
-const SectionCard = ({ title, icon: Icon, children, actions }: { title: string; icon: React.ElementType; children: React.ReactNode; actions?: React.ReactNode }) => (
-  <div className="bg-card rounded-lg border border-border">
-    <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-      </div>
-      {actions}
-    </div>
-    <div className="px-5 py-4">{children}</div>
-  </div>
-);
-
-const EmptyState = ({ icon: Icon, message }: { icon: React.ElementType; message: string }) => (
-  <div className="py-8 text-center">
-    <Icon className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-    <p className="text-sm text-muted-foreground">{message}</p>
-  </div>
-);
+import { statusVariant, InfoRow, SectionCard, EmptyState, EditButton } from "@/components/participant/ProfileShared";
+import { InstancesTab } from "@/components/participant/InstancesTab";
+import { TimelineTab } from "@/components/participant/TimelineTab";
 
 const ParticipantProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -107,6 +70,17 @@ const ParticipantProfile = () => {
     ? Math.floor((Date.now() - new Date(p.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
     : null;
 
+  const tabs = [
+    { value: "personal", label: "Personal", icon: User },
+    { value: "instances", label: "Instances", icon: Building2, count: p.assignments?.length },
+    { value: "timeline", label: "Timeline", icon: Clock },
+    { value: "medical", label: "Medical", icon: Heart },
+    { value: "dietary", label: "Dietary", icon: UtensilsCrossed },
+    { value: "welfare", label: "Welfare", icon: AlertTriangle },
+    { value: "behaviour", label: "Behaviour", icon: ShieldAlert },
+    { value: "notes", label: "Notes & Logs", icon: FileText },
+  ];
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <DashboardHeader />
@@ -141,10 +115,17 @@ const ParticipantProfile = () => {
                       {p.is_off_site && <Badge variant="outline" className="text-destructive border-destructive/30">Off-site</Badge>}
                       {p.light_load && <Badge variant="outline" className="text-muted-foreground border-border">Light Load</Badge>}
                     </div>
-                    <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground flex-wrap">
                       {p.rank && <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5" />{p.rank}</span>}
-                      {p.instance && <span className="flex items-center gap-1"><Building2 className="w-3.5 h-3.5" />{p.instance.name}</span>}
-                      {p.subgroup && <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{p.subgroup.name}</span>}
+                      {p.assignments && p.assignments.length > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5" />
+                          {p.assignments.length === 1
+                            ? p.assignments[0].instance_name
+                            : `${p.assignments.length} instances`
+                          }
+                        </span>
+                      )}
                       {age !== null && <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{age} years old</span>}
                     </div>
                   </div>
@@ -162,26 +143,21 @@ const ParticipantProfile = () => {
               </div>
             </div>
 
-            {/* Tabs in header */}
+            {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <div className="border-t border-border bg-muted/50">
-                <TabsList className="bg-transparent h-11 w-full justify-start p-0 rounded-none gap-0">
-                  {[
-                    { value: "personal", label: "Personal", icon: User },
-                    { value: "instance", label: "Instance & Accommodation", icon: Building2 },
-                    { value: "medical", label: "Medical", icon: Heart },
-                    { value: "dietary", label: "Dietary", icon: UtensilsCrossed },
-                    { value: "welfare", label: "Welfare", icon: AlertTriangle },
-                    { value: "behaviour", label: "Behaviour", icon: ShieldAlert },
-                    { value: "notes", label: "Notes & Logs", icon: FileText },
-                  ].map((tab) => (
+                <TabsList className="bg-transparent h-11 w-full justify-start p-0 rounded-none gap-0 overflow-x-auto">
+                  {tabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="rounded-none h-full px-5 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors"
+                      className="rounded-none h-full px-5 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors shrink-0"
                     >
                       <tab.icon className="w-3.5 h-3.5" />
                       {tab.label}
+                      {tab.count !== undefined && tab.count > 1 && (
+                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 h-4">{tab.count}</Badge>
+                      )}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -214,38 +190,25 @@ const ParticipantProfile = () => {
                   </div>
                 </TabsContent>
 
-                {/* Instance & Accommodation */}
-                <TabsContent value="instance" className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <SectionCard title="Instance Assignment" icon={Building2}>
-                      <InfoRow label="Instance" value={p.instance?.name} icon={Building2} />
-                      <InfoRow label="Location" value={p.instance?.location} icon={MapPin} />
-                      <InfoRow label="Instance Dates" value={
-                        p.instance?.start_date && p.instance?.end_date
-                          ? `${new Date(p.instance.start_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${new Date(p.instance.end_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
-                          : null
-                      } icon={Calendar} />
-                    </SectionCard>
+                {/* Instances */}
+                <TabsContent value="instances" className="mt-0">
+                  <InstancesTab
+                    assignments={p.assignments ?? []}
+                    activityLogs={p.activityLogs ?? []}
+                  />
+                </TabsContent>
 
-                    <SectionCard title="Groups" icon={Users}>
-                      <InfoRow label="Supergroup" value={p.supergroup?.name} icon={Users} />
-                      <InfoRow label="Subgroup" value={p.subgroup?.name} icon={Users} />
-                    </SectionCard>
-
-                    <SectionCard title="Accommodation" icon={Bed}>
-                      <InfoRow label="Room Number" value={(p as any).room_number} icon={Bed} />
-                      <InfoRow label="Arrival" value={p.arrival_date ? new Date(p.arrival_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null} icon={Calendar} />
-                      <InfoRow label="Departure" value={p.departure_date ? new Date(p.departure_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : null} icon={Calendar} />
-                      <InfoRow label="Off-site" value={p.is_off_site ? `Yes${(p as any).off_site_comment ? ` — ${(p as any).off_site_comment}` : ""}` : "No"} />
-                    </SectionCard>
-                  </div>
+                {/* Timeline */}
+                <TabsContent value="timeline" className="mt-0">
+                  <TimelineTab
+                    activityLogs={p.activityLogs ?? []}
+                    assignments={p.assignments ?? []}
+                  />
                 </TabsContent>
 
                 {/* Medical */}
                 <TabsContent value="medical" className="mt-0 space-y-6">
-                  <SectionCard title="Medical Information" icon={Heart} actions={
-                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Pencil className="w-3 h-3" /> Edit</Button>
-                  }>
+                  <SectionCard title="Medical Information" icon={Heart} actions={<EditButton />}>
                     {p.medical ? (
                       <div className="space-y-5">
                         <div>
@@ -287,9 +250,7 @@ const ParticipantProfile = () => {
 
                 {/* Dietary */}
                 <TabsContent value="dietary" className="mt-0 space-y-6">
-                  <SectionCard title="Dietary Requirements" icon={UtensilsCrossed} actions={
-                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Pencil className="w-3 h-3" /> Edit</Button>
-                  }>
+                  <SectionCard title="Dietary Requirements" icon={UtensilsCrossed} actions={<EditButton />}>
                     {p.dietary ? (
                       <div className="space-y-5">
                         <div>
@@ -356,14 +317,14 @@ const ParticipantProfile = () => {
                 {/* Behaviour */}
                 <TabsContent value="behaviour" className="mt-0 space-y-6">
                   <SectionCard title="Behaviour & Incidents" icon={ShieldAlert}>
-                    <EmptyState icon={ShieldAlert} message="No behaviour records or incidents have been logged for this participant. Strikes and incident reports will appear here." />
+                    <EmptyState icon={ShieldAlert} message="No behaviour records or incidents have been logged for this participant." />
                   </SectionCard>
                 </TabsContent>
 
                 {/* Notes & Logs */}
                 <TabsContent value="notes" className="mt-0 space-y-6">
                   <SectionCard title="Activity Log" icon={FileText}>
-                    <EmptyState icon={FileText} message="No activity logs found for this participant. Check-in records, stage completions, and general notes will appear here." />
+                    <EmptyState icon={FileText} message="No activity logs found for this participant." />
                   </SectionCard>
                 </TabsContent>
               </div>
