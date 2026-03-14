@@ -33,7 +33,7 @@ export function useParticipants() {
       const { data: participants, error } = await supabase
         .from("participants")
         .select("*")
-        .is("deleted_at" as any, null)
+        .order("full_name", { ascending: true });
         .order("full_name", { ascending: true });
 
       if (error) throw error;
