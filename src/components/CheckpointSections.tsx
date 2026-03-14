@@ -37,7 +37,6 @@ const sections: SectionGroup[] = [
   {
     title: "Instance Overview",
     items: [
-      { icon: LayoutDashboard, title: "Dashboard", description: "Overview and key metrics" },
       { icon: Users, title: "People Management", description: "Manage staff and personnel" },
       { icon: UserCheck, title: "Participants", description: "Participant records and details" },
       { icon: UsersRound, title: "Groups", description: "Group management and assignments" },
