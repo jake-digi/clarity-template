@@ -1,4 +1,5 @@
-import { MapPin, Users, Briefcase, TrendingUp, Send, Apple, PlayCircle, Smartphone, CalendarCheck, ShieldCheck } from "lucide-react";
+import { MapPin, Users, Briefcase, TrendingUp, Send, Smartphone, CalendarCheck, ShieldCheck } from "lucide-react";
+import { SiApple, SiGoogleplay } from "react-icons/si";
 import qrCode from "@/assets/qr-checkpoint.png";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -67,20 +68,31 @@ const DashboardOverview = () => {
 
         {/* Mobile App Card — 1/3 */}
         <div className="bg-card rounded-lg border border-border p-5 flex gap-4 items-center">
-          <div className="shrink-0 w-24 h-24 rounded-lg border border-border bg-background p-1.5 flex items-center justify-center">
-            <img src={qrCode} alt="Download WMS Mobile QR Code" className="w-full h-full object-contain rounded" />
-          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="shrink-0 w-28 h-28 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                <img src={qrCode} alt="Download Checkpoint App QR Code" className="w-full h-full object-cover" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-xs flex flex-col items-center gap-4 p-8">
+              <DialogHeader>
+                <DialogTitle>Scan to Download</DialogTitle>
+              </DialogHeader>
+              <img src={qrCode} alt="Download Checkpoint App QR Code" className="w-64 h-64 object-cover rounded-lg" />
+              <p className="text-sm text-muted-foreground text-center">Scan this QR code with your phone camera to download the Checkpoint app.</p>
+            </DialogContent>
+          </Dialog>
           <div className="flex flex-col gap-2 min-w-0">
             <div className="flex items-center gap-1.5">
               <Smartphone className="w-4 h-4 text-icon-primary" />
-              <span className="text-sm font-semibold text-foreground">WMS Mobile</span>
+              <span className="text-sm font-semibold text-foreground">Checkpoint Download</span>
             </div>
             <div className="flex gap-2">
               <a href="#" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent hover:bg-accent/80 transition-colors text-xs font-medium text-foreground">
-                <Apple className="w-3.5 h-3.5" /> iOS
+                <SiApple className="w-3.5 h-3.5" /> App Store
               </a>
               <a href="#" className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent hover:bg-accent/80 transition-colors text-xs font-medium text-foreground">
-                <PlayCircle className="w-3.5 h-3.5" /> Android
+                <SiGoogleplay className="w-3.5 h-3.5" /> Google Play
               </a>
             </div>
             <Dialog>
