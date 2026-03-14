@@ -28,7 +28,7 @@ const statusVariant = (status: string) => {
   }
 };
 
-type ColumnKey = "id" | "full_name" | "gender" | "date_of_birth" | "subgroup_name" | "supergroup_name" | "instance_name" | "status" | "created_at" | "unit_name" | "rank" | "school_institute";
+type ColumnKey = "id" | "full_name" | "gender" | "date_of_birth" | "subgroup_name" | "supergroup_name" | "instance_name" | "updated_at" | "unit_name" | "rank" | "school_institute";
 
 interface ColumnDef {
   key: ColumnKey;
@@ -41,14 +41,24 @@ interface ColumnDef {
 
 const ALL_COLUMNS: ColumnDef[] = [
   { key: "id", label: "ID", sortable: false, defaultVisible: true, className: "font-mono text-xs text-muted-foreground truncate max-w-[90px]", render: (p) => <span title={p.id}>{p.id.slice(0, 8)}…</span> },
-  { key: "full_name", label: "Name", sortable: true, defaultVisible: true, className: "font-medium text-foreground", render: (p) => p.full_name },
+  { key: "full_name", label: "Name", sortable: true, defaultVisible: true, className: "font-medium text-foreground", render: (p) => (
+    <div className="flex items-center gap-2.5">
+      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border overflow-hidden shrink-0">
+        {p.photo_link ? (
+          <img src={p.photo_link} alt={p.full_name} className="w-full h-full object-cover" />
+        ) : (
+          <User className="w-4 h-4 text-muted-foreground" />
+        )}
+      </div>
+      <span>{p.full_name}</span>
+    </div>
+  ) },
   { key: "gender", label: "Gender", sortable: false, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.gender ?? "—" },
   { key: "date_of_birth", label: "Date of Birth", sortable: true, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—" },
   { key: "subgroup_name", label: "Subgroup", sortable: true, defaultVisible: true, render: (p) => p.subgroup_name ?? "—" },
   { key: "supergroup_name", label: "Supergroup", sortable: true, defaultVisible: false, render: (p) => p.supergroup_name ?? "—" },
   { key: "instance_name", label: "Instance", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.instance_name },
-  { key: "status", label: "Status", sortable: true, defaultVisible: true, render: (p) => <Badge variant={statusVariant(p.status)} className="capitalize">{p.status}</Badge> },
-  { key: "created_at", label: "Created", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) },
+  { key: "updated_at", label: "Last Updated", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => new Date(p.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) },
   { key: "unit_name", label: "Unit", sortable: false, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.unit_name ?? "—" },
   { key: "rank", label: "Rank", sortable: false, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.rank ?? "—" },
   { key: "school_institute", label: "School", sortable: false, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.school_institute ?? "—" },

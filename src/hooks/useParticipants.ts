@@ -13,6 +13,7 @@ export interface ParticipantRow {
   sub_group_id: string | null;
   super_group_id: string | null;
   created_at: string;
+  updated_at: string;
   school_institute: string | null;
   unit_name: string | null;
   rank: string | null;
