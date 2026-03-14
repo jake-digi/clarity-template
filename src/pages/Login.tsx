@@ -50,14 +50,11 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo & Title */}
-        <div className="text-center space-y-3">
-          <img src={checkpointLogo} alt="CheckPoint" className="h-14 mx-auto" />
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Checkpoint</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {mode === "login" ? "Sign in to your account" : "Reset your password"}
-            </p>
-          </div>
+        <div className="text-center space-y-4">
+          <img src={checkpointLogo} alt="CheckPoint" className="h-24 mx-auto" />
+          <p className="text-sm text-muted-foreground">
+            {mode === "login" ? "Sign in to your account" : "Reset your password"}
+          </p>
         </div>
 
         {/* Form */}
