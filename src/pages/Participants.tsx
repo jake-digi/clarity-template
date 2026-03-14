@@ -113,8 +113,16 @@ const Participants = () => {
 
   const columns = useMemo(() => ALL_COLUMNS.filter((c) => visibleColumns.has(c.key)), [visibleColumns]);
 
-  const instances = useMemo(() => [...new Set(participants.map((p) => p.instance_name).filter(Boolean))] as string[], [participants]);
-  const subgroups = useMemo(() => [...new Set(participants.map((p) => p.subgroup_name).filter(Boolean))] as string[], [participants]);
+  const instances = useMemo(() => {
+    const names = new Set<string>();
+    participants.forEach((p) => p.assignments.forEach((a) => names.add(a.instance_name)));
+    return [...names].sort();
+  }, [participants]);
+  const subgroups = useMemo(() => {
+    const names = new Set<string>();
+    participants.forEach((p) => p.assignments.forEach((a) => { if (a.subgroup_name) names.add(a.subgroup_name); }));
+    return [...names].sort();
+  }, [participants]);
   const statuses = useMemo(() => [...new Set(participants.map((p) => p.status))], [participants]);
 
   const filtered = useMemo(() => {
