@@ -105,7 +105,7 @@ const Login = () => {
           ) : (
             <button
               onClick={() => setMode("login")}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-[hsl(var(--checkpoint-green))] hover:underline"
             >
               Back to sign in
             </button>
