@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import jlgbLogo from "@/assets/jlgb-logo.png";
+import checkpointLogo from "@/assets/checkpoint-logo.png";
 
 const Login = () => {
   const navigate = useNavigate();
