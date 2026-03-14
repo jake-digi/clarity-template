@@ -51,7 +51,7 @@ const Login = () => {
       <div className="w-full max-w-sm space-y-8">
         {/* Logo & Title */}
         <div className="text-center space-y-3">
-          <img src={jlgbLogo} alt="JLGB" className="h-16 mx-auto" />
+          <img src={checkpointLogo} alt="CheckPoint" className="h-14 mx-auto" />
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Checkpoint</h1>
             <p className="text-sm text-muted-foreground mt-1">
