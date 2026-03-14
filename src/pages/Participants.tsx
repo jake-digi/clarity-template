@@ -120,6 +120,8 @@ const Participants = () => {
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const activeCount = participants.filter((p) => p.status === "active").length;
 
+  const inactiveCount = participants.filter((p) => p.status === "inactive").length;
+
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <TableHead>
       <button onClick={() => toggleSort(field)} className="flex items-center gap-1 hover:text-foreground transition-colors">
@@ -134,97 +136,127 @@ const Participants = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 p-6 space-y-6 overflow-auto">
-          {/* Page Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button onClick={() => navigate("/")} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-              </button>
-              <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                <UserCheck className="w-5 h-5 text-icon-primary" />
-              </div>
+        <main className="flex-1 overflow-auto">
+          {/* Page Banner */}
+          <div className="border-b border-border bg-card px-6 py-5">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
+              <ChevronRightIcon className="w-3 h-3" />
+              <span className="text-foreground font-medium">Participants</span>
+            </div>
+
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h1 className="text-xl font-semibold text-foreground">Participants</h1>
-                <p className="text-sm text-muted-foreground">Participant records across all instances</p>
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Participants</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Manage participant records across all CheckPoint instances</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Participant
+                </Button>
               </div>
             </div>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Participant
-            </Button>
-          </div>
 
-          {/* Filters */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[240px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search by name or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            {/* Stat Cards */}
+            <div className="grid grid-cols-4 gap-4">
+              <div className="rounded-lg border border-border bg-background px-4 py-3">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Users className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Total</span>
+                </div>
+                <p className="text-2xl font-semibold text-foreground">{participants.length}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background px-4 py-3">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Active</span>
+                </div>
+                <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background px-4 py-3">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <UserX className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
+                </div>
+                <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
+              </div>
+              <div className="rounded-lg border border-border bg-background px-4 py-3">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Instances</span>
+                </div>
+                <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
+              </div>
             </div>
-            <Select value={instanceFilter} onValueChange={setInstanceFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Instance" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Instances</SelectItem>
-                {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-                <SelectValue placeholder="Subgroup" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Subgroups</SelectItem>
-                {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
-            {/* Column visibility toggle */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" title="Toggle columns">
-                  <Settings2 className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {ALL_COLUMNS.map((col) => (
-                  <DropdownMenuCheckboxItem
-                    key={col.key}
-                    checked={visibleColumns.has(col.key)}
-                    onCheckedChange={() => toggleColumn(col.key)}
-                  >
-                    {col.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="icon" title="Export">
-              <Download className="w-4 h-4" />
-            </Button>
           </div>
 
-          {/* Summary */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{filtered.length} of {participants.length} participants</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[hsl(var(--success))]" />
-              {activeCount} active
-            </span>
-          </div>
+          {/* Toolbar */}
+          <div className="px-6 py-4 space-y-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[240px] max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Search by name, ID or unit..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <Select value={instanceFilter} onValueChange={setInstanceFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Instance" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Instances</SelectItem>
+                  {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Subgroup" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subgroups</SelectItem>
+                  {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" title="Toggle columns">
+                    <Settings2 className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {ALL_COLUMNS.map((col) => (
+                    <DropdownMenuCheckboxItem
+                      key={col.key}
+                      checked={visibleColumns.has(col.key)}
+                      onCheckedChange={() => toggleColumn(col.key)}
+                    >
+                      {col.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="text-xs text-muted-foreground">
+              Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
+              {filtered.length < participants.length && <span> (filtered from {participants.length} total)</span>}
+            </div>
 
           {/* Data Table */}
           <div className="bg-card rounded-lg border border-border overflow-hidden">
