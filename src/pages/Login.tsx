@@ -87,7 +87,7 @@ const Login = () => {
             </div>
           )}
 
-          <Button type="submit" className="w-full gap-2" disabled={loading}>
+          <Button type="submit" className="w-full gap-2 bg-[hsl(var(--checkpoint-green))] hover:bg-[hsl(var(--checkpoint-green))]/90 text-white" disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
             {mode === "login" ? "Sign in" : "Send reset link"}
           </Button>
