@@ -57,7 +57,19 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: "date_of_birth", label: "Date of Birth", sortable: true, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—" },
   { key: "subgroup_name", label: "Subgroup", sortable: true, defaultVisible: true, render: (p) => p.subgroup_name ?? "—" },
   { key: "supergroup_name", label: "Supergroup", sortable: true, defaultVisible: false, render: (p) => p.supergroup_name ?? "—" },
-  { key: "instance_name", label: "Instance", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.instance_name },
+  { key: "instance_name", label: "Instance", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => (
+    <div className="flex flex-wrap gap-1">
+      {p.assignments.length <= 1 ? (
+        <span>{p.assignments[0]?.instance_name ?? p.instance_name}</span>
+      ) : (
+        p.assignments.map((a) => (
+          <Badge key={a.instance_id} variant="secondary" className="text-xs font-normal">
+            {a.instance_name}
+          </Badge>
+        ))
+      )}
+    </div>
+  ) },
   { key: "updated_at", label: "Last Updated", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => new Date(p.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) },
   { key: "unit_name", label: "Unit", sortable: false, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.unit_name ?? "—" },
   { key: "rank", label: "Rank", sortable: false, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.rank ?? "—" },
