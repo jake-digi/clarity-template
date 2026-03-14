@@ -36,7 +36,7 @@ interface SectionGroup {
 
 const sections: SectionGroup[] = [
   {
-    title: "Instance Overview",
+    title: "Tenant Overview",
     items: [
       { icon: Users, title: "Users", description: "Manage staff and personnel", path: "/people" },
       { icon: UserCheck, title: "Participants", description: "Participant records and details", path: "/participants" },
