@@ -1,4 +1,5 @@
-import { MapPin, Users, Briefcase, TrendingUp, Send, Apple, PlayCircle, Smartphone, CalendarCheck, ShieldCheck } from "lucide-react";
+import { MapPin, Users, Briefcase, TrendingUp, Send, Smartphone, CalendarCheck, ShieldCheck } from "lucide-react";
+import { SiApple, SiGoogleplay } from "react-icons/si";
 import qrCode from "@/assets/qr-checkpoint.png";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
