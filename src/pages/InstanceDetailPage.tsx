@@ -315,6 +315,11 @@ const InstanceDetailPage = () => {
                   )}
                 </TabsContent>
 
+                {/* Tracking */}
+                <TabsContent value="tracking" className="mt-0">
+                  <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} />
+                </TabsContent>
+
                 {/* Settings */}
                 <TabsContent value="settings" className="mt-0">
                   <SectionCard title="Instance Settings" icon={Settings}>
