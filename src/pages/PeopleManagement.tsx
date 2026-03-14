@@ -112,9 +112,9 @@ const PeopleManagement = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <DashboardHeader />
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
         <main className="flex-1 p-6 space-y-6 overflow-auto">
           {/* Page Header */}
