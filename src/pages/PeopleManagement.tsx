@@ -127,7 +127,7 @@ const PeopleManagement = () => {
                 <Users className="w-5 h-5 text-icon-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-foreground">People Management</h1>
+                <h1 className="text-xl font-semibold text-foreground">Users</h1>
                 <p className="text-sm text-muted-foreground">Manage staff and personnel across instances</p>
               </div>
             </div>
