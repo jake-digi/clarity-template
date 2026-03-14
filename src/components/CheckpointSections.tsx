@@ -26,6 +26,7 @@ interface SectionItem {
   icon: LucideIcon;
   title: string;
   description?: string;
+  path?: string;
 }
 
 interface SectionGroup {
