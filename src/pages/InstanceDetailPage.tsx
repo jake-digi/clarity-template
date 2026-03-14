@@ -12,8 +12,9 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  CheckCircle2, Lock, Play, Plus, GripVertical
+  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation
 } from "lucide-react";
+import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
@@ -149,6 +150,7 @@ const InstanceDetailPage = () => {
     { value: "overview", label: "Overview", icon: Building2 },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "groups", label: "Groups", icon: FolderTree },
+    { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -311,6 +313,11 @@ const InstanceDetailPage = () => {
                       })}
                     </div>
                   )}
+                </TabsContent>
+
+                {/* Tracking */}
+                <TabsContent value="tracking" className="mt-0">
+                  <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} />
                 </TabsContent>
 
                 {/* Settings */}
