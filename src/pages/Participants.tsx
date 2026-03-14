@@ -11,9 +11,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Filter, Download, MoreHorizontal, ArrowUpDown, UserCheck, ArrowLeft, Loader2 } from "lucide-react";
+import { Search, Plus, Filter, Download, MoreHorizontal, ArrowUpDown, UserCheck, ArrowLeft, Settings2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useParticipants, type ParticipantRow } from "@/hooks/useParticipants";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,8 +28,36 @@ const statusVariant = (status: string) => {
   }
 };
 
-type SortField = "full_name" | "status" | "instance_name" | "subgroup_name" | "created_at";
+type ColumnKey = "id" | "full_name" | "gender" | "date_of_birth" | "subgroup_name" | "supergroup_name" | "instance_name" | "status" | "created_at" | "unit_name" | "rank" | "school_institute";
+
+interface ColumnDef {
+  key: ColumnKey;
+  label: string;
+  sortable: boolean;
+  defaultVisible: boolean;
+  render: (p: ParticipantRow) => React.ReactNode;
+  className?: string;
+}
+
+const ALL_COLUMNS: ColumnDef[] = [
+  { key: "id", label: "ID", sortable: false, defaultVisible: true, className: "font-mono text-xs text-muted-foreground truncate max-w-[90px]", render: (p) => <span title={p.id}>{p.id.slice(0, 8)}…</span> },
+  { key: "full_name", label: "Name", sortable: true, defaultVisible: true, className: "font-medium text-foreground", render: (p) => p.full_name },
+  { key: "gender", label: "Gender", sortable: false, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.gender ?? "—" },
+  { key: "date_of_birth", label: "Date of Birth", sortable: true, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—" },
+  { key: "subgroup_name", label: "Subgroup", sortable: true, defaultVisible: true, render: (p) => p.subgroup_name ?? "—" },
+  { key: "supergroup_name", label: "Supergroup", sortable: true, defaultVisible: false, render: (p) => p.supergroup_name ?? "—" },
+  { key: "instance_name", label: "Instance", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.instance_name },
+  { key: "status", label: "Status", sortable: true, defaultVisible: true, render: (p) => <Badge variant={statusVariant(p.status)} className="capitalize">{p.status}</Badge> },
+  { key: "created_at", label: "Created", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) },
+  { key: "unit_name", label: "Unit", sortable: false, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.unit_name ?? "—" },
+  { key: "rank", label: "Rank", sortable: false, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.rank ?? "—" },
+  { key: "school_institute", label: "School", sortable: false, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.school_institute ?? "—" },
+];
+
+type SortField = ColumnKey;
 type SortDir = "asc" | "desc";
+
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 const Participants = () => {
   const navigate = useNavigate();
@@ -41,11 +69,27 @@ const Participants = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState<SortField>("full_name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(
+    () => new Set(ALL_COLUMNS.filter((c) => c.defaultVisible).map((c) => c.key))
+  );
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("asc"); }
   };
+
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const columns = useMemo(() => ALL_COLUMNS.filter((c) => visibleColumns.has(c.key)), [visibleColumns]);
 
   const instances = useMemo(() => [...new Set(participants.map((p) => p.instance_name).filter(Boolean))] as string[], [participants]);
   const subgroups = useMemo(() => [...new Set(participants.map((p) => p.subgroup_name).filter(Boolean))] as string[], [participants]);
@@ -69,6 +113,11 @@ const Participants = () => {
       });
   }, [participants, search, instanceFilter, subgroupFilter, statusFilter, sortField, sortDir]);
 
+  // Reset page when filters change
+  useMemo(() => setPage(0), [search, instanceFilter, subgroupFilter, statusFilter]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const activeCount = participants.filter((p) => p.status === "active").length;
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
@@ -140,6 +189,29 @@ const Participants = () => {
                 {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
+
+            {/* Column visibility toggle */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" title="Toggle columns">
+                  <Settings2 className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {ALL_COLUMNS.map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.key}
+                    checked={visibleColumns.has(col.key)}
+                    onCheckedChange={() => toggleColumn(col.key)}
+                  >
+                    {col.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button variant="outline" size="icon" title="Export">
               <Download className="w-4 h-4" />
             </Button>
@@ -168,64 +240,84 @@ const Participants = () => {
                 <p className="text-sm text-muted-foreground mt-1">{(error as Error).message}</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[90px]">ID</TableHead>
-                    <SortableHeader field="full_name">Name</SortableHeader>
-                    <TableHead>Gender</TableHead>
-                    <SortableHeader field="subgroup_name">Subgroup</SortableHeader>
-                    <SortableHeader field="instance_name">Instance</SortableHeader>
-                    <SortableHeader field="status">Status</SortableHeader>
-                    <SortableHeader field="created_at">Created</SortableHeader>
-                    <TableHead>Unit</TableHead>
-                    <TableHead className="w-[50px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.length === 0 ? (
+              <>
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                        No participants found matching your filters.
-                      </TableCell>
+                      {columns.map((col) =>
+                        col.sortable ? (
+                          <SortableHeader key={col.key} field={col.key}>{col.label}</SortableHeader>
+                        ) : (
+                          <TableHead key={col.key}>{col.label}</TableHead>
+                        )
+                      )}
+                      <TableHead className="w-[50px]" />
                     </TableRow>
-                  ) : (
-                    filtered.map((p) => (
-                      <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer">
-                        <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[90px]" title={p.id}>
-                          {p.id.slice(0, 8)}…
-                        </TableCell>
-                        <TableCell className="font-medium text-foreground">{p.full_name}</TableCell>
-                        <TableCell className="text-muted-foreground">{p.gender ?? "—"}</TableCell>
-                        <TableCell>{p.subgroup_name ?? "—"}</TableCell>
-                        <TableCell className="text-muted-foreground">{p.instance_name}</TableCell>
-                        <TableCell>
-                          <Badge variant={statusVariant(p.status)} className="capitalize">{p.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{p.unit_name ?? "—"}</TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Profile</DropdownMenuItem>
-                              <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                              <DropdownMenuItem>Change Group</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">Withdraw</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                  </TableHeader>
+                  <TableBody>
+                    {paged.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={columns.length + 1} className="text-center py-8 text-muted-foreground">
+                          No participants found matching your filters.
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      paged.map((p) => (
+                        <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer">
+                          {columns.map((col) => (
+                            <TableCell key={col.key} className={col.className}>
+                              {col.render(p)}
+                            </TableCell>
+                          ))}
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>View Profile</DropdownMenuItem>
+                                <DropdownMenuItem>Edit Details</DropdownMenuItem>
+                                <DropdownMenuItem>Change Group</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Withdraw</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Rows per page</span>
+                    <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                      <SelectTrigger className="h-8 w-[70px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZE_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>
+                      {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
+                    </span>
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </main>
