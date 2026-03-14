@@ -12,8 +12,9 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  CheckCircle2, Lock, Play, Plus, GripVertical
+  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation
 } from "lucide-react";
+import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
