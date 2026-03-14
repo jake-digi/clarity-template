@@ -57,7 +57,19 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: "date_of_birth", label: "Date of Birth", sortable: true, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—" },
   { key: "subgroup_name", label: "Subgroup", sortable: true, defaultVisible: true, render: (p) => p.subgroup_name ?? "—" },
   { key: "supergroup_name", label: "Supergroup", sortable: true, defaultVisible: false, render: (p) => p.supergroup_name ?? "—" },
-  { key: "instance_name", label: "Instance", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.instance_name },
+  { key: "instance_name", label: "Instance", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => (
+    <div className="flex flex-wrap gap-1">
+      {p.assignments.length <= 1 ? (
+        <span>{p.assignments[0]?.instance_name ?? p.instance_name}</span>
+      ) : (
+        p.assignments.map((a) => (
+          <Badge key={a.instance_id} variant="secondary" className="text-xs font-normal">
+            {a.instance_name}
+          </Badge>
+        ))
+      )}
+    </div>
+  ) },
   { key: "updated_at", label: "Last Updated", sortable: true, defaultVisible: true, className: "text-muted-foreground", render: (p) => new Date(p.updated_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) },
   { key: "unit_name", label: "Unit", sortable: false, defaultVisible: true, className: "text-muted-foreground", render: (p) => p.unit_name ?? "—" },
   { key: "rank", label: "Rank", sortable: false, defaultVisible: false, className: "text-muted-foreground", render: (p) => p.rank ?? "—" },
@@ -101,8 +113,16 @@ const Participants = () => {
 
   const columns = useMemo(() => ALL_COLUMNS.filter((c) => visibleColumns.has(c.key)), [visibleColumns]);
 
-  const instances = useMemo(() => [...new Set(participants.map((p) => p.instance_name).filter(Boolean))] as string[], [participants]);
-  const subgroups = useMemo(() => [...new Set(participants.map((p) => p.subgroup_name).filter(Boolean))] as string[], [participants]);
+  const instances = useMemo(() => {
+    const names = new Set<string>();
+    participants.forEach((p) => p.assignments.forEach((a) => names.add(a.instance_name)));
+    return [...names].sort();
+  }, [participants]);
+  const subgroups = useMemo(() => {
+    const names = new Set<string>();
+    participants.forEach((p) => p.assignments.forEach((a) => { if (a.subgroup_name) names.add(a.subgroup_name); }));
+    return [...names].sort();
+  }, [participants]);
   const statuses = useMemo(() => [...new Set(participants.map((p) => p.status))], [participants]);
 
   const filtered = useMemo(() => {
@@ -110,8 +130,8 @@ const Participants = () => {
       .filter((p) => {
         const q = search.toLowerCase();
         const matchSearch = !q || p.full_name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || (p.unit_name?.toLowerCase().includes(q));
-        const matchInstance = instanceFilter === "all" || p.instance_name === instanceFilter;
-        const matchSubgroup = subgroupFilter === "all" || p.subgroup_name === subgroupFilter;
+        const matchInstance = instanceFilter === "all" || p.assignments.some((a) => a.instance_name === instanceFilter);
+        const matchSubgroup = subgroupFilter === "all" || p.assignments.some((a) => a.subgroup_name === subgroupFilter);
         const matchStatus = statusFilter === "all" || p.status === statusFilter;
         return matchSearch && matchInstance && matchSubgroup && matchStatus;
       })
