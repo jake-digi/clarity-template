@@ -13,7 +13,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Download, MoreHorizontal, ArrowUpDown, UserCheck, Settings2, ChevronLeft, ChevronRight, Users, Clock, UserX, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Search, Plus, Download, MoreHorizontal, ArrowUpDown, UserCheck, Settings2, ChevronLeft, ChevronRight, Users, Clock, UserX, ChevronRight as ChevronRightIcon, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useParticipants, type ParticipantRow } from "@/hooks/useParticipants";
 import { Skeleton } from "@/components/ui/skeleton";
