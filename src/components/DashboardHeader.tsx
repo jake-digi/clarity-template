@@ -173,9 +173,34 @@ const DashboardHeader = () => {
             )}
           </div>
 
-          {open && query.trim() && (
+          {open && (
             <div className="absolute top-full left-0 mt-1.5 w-96 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
-              {results.length === 0 ? (
+              {!query.trim() ? (
+                <div className="py-3 px-4 space-y-3">
+                  <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Try searching for</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["Participants", "Users", "Groups", "Accommodation", "Instances"].map((hint) => (
+                      <button
+                        key={hint}
+                        onClick={() => { setQuery(hint); }}
+                        className="px-2.5 py-1 text-xs rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      >
+                        {hint}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-1">Search by</div>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2"><User className="w-3.5 h-3.5" /><span>Participant name — e.g. "Aaron"</span></div>
+                    <div className="flex items-center gap-2"><Building2 className="w-3.5 h-3.5" /><span>Page or module name</span></div>
+                  </div>
+                  <div className="border-t border-border pt-2 flex items-center gap-4 text-[10px] text-muted-foreground">
+                    <span><kbd className="px-1 py-0.5 bg-muted border border-border rounded text-[9px]">↑↓</kbd> Navigate</span>
+                    <span><kbd className="px-1 py-0.5 bg-muted border border-border rounded text-[9px]">↵</kbd> Select</span>
+                    <span><kbd className="px-1 py-0.5 bg-muted border border-border rounded text-[9px]">Esc</kbd> Close</span>
+                  </div>
+                </div>
+              ) : results.length === 0 ? (
                 <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                   No results found for "{query}"
                 </div>
