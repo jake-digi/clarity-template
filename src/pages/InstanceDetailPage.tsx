@@ -259,7 +259,7 @@ const InstanceDetailPage = () => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="text-[10px]">{tasks.length} task{tasks.length !== 1 ? "s" : ""}</Badge>
-                                {stage.requires_previous_stage && <Lock className="w-3.5 h-3.5 text-muted-foreground" title="Requires previous stage" />}
+                                {stage.requires_previous_stage && <span title="Requires previous stage"><Lock className="w-3.5 h-3.5 text-muted-foreground" /></span>}
                                 <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3 h-3" /></Button>
                               </div>
                             </div>
