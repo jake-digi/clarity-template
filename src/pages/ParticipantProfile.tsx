@@ -164,8 +164,8 @@ const ParticipantProfile = () => {
 
             {/* Tabs in header */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <div className="border-t border-border bg-muted/40 px-6">
-                <TabsList className="bg-transparent h-auto p-0 gap-1 rounded-none border-0 -mb-px">
+              <div className="border-t border-border px-6 pt-2">
+                <TabsList className="bg-muted/60 h-10 p-1 rounded-lg gap-0.5">
                   {[
                     { value: "personal", label: "Personal", icon: User },
                     { value: "instance", label: "Instance & Accommodation", icon: Building2 },
@@ -178,7 +178,7 @@ const ParticipantProfile = () => {
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="rounded-t-md rounded-b-none border border-transparent border-b-0 px-4 py-2.5 text-sm gap-1.5 text-muted-foreground transition-colors data-[state=active]:bg-background data-[state=active]:border-border data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=inactive]:hover:bg-muted/60 data-[state=inactive]:hover:text-foreground"
+                      className="rounded-md px-3.5 py-1.5 text-sm gap-1.5 text-muted-foreground data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
                     >
                       <tab.icon className="w-3.5 h-3.5" />
                       {tab.label}
