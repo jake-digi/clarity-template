@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index.tsx";
 import PeopleManagement from "./pages/PeopleManagement.tsx";
 import Participants from "./pages/Participants.tsx";
+import ParticipantProfile from "./pages/ParticipantProfile.tsx";
 import Login from "./pages/Login.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
