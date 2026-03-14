@@ -98,7 +98,7 @@ const Login = () => {
           {mode === "login" ? (
             <button
               onClick={() => setMode("reset")}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-[hsl(var(--checkpoint-green))] hover:underline"
             >
               Forgot your password?
             </button>
