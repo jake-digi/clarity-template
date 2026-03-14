@@ -50,14 +50,11 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-8">
         {/* Logo & Title */}
-        <div className="text-center space-y-3">
-          <img src={checkpointLogo} alt="CheckPoint" className="h-14 mx-auto" />
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Checkpoint</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {mode === "login" ? "Sign in to your account" : "Reset your password"}
-            </p>
-          </div>
+        <div className="text-center space-y-4">
+          <img src={checkpointLogo} alt="CheckPoint" className="h-24 mx-auto" />
+          <p className="text-sm text-muted-foreground">
+            {mode === "login" ? "Sign in to your account" : "Reset your password"}
+          </p>
         </div>
 
         {/* Form */}
@@ -90,7 +87,7 @@ const Login = () => {
             </div>
           )}
 
-          <Button type="submit" className="w-full gap-2" disabled={loading}>
+          <Button type="submit" className="w-full gap-2 bg-[hsl(var(--checkpoint-green))] hover:bg-[hsl(var(--checkpoint-green))]/90 text-white" disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
             {mode === "login" ? "Sign in" : "Send reset link"}
           </Button>
@@ -101,14 +98,14 @@ const Login = () => {
           {mode === "login" ? (
             <button
               onClick={() => setMode("reset")}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-[hsl(var(--checkpoint-green))] hover:underline"
             >
               Forgot your password?
             </button>
           ) : (
             <button
               onClick={() => setMode("login")}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-[hsl(var(--checkpoint-green))] hover:underline"
             >
               Back to sign in
             </button>
