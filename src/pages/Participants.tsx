@@ -165,34 +165,45 @@ const Participants = () => {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Users className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Total</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{participants.length}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Active</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <UserX className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Instances</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
-              </div>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border border-border bg-background px-4 py-3 space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-7 w-12" />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Users className="w-4 h-4" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Total</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{participants.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Active</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <UserX className="w-4 h-4" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Instances</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
