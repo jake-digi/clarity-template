@@ -193,8 +193,8 @@ const ParticipantProfile = () => {
                 {/* Instances */}
                 <TabsContent value="instances" className="mt-0">
                   <InstancesTab
+                    participantId={id ?? ""}
                     assignments={p.assignments ?? []}
-                    activityLogs={p.activityLogs ?? []}
                   />
                 </TabsContent>
 

@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import PeopleManagement from "./pages/PeopleManagement.tsx";
 import Participants from "./pages/Participants.tsx";
 import ParticipantProfile from "./pages/ParticipantProfile.tsx";
+import ParticipantInstancePage from "./pages/ParticipantInstancePage.tsx";
 import Login from "./pages/Login.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
             <Route path="/participants" element={<ProtectedRoute><Participants /></ProtectedRoute>} />
             <Route path="/participants/:id" element={<ProtectedRoute><ParticipantProfile /></ProtectedRoute>} />
+            <Route path="/participants/:id/instances/:instanceId" element={<ProtectedRoute><ParticipantInstancePage /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
