@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Input } from "@/components/ui/input";
@@ -13,57 +13,33 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Filter, Download, MoreHorizontal, ArrowUpDown, UserCheck, ArrowLeft } from "lucide-react";
+import { Search, Plus, Filter, Download, MoreHorizontal, ArrowUpDown, UserCheck, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useParticipants, type ParticipantRow } from "@/hooks/useParticipants";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface Participant {
-  id: string;
-  name: string;
-  email: string;
-  age: number;
-  group: string;
-  instance: string;
-  status: "Enrolled" | "Waitlisted" | "Completed" | "Withdrawn";
-  enrollDate: string;
-  emergencyContact: string;
-}
-
-const demoData: Participant[] = [
-  { id: "PRT-001", name: "Ethan Goldstein", email: "e.goldstein@mail.com", age: 15, group: "Alpha Squad", instance: "Checkpoint North", status: "Enrolled", enrollDate: "2025-09-01", emergencyContact: "Ruth Goldstein" },
-  { id: "PRT-002", name: "Maya Jacobs", email: "m.jacobs@mail.com", age: 14, group: "Bravo Team", instance: "Checkpoint North", status: "Enrolled", enrollDate: "2025-09-03", emergencyContact: "Avi Jacobs" },
-  { id: "PRT-003", name: "Oliver Stern", email: "o.stern@mail.com", age: 16, group: "Alpha Squad", instance: "Checkpoint South", status: "Completed", enrollDate: "2024-09-10", emergencyContact: "Miriam Stern" },
-  { id: "PRT-004", name: "Sophie Blum", email: "s.blum@mail.com", age: 13, group: "Charlie Unit", instance: "Checkpoint East", status: "Enrolled", enrollDate: "2025-10-15", emergencyContact: "Daniel Blum" },
-  { id: "PRT-005", name: "Jake Abrams", email: "j.abrams@mail.com", age: 15, group: "Bravo Team", instance: "Checkpoint North", status: "Waitlisted", enrollDate: "2025-11-02", emergencyContact: "Lisa Abrams" },
-  { id: "PRT-006", name: "Ava Rosenberg", email: "a.rosenberg@mail.com", age: 14, group: "Delta Force", instance: "Checkpoint West", status: "Enrolled", enrollDate: "2025-09-08", emergencyContact: "Sam Rosenberg" },
-  { id: "PRT-007", name: "Noah Katz", email: "n.katz@mail.com", age: 16, group: "Alpha Squad", instance: "Checkpoint South", status: "Withdrawn", enrollDate: "2025-01-20", emergencyContact: "Rachel Katz" },
-  { id: "PRT-008", name: "Lily Fischer", email: "l.fischer@mail.com", age: 13, group: "Charlie Unit", instance: "Checkpoint East", status: "Enrolled", enrollDate: "2025-09-12", emergencyContact: "Tom Fischer" },
-  { id: "PRT-009", name: "Ben Shapiro", email: "b.shapiro@mail.com", age: 15, group: "Delta Force", instance: "Checkpoint West", status: "Enrolled", enrollDate: "2025-10-01", emergencyContact: "Anna Shapiro" },
-  { id: "PRT-010", name: "Chloe Weiner", email: "c.weiner@mail.com", age: 14, group: "Bravo Team", instance: "Checkpoint North", status: "Completed", enrollDate: "2024-09-05", emergencyContact: "Mark Weiner" },
-  { id: "PRT-011", name: "Theo Baum", email: "t.baum@mail.com", age: 16, group: "Alpha Squad", instance: "Checkpoint South", status: "Enrolled", enrollDate: "2025-09-20", emergencyContact: "Helen Baum" },
-  { id: "PRT-012", name: "Isla Hartman", email: "i.hartman@mail.com", age: 13, group: "Charlie Unit", instance: "Checkpoint East", status: "Waitlisted", enrollDate: "2025-12-01", emergencyContact: "David Hartman" },
-  { id: "PRT-013", name: "Max Levi", email: "m.levi@mail.com", age: 15, group: "Delta Force", instance: "Checkpoint West", status: "Enrolled", enrollDate: "2025-09-18", emergencyContact: "Sarah Levi" },
-  { id: "PRT-014", name: "Ruby Feldman", email: "r.feldman@mail.com", age: 14, group: "Bravo Team", instance: "Checkpoint North", status: "Enrolled", enrollDate: "2025-10-10", emergencyContact: "Joel Feldman" },
-];
-
-const statusVariant = (status: Participant["status"]) => {
-  switch (status) {
-    case "Enrolled": return "default";
-    case "Waitlisted": return "secondary";
-    case "Completed": return "outline";
-    case "Withdrawn": return "destructive";
+const statusVariant = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "active": return "default" as const;
+    case "inactive": return "secondary" as const;
+    case "completed": return "outline" as const;
+    case "withdrawn": return "destructive" as const;
+    default: return "default" as const;
   }
 };
 
-type SortField = "name" | "age" | "group" | "instance" | "status" | "enrollDate";
+type SortField = "full_name" | "status" | "instance_name" | "subgroup_name" | "created_at";
 type SortDir = "asc" | "desc";
 
 const Participants = () => {
   const navigate = useNavigate();
+  const { data: participants = [], isLoading, error } = useParticipants();
+
   const [search, setSearch] = useState("");
-  const [groupFilter, setGroupFilter] = useState("all");
   const [instanceFilter, setInstanceFilter] = useState("all");
+  const [subgroupFilter, setSubgroupFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortField, setSortField] = useState<SortField>("full_name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const toggleSort = (field: SortField) => {
@@ -71,24 +47,29 @@ const Participants = () => {
     else { setSortField(field); setSortDir("asc"); }
   };
 
-  const groups = [...new Set(demoData.map((d) => d.group))];
-  const instances = [...new Set(demoData.map((d) => d.instance))];
+  const instances = useMemo(() => [...new Set(participants.map((p) => p.instance_name).filter(Boolean))] as string[], [participants]);
+  const subgroups = useMemo(() => [...new Set(participants.map((p) => p.subgroup_name).filter(Boolean))] as string[], [participants]);
+  const statuses = useMemo(() => [...new Set(participants.map((p) => p.status))], [participants]);
 
-  const filtered = demoData
-    .filter((d) => {
-      const q = search.toLowerCase();
-      const matchSearch = !q || d.name.toLowerCase().includes(q) || d.email.toLowerCase().includes(q) || d.id.toLowerCase().includes(q);
-      const matchGroup = groupFilter === "all" || d.group === groupFilter;
-      const matchInstance = instanceFilter === "all" || d.instance === instanceFilter;
-      const matchStatus = statusFilter === "all" || d.status === statusFilter;
-      return matchSearch && matchGroup && matchInstance && matchStatus;
-    })
-    .sort((a, b) => {
-      const aVal = String(a[sortField]);
-      const bVal = String(b[sortField]);
-      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
-      return sortDir === "asc" ? cmp : -cmp;
-    });
+  const filtered = useMemo(() => {
+    return participants
+      .filter((p) => {
+        const q = search.toLowerCase();
+        const matchSearch = !q || p.full_name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || (p.unit_name?.toLowerCase().includes(q));
+        const matchInstance = instanceFilter === "all" || p.instance_name === instanceFilter;
+        const matchSubgroup = subgroupFilter === "all" || p.subgroup_name === subgroupFilter;
+        const matchStatus = statusFilter === "all" || p.status === statusFilter;
+        return matchSearch && matchInstance && matchSubgroup && matchStatus;
+      })
+      .sort((a, b) => {
+        const aVal = String((a as any)[sortField] ?? "");
+        const bVal = String((b as any)[sortField] ?? "");
+        const cmp = aVal.localeCompare(bVal, undefined, { numeric: true });
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+  }, [participants, search, instanceFilter, subgroupFilter, statusFilter, sortField, sortDir]);
+
+  const activeCount = participants.filter((p) => p.status === "active").length;
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <TableHead>
@@ -116,7 +97,7 @@ const Participants = () => {
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Participants</h1>
-                <p className="text-sm text-muted-foreground">Participant records and details across instances</p>
+                <p className="text-sm text-muted-foreground">Participant records across all instances</p>
               </div>
             </div>
             <Button className="gap-2">
@@ -129,18 +110,8 @@ const Participants = () => {
           <div className="flex items-center gap-3 flex-wrap">
             <div className="relative flex-1 min-w-[240px] max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search by name, email, or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              <Input placeholder="Search by name or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
             </div>
-            <Select value={groupFilter} onValueChange={setGroupFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
-                <SelectValue placeholder="Group" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Groups</SelectItem>
-                {groups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-              </SelectContent>
-            </Select>
             <Select value={instanceFilter} onValueChange={setInstanceFilter}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Instance" />
@@ -150,16 +121,23 @@ const Participants = () => {
                 {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue placeholder="Subgroup" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subgroups</SelectItem>
+                {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Enrolled">Enrolled</SelectItem>
-                <SelectItem value="Waitlisted">Waitlisted</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Withdrawn">Withdrawn</SelectItem>
+                {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
             <Button variant="outline" size="icon" title="Export">
@@ -169,78 +147,86 @@ const Participants = () => {
 
           {/* Summary */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>{filtered.length} of {demoData.length} participants</span>
+            <span>{filtered.length} of {participants.length} participants</span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[hsl(var(--success))]" />
-              {demoData.filter((d) => d.status === "Enrolled").length} enrolled
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[hsl(var(--muted-foreground))]" />
-              {demoData.filter((d) => d.status === "Waitlisted").length} waitlisted
+              {activeCount} active
             </span>
           </div>
 
           {/* Data Table */}
           <div className="bg-card rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[90px]">ID</TableHead>
-                  <SortableHeader field="name">Name</SortableHeader>
-                  <TableHead>Email</TableHead>
-                  <SortableHeader field="age">Age</SortableHeader>
-                  <SortableHeader field="group">Group</SortableHeader>
-                  <SortableHeader field="instance">Instance</SortableHeader>
-                  <SortableHeader field="status">Status</SortableHeader>
-                  <SortableHeader field="enrollDate">Enrolled</SortableHeader>
-                  <TableHead>Emergency Contact</TableHead>
-                  <TableHead className="w-[50px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 ? (
+            {isLoading ? (
+              <div className="p-8 space-y-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="p-8 text-center text-destructive">
+                <p>Failed to load participants. Make sure you're logged in.</p>
+                <p className="text-sm text-muted-foreground mt-1">{(error as Error).message}</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                      No participants found matching your filters.
-                    </TableCell>
+                    <TableHead className="w-[90px]">ID</TableHead>
+                    <SortableHeader field="full_name">Name</SortableHeader>
+                    <TableHead>Gender</TableHead>
+                    <SortableHeader field="subgroup_name">Subgroup</SortableHeader>
+                    <SortableHeader field="instance_name">Instance</SortableHeader>
+                    <SortableHeader field="status">Status</SortableHeader>
+                    <SortableHeader field="created_at">Created</SortableHeader>
+                    <TableHead>Unit</TableHead>
+                    <TableHead className="w-[50px]" />
                   </TableRow>
-                ) : (
-                  filtered.map((p) => (
-                    <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{p.id}</TableCell>
-                      <TableCell className="font-medium text-foreground">{p.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{p.email}</TableCell>
-                      <TableCell>{p.age}</TableCell>
-                      <TableCell>{p.group}</TableCell>
-                      <TableCell className="text-muted-foreground">{p.instance}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusVariant(p.status)}>{p.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(p.enrollDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{p.emergencyContact}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Profile</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                            <DropdownMenuItem>Change Group</DropdownMenuItem>
-                            <DropdownMenuItem>View Case History</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Withdraw</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {filtered.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        No participants found matching your filters.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filtered.map((p) => (
+                      <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer">
+                        <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[90px]" title={p.id}>
+                          {p.id.slice(0, 8)}…
+                        </TableCell>
+                        <TableCell className="font-medium text-foreground">{p.full_name}</TableCell>
+                        <TableCell className="text-muted-foreground">{p.gender ?? "—"}</TableCell>
+                        <TableCell>{p.subgroup_name ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{p.instance_name}</TableCell>
+                        <TableCell>
+                          <Badge variant={statusVariant(p.status)} className="capitalize">{p.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{p.unit_name ?? "—"}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>View Profile</DropdownMenuItem>
+                              <DropdownMenuItem>Edit Details</DropdownMenuItem>
+                              <DropdownMenuItem>Change Group</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive">Withdraw</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </main>
       </div>
