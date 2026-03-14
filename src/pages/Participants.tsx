@@ -351,6 +351,7 @@ const Participants = () => {
                 </div>
               </>
             )}
+           </div>
           </div>
         </main>
       </div>
