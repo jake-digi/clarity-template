@@ -34,7 +34,6 @@ export function useParticipants() {
         .from("participants")
         .select("*")
         .order("full_name", { ascending: true });
-        .order("full_name", { ascending: true });
 
       if (error) throw error;
       if (!participants?.length) return [];
