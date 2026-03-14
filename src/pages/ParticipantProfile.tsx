@@ -122,8 +122,8 @@ const ParticipantProfile = () => {
                   <div className="flex items-center gap-2.5">
                     <h1 className="text-2xl font-semibold text-foreground tracking-tight">{p.full_name}</h1>
                     <Badge variant={statusVariant(p.status)} className="capitalize">{p.status}</Badge>
-                    {p.is_off_site && <Badge variant="outline" className="text-orange-600 border-orange-300">Off-site</Badge>}
-                    {p.light_load && <Badge variant="outline" className="text-amber-600 border-amber-300">Light Load</Badge>}
+                    {p.is_off_site && <Badge variant="outline" className="text-destructive border-destructive/30">Off-site</Badge>}
+                    {p.light_load && <Badge variant="outline" className="text-muted-foreground border-border">Light Load</Badge>}
                   </div>
                   <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                     {p.rank && <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5" />{p.rank}</span>}
