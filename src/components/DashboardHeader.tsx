@@ -118,7 +118,7 @@ const DashboardHeader = () => {
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
               placeholder="Search pages, modules, people..."
-              className="w-80 pl-9 pr-8 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+              className="w-80 pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query && (
               <button
