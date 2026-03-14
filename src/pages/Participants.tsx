@@ -130,8 +130,8 @@ const Participants = () => {
       .filter((p) => {
         const q = search.toLowerCase();
         const matchSearch = !q || p.full_name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || (p.unit_name?.toLowerCase().includes(q));
-        const matchInstance = instanceFilter === "all" || p.instance_name === instanceFilter;
-        const matchSubgroup = subgroupFilter === "all" || p.subgroup_name === subgroupFilter;
+        const matchInstance = instanceFilter === "all" || p.assignments.some((a) => a.instance_name === instanceFilter);
+        const matchSubgroup = subgroupFilter === "all" || p.assignments.some((a) => a.subgroup_name === subgroupFilter);
         const matchStatus = statusFilter === "all" || p.status === statusFilter;
         return matchSearch && matchInstance && matchSubgroup && matchStatus;
       })
