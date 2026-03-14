@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import jlgbLogo from "@/assets/jlgb-logo.png";
 
 interface SearchItem {
@@ -31,16 +32,54 @@ const DashboardHeader = () => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [participantResults, setParticipantResults] = useState<SearchItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const results = query.trim()
-    ? searchIndex.filter(
-        (item) =>
-          item.label.toLowerCase().includes(query.toLowerCase()) ||
-          item.category.toLowerCase().includes(query.toLowerCase())
-      )
-    : [];
+  const pageResults = useMemo(() => {
+    if (!query.trim()) return [];
+    return searchIndex.filter(
+      (item) =>
+        item.label.toLowerCase().includes(query.toLowerCase()) ||
+        item.category.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [query]);
+
+  // Search participants from Supabase with debounce
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!query.trim() || query.trim().length < 2) {
+      setParticipantResults([]);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from("participants")
+        .select("id, full_name")
+        .ilike("full_name", `%${query.trim()}%`)
+        .limit(8);
+
+      if (data) {
+        setParticipantResults(
+          data.map((p) => ({
+            label: p.full_name,
+            category: "Participants",
+            path: `/participants/${p.id}`,
+            icon: User,
+          }))
+        );
+      }
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query]);
+
+  const results = useMemo(() => [...pageResults, ...participantResults], [pageResults, participantResults]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -117,12 +156,12 @@ const DashboardHeader = () => {
               onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search pages, modules, people..."
+              placeholder="Search pages, participants..."
               className="w-80 pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query ? (
               <button
-                onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+                onClick={() => { setQuery(""); setParticipantResults([]); inputRef.current?.focus(); }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
               >
                 ✕
@@ -153,7 +192,7 @@ const DashboardHeader = () => {
                         const Icon = item.icon;
                         return (
                           <button
-                            key={item.label}
+                            key={`${item.path}-${item.label}`}
                             onClick={() => handleSelect(item)}
                             className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-left transition-colors ${
                               idx === selectedIndex
@@ -161,7 +200,7 @@ const DashboardHeader = () => {
                                 : "text-foreground hover:bg-muted"
                             }`}
                           >
-                            <Icon className="w-4 h-4 text-icon-primary shrink-0" />
+                            <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                             <span className="font-medium">{item.label}</span>
                           </button>
                         );
