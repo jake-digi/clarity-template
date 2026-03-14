@@ -165,98 +165,124 @@ const Participants = () => {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Users className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Total</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{participants.length}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Active</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <UserX className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-background px-4 py-3">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-xs font-medium uppercase tracking-wide">Instances</span>
-                </div>
-                <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
-              </div>
+              {isLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border border-border bg-background px-4 py-3 space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-7 w-12" />
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Users className="w-4 h-4" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Total</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{participants.length}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Active</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <UserX className="w-4 h-4" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-background px-4 py-3">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-xs font-medium uppercase tracking-wide">Instances</span>
+                    </div>
+                    <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
           {/* Toolbar */}
           <div className="px-6 py-4 space-y-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative flex-1 min-w-[240px] max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search by name, ID or unit..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            {isLoading ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 flex-1 max-w-sm" />
+                  <Skeleton className="h-10 w-[200px]" />
+                  <Skeleton className="h-10 w-[180px]" />
+                  <Skeleton className="h-10 w-[160px]" />
+                  <Skeleton className="h-10 w-10" />
+                </div>
+                <Skeleton className="h-4 w-48" />
               </div>
-              <Select value={instanceFilter} onValueChange={setInstanceFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Instance" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Instances</SelectItem>
-                  {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Subgroup" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Subgroups</SelectItem>
-                  {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="relative flex-1 min-w-[240px] max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="Search by name, ID or unit..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+                  </div>
+                  <Select value={instanceFilter} onValueChange={setInstanceFilter}>
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Instance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Instances</SelectItem>
+                      {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Subgroup" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subgroups</SelectItem>
+                      {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" title="Toggle columns">
-                    <Settings2 className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {ALL_COLUMNS.map((col) => (
-                    <DropdownMenuCheckboxItem
-                      key={col.key}
-                      checked={visibleColumns.has(col.key)}
-                      onCheckedChange={() => toggleColumn(col.key)}
-                    >
-                      {col.label}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" title="Toggle columns">
+                        <Settings2 className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {ALL_COLUMNS.map((col) => (
+                        <DropdownMenuCheckboxItem
+                          key={col.key}
+                          checked={visibleColumns.has(col.key)}
+                          onCheckedChange={() => toggleColumn(col.key)}
+                        >
+                          {col.label}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-            <div className="text-xs text-muted-foreground">
-              Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
-              {filtered.length < participants.length && <span> (filtered from {participants.length} total)</span>}
-            </div>
+                <div className="text-xs text-muted-foreground">
+                  Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
+                  {filtered.length < participants.length && <span> (filtered from {participants.length} total)</span>}
+                </div>
+              </>
+            )}
 
           {/* Data Table */}
           <div className="bg-card rounded-lg border border-border overflow-hidden">
