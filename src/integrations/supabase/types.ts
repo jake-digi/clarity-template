@@ -976,7 +976,7 @@ export type Database = {
           full_name: string
           gender: string | null
           id: string
-          instance_id: string
+          instance_id: string | null
           is_off_site: boolean | null
           light_load: boolean | null
           off_site_comment: string | null
@@ -987,14 +987,14 @@ export type Database = {
           room_number: string | null
           school_institute: string | null
           school_year: string | null
-          status: string
+          status: string | null
           sub_group_id: string | null
           super_group_id: string | null
           surname: string
-          tenant_id: string
+          tenant_id: string | null
           unit_name: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           arrival_date?: string | null
@@ -1006,7 +1006,7 @@ export type Database = {
           full_name: string
           gender?: string | null
           id: string
-          instance_id: string
+          instance_id?: string | null
           is_off_site?: boolean | null
           light_load?: boolean | null
           off_site_comment?: string | null
@@ -1017,14 +1017,14 @@ export type Database = {
           room_number?: string | null
           school_institute?: string | null
           school_year?: string | null
-          status?: string
+          status?: string | null
           sub_group_id?: string | null
           super_group_id?: string | null
           surname: string
-          tenant_id: string
+          tenant_id?: string | null
           unit_name?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           arrival_date?: string | null
@@ -1036,7 +1036,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           id?: string
-          instance_id?: string
+          instance_id?: string | null
           is_off_site?: boolean | null
           light_load?: boolean | null
           off_site_comment?: string | null
@@ -1047,14 +1047,14 @@ export type Database = {
           room_number?: string | null
           school_institute?: string | null
           school_year?: string | null
-          status?: string
+          status?: string | null
           sub_group_id?: string | null
           super_group_id?: string | null
           surname?: string
-          tenant_id?: string
+          tenant_id?: string | null
           unit_name?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -2038,6 +2038,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      welfare_cases: {
+        Row: {
+          assigned_to_id: string | null
+          assigned_to_name: string | null
+          category: string
+          check_in_frequency: string | null
+          check_in_required: boolean | null
+          created_at: string | null
+          id: string
+          instance_id: string
+          involves_staff_member: boolean | null
+          is_safeguarding_issue: boolean | null
+          is_sensitive_safeguarding: boolean | null
+          location: string | null
+          metadata: Json | null
+          overview: string | null
+          participant_id: string
+          privacy_level: string
+          raised_by: string | null
+          requires_external_support: boolean | null
+          status: string
+          support_providers: string[] | null
+          tenant_id: string
+          timestamp: string | null
+          updated_at: string | null
+          urgency_level: string
+          witnesses: string[] | null
+        }
+        Insert: {
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          category?: string
+          check_in_frequency?: string | null
+          check_in_required?: boolean | null
+          created_at?: string | null
+          id?: string
+          instance_id: string
+          involves_staff_member?: boolean | null
+          is_safeguarding_issue?: boolean | null
+          is_sensitive_safeguarding?: boolean | null
+          location?: string | null
+          metadata?: Json | null
+          overview?: string | null
+          participant_id: string
+          privacy_level?: string
+          raised_by?: string | null
+          requires_external_support?: boolean | null
+          status?: string
+          support_providers?: string[] | null
+          tenant_id: string
+          timestamp?: string | null
+          updated_at?: string | null
+          urgency_level?: string
+          witnesses?: string[] | null
+        }
+        Update: {
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          category?: string
+          check_in_frequency?: string | null
+          check_in_required?: boolean | null
+          created_at?: string | null
+          id?: string
+          instance_id?: string
+          involves_staff_member?: boolean | null
+          is_safeguarding_issue?: boolean | null
+          is_sensitive_safeguarding?: boolean | null
+          location?: string | null
+          metadata?: Json | null
+          overview?: string | null
+          participant_id?: string
+          privacy_level?: string
+          raised_by?: string | null
+          requires_external_support?: boolean | null
+          status?: string
+          support_providers?: string[] | null
+          tenant_id?: string
+          timestamp?: string | null
+          updated_at?: string | null
+          urgency_level?: string
+          witnesses?: string[] | null
+        }
+        Relationships: []
       }
     }
     Views: {
