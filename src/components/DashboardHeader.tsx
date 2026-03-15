@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle, LogOut, Settings } from "lucide-react";
+import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle, LogOut, Settings, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jlgbLogo from "@/assets/jlgb-logo.png";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SearchItem {
   label: string;
@@ -65,6 +66,23 @@ const ProfileMenu = () => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+};
+
+const ThemeToggle = () => {
+  const { resolved, setTheme } = useTheme();
+  return (
+    <button
+      onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
+      className="p-2 rounded-lg hover:bg-muted transition-colors"
+      title={`Switch to ${resolved === "dark" ? "light" : "dark"} mode`}
+    >
+      {resolved === "dark" ? (
+        <Sun className="w-5 h-5 text-muted-foreground" />
+      ) : (
+        <Moon className="w-5 h-5 text-muted-foreground" />
+      )}
+    </button>
   );
 };
 
@@ -338,7 +356,8 @@ const DashboardHeader = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
         <button className="p-2 rounded-lg hover:bg-muted transition-colors">
           <Bell className="w-5 h-5 text-muted-foreground" />
         </button>
