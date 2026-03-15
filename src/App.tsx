@@ -18,6 +18,8 @@ import UserProfile from "./pages/UserProfile.tsx";
 import Login from "./pages/Login.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import CasesPage from "./pages/CasesPage.tsx";
+import CaseDetailPage from "./pages/CaseDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
