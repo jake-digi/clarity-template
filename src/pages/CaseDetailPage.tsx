@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   ChevronRight, ArrowLeft, User, Calendar, MapPin, AlertTriangle,
-  Shield, MessageSquare, Clock, Activity, Send, Eye, EyeOff, Bell
+  Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +25,14 @@ const severityColors: Record<string, string> = {
 };
 
 const statusOptions = ["pending", "open", "in-progress", "closed", "resolved"];
+
+type TimelineEntry = {
+  id: string;
+  type: "action" | "comment";
+  timestamp: string;
+  content: string;
+  author: string;
+};
 
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
@@ -48,7 +57,7 @@ const CaseDetailPage = () => {
   };
 
   const handleStatusChange = (newStatus: string) => {
-    if (!c || !caseId || !user) return;
+    if (!c || !caseId || !user || newStatus === c.status) return;
     updateStatus.mutate(
       { caseId, newStatus, oldStatus: c.status, performedBy: user.id, performedByName: user.email ?? "Unknown" },
       {
@@ -57,6 +66,24 @@ const CaseDetailPage = () => {
       }
     );
   };
+
+  // Merge actions + comments into a single sorted timeline
+  const timeline: TimelineEntry[] = [
+    ...(actions ?? []).map((a) => ({
+      id: a.id,
+      type: "action" as const,
+      timestamp: a.timestamp,
+      content: a.description ?? "",
+      author: a.performed_by_name ?? "System",
+    })),
+    ...(comments ?? []).map((cm) => ({
+      id: cm.id,
+      type: "comment" as const,
+      timestamp: cm.timestamp,
+      content: cm.content,
+      author: cm.author_name,
+    })),
+  ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   if (isLoading) {
     return (
@@ -96,7 +123,7 @@ const CaseDetailPage = () => {
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
         <main className="flex-1 overflow-auto">
-          {/* Header */}
+          {/* Header with details moved here */}
           <div className="bg-card border-b border-border px-6 py-5">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
               <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
@@ -112,11 +139,60 @@ const CaseDetailPage = () => {
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severityColors[c.severity_level]}`}>
                     {c.severity_level}
                   </span>
-                  <Badge variant="outline" className="capitalize">{c.status}</Badge>
+                  {/* Status dropdown in header */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border border-border bg-background text-foreground capitalize hover:bg-muted transition-colors">
+                        {c.status}
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {statusOptions.map((s) => (
+                        <DropdownMenuItem
+                          key={s}
+                          className="capitalize"
+                          onClick={() => handleStatusChange(s)}
+                        >
+                          {s}
+                          {s === c.status && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <p className="text-sm text-muted-foreground">{c.participant_name} · {c.instance_name}</p>
+
+                {/* Case details row */}
+                <div className="flex items-center gap-5 mt-3 flex-wrap">
+                  <DetailChip icon={User} label="Assigned" value={c.assigned_to_name ?? "Unassigned"} />
+                  <DetailChip icon={Calendar} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
+                  <DetailChip icon={MapPin} label="Location" value={c.location || "—"} />
+                  <DetailChip icon={Shield} label="Category" value={c.category} />
+                  {/* Flags as small indicators */}
+                  {c.requires_immediate_action && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+                      <AlertTriangle className="w-3 h-3" /> Immediate Action
+                    </span>
+                  )}
+                  {c.is_sensitive_safeguarding && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+                      <EyeOff className="w-3 h-3" /> Safeguarding
+                    </span>
+                  )}
+                  {c.involves_staff_member && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-orange-600">
+                      <User className="w-3 h-3" /> Staff Involved
+                    </span>
+                  )}
+                  {c.parent_notification_sent && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                      <Bell className="w-3 h-3" /> Parent Notified
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Button variant="outline" onClick={() => navigate("/cases")} className="gap-2">
                   <ArrowLeft className="w-4 h-4" /> Back
                 </Button>
@@ -124,61 +200,61 @@ const CaseDetailPage = () => {
             </div>
           </div>
 
-          <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Overview */}
-              <div className="bg-card rounded-lg border border-border p-5">
-                <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
-              </div>
+          {/* Single-column content: overview + unified timeline */}
+          <div className="p-6 max-w-4xl space-y-6">
+            {/* Overview */}
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
+            </div>
 
-              {/* Timeline */}
-              <div className="bg-card rounded-lg border border-border p-5">
-                <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Activity className="w-4 h-4" /> Activity Timeline
-                </h2>
-                <div className="space-y-4">
-                  {(actions ?? []).length === 0 && (comments ?? []).length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No activity yet.</p>
-                  ) : (
-                    <>
-                      {(actions ?? []).map((a) => (
-                        <div key={a.id} className="flex gap-3">
-                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-foreground">{a.description}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {a.performed_by_name} · {new Date(a.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Comments */}
-              <div className="bg-card rounded-lg border border-border p-5">
-                <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" /> Comments ({(comments ?? []).length})
-                </h2>
-                <div className="space-y-4 mb-4">
-                  {(comments ?? []).map((cm) => (
-                    <div key={cm.id} className="bg-muted/50 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-sm font-medium text-foreground">{cm.author_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(cm.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        </p>
+            {/* Unified Activity & Comments Timeline */}
+            <div className="bg-card rounded-lg border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4" /> Activity & Comments
+              </h2>
+              <div className="space-y-4">
+                {timeline.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No activity yet.</p>
+                ) : (
+                  timeline.map((entry) => (
+                    <div key={entry.id} className="flex gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                        entry.type === "comment" ? "bg-primary/10" : "bg-muted"
+                      }`}>
+                        {entry.type === "comment" ? (
+                          <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{cm.content}</p>
+                      <div className="flex-1 min-w-0">
+                        {entry.type === "comment" ? (
+                          <div className="bg-muted/50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium text-foreground">{entry.author}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{entry.content}</p>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-sm text-foreground">{entry.content}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {entry.author} · {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add comment inline at bottom of timeline */}
+              <div className="mt-5 pt-4 border-t border-border">
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Add a comment..."
@@ -197,44 +273,6 @@ const CaseDetailPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Status */}
-              <div className="bg-card rounded-lg border border-border p-5">
-                <h3 className="text-sm font-semibold text-foreground mb-3">Status</h3>
-                <Select value={c.status} onValueChange={handleStatusChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((s) => (
-                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Details */}
-              <div className="bg-card rounded-lg border border-border p-5 space-y-3">
-                <h3 className="text-sm font-semibold text-foreground mb-1">Details</h3>
-                <DetailRow icon={User} label="Participant" value={c.participant_name ?? "—"} />
-                <DetailRow icon={User} label="Assigned To" value={c.assigned_to_name ?? "Unassigned"} />
-                <DetailRow icon={Calendar} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} />
-                <DetailRow icon={MapPin} label="Location" value={c.location || "—"} />
-                <DetailRow icon={AlertTriangle} label="Severity" value={c.severity_level} />
-                <DetailRow icon={Shield} label="Category" value={c.category} />
-              </div>
-
-              {/* Flags */}
-              <div className="bg-card rounded-lg border border-border p-5 space-y-2.5">
-                <h3 className="text-sm font-semibold text-foreground mb-1">Flags</h3>
-                <FlagRow icon={AlertTriangle} label="Immediate Action" active={c.requires_immediate_action} />
-                <FlagRow icon={EyeOff} label="Sensitive / Safeguarding" active={c.is_sensitive_safeguarding} />
-                <FlagRow icon={User} label="Involves Staff" active={c.involves_staff_member} />
-                <FlagRow icon={Bell} label="Parent Notified" active={c.parent_notification_sent} />
-              </div>
-            </div>
           </div>
         </main>
       </div>
@@ -242,21 +280,11 @@ const CaseDetailPage = () => {
   );
 };
 
-const DetailRow = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) => (
-  <div className="flex items-start gap-2.5">
-    <Icon className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm text-foreground capitalize">{value}</p>
-    </div>
-  </div>
-);
-
-const FlagRow = ({ icon: Icon, label, active }: { icon: React.ElementType; label: string; active: boolean }) => (
-  <div className="flex items-center gap-2.5">
-    <Icon className={`w-3.5 h-3.5 shrink-0 ${active ? "text-destructive" : "text-muted-foreground/40"}`} />
-    <span className={`text-sm ${active ? "text-foreground font-medium" : "text-muted-foreground"}`}>{label}</span>
-    {active && <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4 ml-auto">Yes</Badge>}
+const DetailChip = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) => (
+  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+    <Icon className="w-3.5 h-3.5" />
+    <span className="text-xs text-muted-foreground/70">{label}:</span>
+    <span className="text-foreground text-xs font-medium capitalize">{value}</span>
   </div>
 );
 
