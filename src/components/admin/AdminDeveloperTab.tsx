@@ -30,6 +30,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
+const API_INTERNAL_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
 const API_BASE_URL = "https://checkpoint.jlgb.org/functions/v1/api-gateway";
 
 interface ApiKey {
