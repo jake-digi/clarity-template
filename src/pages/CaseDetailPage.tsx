@@ -257,6 +257,25 @@ const CaseDetailPage = () => {
 
   const handleCaseAction = async () => {
     if (!caseId || !user || !c) return;
+
+    // For formal warnings, also insert into the formal_warnings table
+    if (actionDialog.type === "formal_warning") {
+      const nextLevel = strikeCount + 1;
+      const { error: fwError } = await supabase.from("formal_warnings").insert({
+        tenant_id: c.tenant_id,
+        instance_id: c.instance_id,
+        participant_id: c.participant_id,
+        case_id: caseId,
+        warning_level: nextLevel,
+        reason: c.category,
+        details: actionNotes.trim() || null,
+        issued_by: user.id,
+        issued_by_name: user.email ?? "Unknown",
+        parent_notified: !!strikeConfirmed["m-0"],
+      });
+      if (fwError) { toast.error("Failed to issue formal warning: " + fwError.message); return; }
+    }
+
     const { error } = await supabase.from("case_actions").insert({
       case_id: caseId,
       instance_id: c.instance_id,
@@ -271,6 +290,8 @@ const CaseDetailPage = () => {
     setActionDialog({ open: false, type: "", label: "" });
     setActionNotes("");
     qc.invalidateQueries({ queryKey: ["case-actions", caseId] });
+    qc.invalidateQueries({ queryKey: ["participant-strikes", c.participant_id] });
+    qc.invalidateQueries({ queryKey: ["formal-warnings"] });
   };
 
   const handleStatusChange = (newStatus: string) => {

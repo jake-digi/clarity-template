@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FormalWarningsSheet from "@/components/FormalWarningsSheet";
 import CasesKanban from "@/components/CasesKanban";
+import NewCaseDialog from "@/components/NewCaseDialog";
 import { useCases } from "@/hooks/useCases";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const CasesPage = () => {
   const [severityFilter, setSeverityFilter] = useState("all");
   const [warningsOpen, setWarningsOpen] = useState(false);
   const [view, setView] = useState<"table" | "kanban">("table");
+  const [newCaseOpen, setNewCaseOpen] = useState(false);
 
   const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
 
@@ -79,7 +81,7 @@ const CasesPage = () => {
                   <Shield className="w-4 h-4" />
                   Formal Warnings
                 </Button>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setNewCaseOpen(true)}>
                   <Plus className="w-4 h-4" />
                   New Case
                 </Button>
@@ -236,6 +238,7 @@ const CasesPage = () => {
         </main>
       </div>
       <FormalWarningsSheet open={warningsOpen} onOpenChange={setWarningsOpen} />
+      <NewCaseDialog open={newCaseOpen} onOpenChange={setNewCaseOpen} />
     </div>
   );
 };
