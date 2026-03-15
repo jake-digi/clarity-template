@@ -80,7 +80,6 @@ const Login = () => {
           {/* branding */}
           <div className="absolute bottom-8 left-6 right-6 text-white">
             <p className="text-sm font-medium">Checkpoint</p>
-            <p className="text-xs text-white/70">Operations Management Platform</p>
           </div>
         </div>
 
