@@ -68,7 +68,7 @@ const ProfileMenu = () => {
   );
 };
 
-
+const DashboardHeader = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
