@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Map, Layers, Square, Pentagon, Trash2, MapPin, Eye, EyeOff, DoorOpen } from "lucide-react";
-import { SiteBlock, SiteRoom } from "@/hooks/useSites";
+import { SiteBlock, SiteRoom, RoomType, ROOM_TYPES } from "@/hooks/useSites";
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
