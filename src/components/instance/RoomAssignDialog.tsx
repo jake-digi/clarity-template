@@ -6,19 +6,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, DoorOpen, Users, Check } from "lucide-react";
+import { Search, DoorOpen, Users, Building } from "lucide-react";
 import type { RoomOccupant } from "@/hooks/useAccommodation";
 
 interface Props {
   roomId: string | null;
   rooms: Array<{ id: string; room_number: string; name: string | null; capacity: number | null; block_id: string }>;
+  blocks?: Array<{ id: string; name: string }>;
   unassigned: RoomOccupant[];
   reassignMode?: boolean;
   currentOccupant?: RoomOccupant | null;
-  occupantsByRoom?: Map<string, RoomOccupant[]>;
+  occupantsByRoom?: globalThis.Map<string, RoomOccupant[]>;
   onAssign: (assignmentId: string, roomId: string) => void;
   onClose: () => void;
 }
@@ -26,6 +26,7 @@ interface Props {
 const RoomAssignDialog = ({
   roomId,
   rooms,
+  blocks = [],
   unassigned,
   reassignMode,
   currentOccupant,
@@ -34,11 +35,8 @@ const RoomAssignDialog = ({
   onClose,
 }: Props) => {
   const [search, setSearch] = useState("");
-
   const open = !!roomId;
 
-  // For assign mode: search through unassigned people
-  // For reassign mode: show room list to pick destination
   const filteredPeople = useMemo(() => {
     if (reassignMode) return [];
     if (!search) return unassigned;
@@ -55,6 +53,59 @@ const RoomAssignDialog = ({
       return !q || name.includes(q);
     });
   }, [rooms, search, reassignMode, currentOccupant]);
+
+  // Group filtered rooms by block
+  const roomsByBlock = useMemo(() => {
+    if (!reassignMode) return [];
+    const blockMap = Object.fromEntries(blocks.map((b) => [b.id, b.name]));
+    const grouped: Array<{ blockId: string; blockName: string; rooms: typeof filteredRooms }> = [];
+    const byBlock: Record<string, typeof filteredRooms> = {};
+
+    filteredRooms.forEach((r) => {
+      if (!byBlock[r.block_id]) byBlock[r.block_id] = [];
+      byBlock[r.block_id].push(r);
+    });
+
+    Object.entries(byBlock).forEach(([blockId, blockRooms]) => {
+      grouped.push({
+        blockId,
+        blockName: blockMap[blockId] ?? "Unknown Block",
+        rooms: blockRooms,
+      });
+    });
+
+    return grouped.sort((a, b) => a.blockName.localeCompare(b.blockName));
+  }, [filteredRooms, blocks, reassignMode]);
+
+  const renderRoomButton = (room: typeof rooms[0]) => {
+    const occ = occupantsByRoom?.get(room.id)?.length ?? 0;
+    const cap = room.capacity ?? 0;
+    const isFull = cap > 0 && occ >= cap;
+    return (
+      <button
+        key={room.id}
+        disabled={isFull}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted/60 transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
+        onClick={() => {
+          if (currentOccupant) {
+            onAssign(currentOccupant.assignmentId, room.id);
+          }
+          setSearch("");
+        }}
+      >
+        <DoorOpen className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-medium text-foreground">{room.room_number}</span>
+          {room.name && <span className="text-xs text-muted-foreground ml-1.5">({room.name})</span>}
+        </div>
+        <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+          <Users className="w-3 h-3" />
+          {occ}{cap > 0 ? `/${cap}` : ""}
+        </span>
+        {isFull && <Badge variant="secondary" className="text-[8px] px-1 py-0">Full</Badge>}
+      </button>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); setSearch(""); } }}>
@@ -106,39 +157,26 @@ const RoomAssignDialog = ({
               )}
             </div>
           ) : (
-            <div className="space-y-1">
-              {filteredRooms.length === 0 ? (
+            <div className="space-y-3">
+              {roomsByBlock.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-6">No rooms available</p>
               ) : (
-                filteredRooms.map((room) => {
-                  const occ = occupantsByRoom?.get(room.id)?.length ?? 0;
-                  const cap = room.capacity ?? 0;
-                  const isFull = cap > 0 && occ >= cap;
-                  return (
-                    <button
-                      key={room.id}
-                      disabled={isFull}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted/60 transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
-                      onClick={() => {
-                        if (currentOccupant) {
-                          onAssign(currentOccupant.assignmentId, room.id);
-                        }
-                        setSearch("");
-                      }}
-                    >
-                      <DoorOpen className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{room.room_number}</span>
-                        {room.name && <span className="text-xs text-muted-foreground ml-1.5">({room.name})</span>}
-                      </div>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                        <Users className="w-3 h-3" />
-                        {occ}{cap > 0 ? `/${cap}` : ""}
+                roomsByBlock.map((group) => (
+                  <div key={group.blockId}>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 mb-1">
+                      <Building className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        {group.blockName}
                       </span>
-                      {isFull && <Badge variant="secondary" className="text-[8px] px-1 py-0">Full</Badge>}
-                    </button>
-                  );
-                })
+                      <span className="text-[10px] text-muted-foreground/60 ml-auto">
+                        {group.rooms.length} room{group.rooms.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {group.rooms.map(renderRoomButton)}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           )}
