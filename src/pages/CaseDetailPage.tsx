@@ -169,6 +169,20 @@ const CaseDetailPage = () => {
   const [strikeConfirmed, setStrikeConfirmed] = useState<Record<string, boolean>>({});
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
 
+  // Fetch staff users for assignment dropdown
+  const { data: staffUsers } = useQuery({
+    queryKey: ["users-for-assignment"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, first_name, surname, email")
+        .is("deleted_at", null)
+        .order("first_name", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // Fetch formal warning (strike) count for this participant
   const { data: strikeActions } = useQuery({
     queryKey: ["participant-strikes", c?.participant_id],
@@ -226,6 +240,19 @@ const CaseDetailPage = () => {
     const { error } = await supabase.from("behavior_cases").update({ [field]: value, updated_at: new Date().toISOString() } as any).eq("id", caseId);
     if (error) { toast.error(`Failed to update ${field}`); return; }
     toast.success(`${field.replace(/_/g, " ")} updated`);
+    qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
+    qc.invalidateQueries({ queryKey: ["behavior-cases"] });
+  };
+
+  const handleAssignCase = async (userId: string | null, userName: string | null) => {
+    if (!caseId) return;
+    const { error } = await supabase.from("behavior_cases").update({
+      assigned_to_id: userId,
+      assigned_to_name: userName,
+      updated_at: new Date().toISOString(),
+    } as any).eq("id", caseId);
+    if (error) { toast.error("Failed to assign case"); return; }
+    toast.success(userName ? `Assigned to ${userName}` : "Unassigned");
     qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
@@ -430,7 +457,29 @@ const CaseDetailPage = () => {
 
                 {/* Case details row */}
                 <div className="flex items-center gap-5 mt-3 flex-wrap">
-                  <DetailChip icon={User} label="Assigned" value={c.assigned_to_name ?? "Unassigned"} />
+                  {/* Assigned To - editable dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <User className="w-3.5 h-3.5" />
+                        <span className="text-xs text-muted-foreground/70">Assigned:</span>
+                        <span className="text-foreground text-xs font-medium">{c.assigned_to_name ?? "Unassigned"}</span>
+                        <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto">
+                      <DropdownMenuItem onClick={() => handleAssignCase(null, null)}>
+                        <span className="text-muted-foreground">Unassigned</span>
+                        {!c.assigned_to_id && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                      </DropdownMenuItem>
+                      {(staffUsers ?? []).map((u) => (
+                        <DropdownMenuItem key={u.id} onClick={() => handleAssignCase(u.id, `${u.first_name}${u.surname ? ` ${u.surname}` : ""}`)}>
+                          {u.first_name}{u.surname ? ` ${u.surname}` : ""} <span className="ml-1 text-muted-foreground text-xs">({u.email})</span>
+                          {u.id === c.assigned_to_id && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <DetailChip icon={CalendarIcon} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
 
                   {/* Event Time - editable */}
