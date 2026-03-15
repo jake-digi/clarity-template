@@ -794,15 +794,16 @@ const AdminDeveloperTab = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Key</TableHead>
                     <TableHead>Scopes</TableHead>
+                    <TableHead>IP Restrictions</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
                     <TableHead>Last Used</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                    <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {keys.map((key) => {
                     const status = getKeyStatus(key);
+                    const ips = key.allowed_ips || [];
                     return (
                       <TableRow key={key.id}>
                         <TableCell className="font-medium text-sm">{key.name}</TableCell>
@@ -812,15 +813,31 @@ const AdminDeveloperTab = () => {
                             {key.scopes.map((s) => <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>)}
                           </div>
                         </TableCell>
+                        <TableCell>
+                          {ips.length > 0 ? (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3 text-primary shrink-0" />
+                              <span className="text-xs text-muted-foreground">{ips.length} IP{ips.length > 1 ? "s" : ""}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">All allowed</span>
+                          )}
+                        </TableCell>
                         <TableCell><Badge variant={status.variant} className="text-[10px]">{status.label}</Badge></TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{new Date(key.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}</TableCell>
                         <TableCell>
-                          {!key.revoked_at && (
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRevokeTarget(key)}>
-                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {!key.revoked_at && (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setIpDialogKey(key); setEditingIps((key.allowed_ips || []).join(", ")); }}>
+                                  <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRevokeTarget(key)}>
+                                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
