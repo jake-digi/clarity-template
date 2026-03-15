@@ -123,7 +123,7 @@ async function logAudit(
   entityName: string | null,
   performedBy: string,
   performedByName: string,
-  details: Record<string, unknown> = {},
+  details: Record<string, string> = {},
   targetUserId?: string,
   targetUserName?: string
 ) {
@@ -135,7 +135,7 @@ async function logAudit(
     entity_name: entityName,
     performed_by: performedBy,
     performed_by_name: performedByName,
-    details,
+    details: details as unknown as import("@/integrations/supabase/types").Json,
     target_user_id: targetUserId ?? null,
     target_user_name: targetUserName ?? null,
   });
