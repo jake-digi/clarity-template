@@ -196,6 +196,7 @@ const CasesPage = () => {
           </div>
         </main>
       </div>
+      <FormalWarningsSheet open={warningsOpen} onOpenChange={setWarningsOpen} />
     </div>
   );
 };
