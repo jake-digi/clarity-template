@@ -19,10 +19,7 @@ const opsItems = [
 ];
 
 const adminItems = [
-  { icon: UserCog, label: "Users", path: "/people" },
-  { icon: Activity, label: "Activity Log", path: "/activity" },
-  { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: Shield, label: "Roles", path: "/roles" },
+  { icon: Wrench, label: "Administration", path: "/admin" },
 ];
 
 const DashboardSidebar = () => {
