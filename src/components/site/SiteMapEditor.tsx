@@ -410,6 +410,7 @@ const SiteMapEditor = ({
               {mode === "set-bounds" && "Click points to draw site boundary"}
               {mode === "draw-block" && "Click points to draw block area"}
               {mode === "add-room" && (selectedBlock ? `Click inside ${selectedBlock.name} to place a room` : "Select a block first")}
+              {mode === "add-feature" && "Click anywhere on the map to place a feature"}
             </Badge>
           )}
         </div>
