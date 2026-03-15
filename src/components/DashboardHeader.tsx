@@ -69,6 +69,23 @@ const ProfileMenu = () => {
   );
 };
 
+const ThemeToggle = () => {
+  const { resolved, setTheme } = useTheme();
+  return (
+    <button
+      onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
+      className="p-2 rounded-lg hover:bg-muted transition-colors"
+      title={`Switch to ${resolved === "dark" ? "light" : "dark"} mode`}
+    >
+      {resolved === "dark" ? (
+        <Sun className="w-5 h-5 text-muted-foreground" />
+      ) : (
+        <Moon className="w-5 h-5 text-muted-foreground" />
+      )}
+    </button>
+  );
+};
+
 const DashboardHeader = () => {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
