@@ -156,7 +156,6 @@ Deno.serve(async (req) => {
     if (!email || !first_name) return json({ error: "email and first_name are required" }, 400);
     const inviteType: InviteType = invite_type === "developer" ? "developer" : "checkpoint";
 
-    const origin = req.headers.get("origin") || DEFAULT_ORIGIN;
     let authUserId: string;
 
     // Create the auth user (or use existing if already registered)
@@ -198,11 +197,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Generate password reset link for the invite
+    // Generate password reset link for the invite (always use production URL so links work from email)
     const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: `${origin}/reset-password` },
+      options: { redirectTo: `${DEFAULT_ORIGIN}/reset-password` },
     });
     if (linkErr) return json({ error: linkErr.message || "Failed to generate invite link" }, 500);
 
