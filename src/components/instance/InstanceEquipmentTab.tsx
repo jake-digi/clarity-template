@@ -38,7 +38,7 @@ const categoryIcons: Record<string, string> = {
 interface Props { instanceId: string }
 
 export default function InstanceEquipmentTab({ instanceId }: Props) {
-  const tenantId = useTenantId();
+  const { data: tenantId } = useTenantId();
   const { user } = useAuth();
   const { data: items, isLoading: iLoading } = useEquipmentItems(instanceId);
   const { data: checkouts, isLoading: cLoading } = useEquipmentCheckouts(instanceId);

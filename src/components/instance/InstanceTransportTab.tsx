@@ -24,7 +24,7 @@ const statusColors: Record<string, "default" | "secondary" | "outline"> = {
 interface Props { instanceId: string }
 
 export default function InstanceTransportTab({ instanceId }: Props) {
-  const tenantId = useTenantId();
+  const { data: tenantId } = useTenantId();
   const { data: vehicles, isLoading: vLoading } = useTransportVehicles(instanceId);
   const { data: legs, isLoading: lLoading } = useTransportLegs(instanceId);
   const addVehicle = useAddVehicle();
