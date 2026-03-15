@@ -168,6 +168,8 @@ const CaseDetailPage = () => {
   const [actionNotes, setActionNotes] = useState("");
   const [strikeConfirmed, setStrikeConfirmed] = useState<Record<string, boolean>>({});
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
+  const [assignPopoverOpen, setAssignPopoverOpen] = useState(false);
+  const [assignSearch, setAssignSearch] = useState("");
 
   // Fetch staff users for assignment dropdown
   const { data: staffUsers } = useQuery({
@@ -175,7 +177,7 @@ const CaseDetailPage = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("users")
-        .select("id, first_name, surname, email")
+        .select("id, first_name, surname, email, profile_photo_url")
         .is("deleted_at", null)
         .order("first_name", { ascending: true });
       if (error) throw error;
