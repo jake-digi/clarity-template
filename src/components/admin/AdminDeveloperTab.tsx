@@ -415,7 +415,7 @@ const AdminDeveloperTab = () => {
 
   const tryEndpoint = (method: string, path: string, body?: string) => {
     setPgMethod(method);
-    setPgPath(path);
+    updatePgPath(path);
     if (body) setPgBody(body);
     else setPgBody("");
     setActiveTab("playground");
