@@ -49,7 +49,6 @@ const AdminDeveloperTab = () => {
   const [newKeyExpiry, setNewKeyExpiry] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [showAnonKey, setShowAnonKey] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const copyToClipboard = (value: string, field: string) => {
