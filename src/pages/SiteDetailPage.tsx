@@ -223,6 +223,10 @@ const SiteDetailPage = () => {
   const updateBlockPolygon = useUpdateBlockPolygon();
   const createRoom = useCreateRoom();
   const updateRoom = useUpdateRoom();
+  const { data: features } = useSiteFeatures(siteId ?? "");
+  const createFeature = useCreateSiteFeature();
+  const updateFeature = useUpdateSiteFeature();
+  const deleteFeature = useDeleteSiteFeature();
 
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showEditSite, setShowEditSite] = useState(false);
@@ -243,6 +247,13 @@ const SiteDetailPage = () => {
   const [showEditRoomDialog, setShowEditRoomDialog] = useState(false);
   const [editingRoom, setEditingRoom] = useState<SiteRoom | null>(null);
   const [editRoomForm, setEditRoomForm] = useState({ room_number: "", name: "", capacity: "", room_type: "room" as string });
+  // Feature state
+  const [showFeatureDialog, setShowFeatureDialog] = useState(false);
+  const [pendingFeaturePos, setPendingFeaturePos] = useState<{ lat: number; lng: number } | null>(null);
+  const [featureForm, setFeatureForm] = useState({ name: "", feature_type: "other", description: "" });
+  const [showEditFeatureDialog, setShowEditFeatureDialog] = useState(false);
+  const [editingFeature, setEditingFeature] = useState<SiteFeature | null>(null);
+  const [editFeatureForm, setEditFeatureForm] = useState({ name: "", feature_type: "other", description: "" });
 
   const site = data?.site;
   const blocks = data?.blocks ?? [];
