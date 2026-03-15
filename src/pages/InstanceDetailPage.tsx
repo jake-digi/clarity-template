@@ -12,7 +12,7 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  Navigation, Briefcase, UserCheck, Building,
+  Navigation, Briefcase, UserCheck, Building, Bus, Package,
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
