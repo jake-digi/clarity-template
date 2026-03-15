@@ -373,6 +373,76 @@ export type Database = {
           },
         ]
       }
+      case_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          enabled: boolean | null
+          icon: string | null
+          id: string
+          instance_id: string | null
+          name: string
+          sort_order: number | null
+          tenant_id: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          icon?: string | null
+          id?: string
+          instance_id?: string | null
+          name: string
+          sort_order?: number | null
+          tenant_id?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          icon?: string | null
+          id?: string
+          instance_id?: string | null
+          name?: string
+          sort_order?: number | null
+          tenant_id?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_categories_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_categories_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_comments: {
         Row: {
           author_id: string
@@ -967,22 +1037,29 @@ export type Database = {
       }
       participants: {
         Row: {
+          active_case_ids: string[] | null
           arrival_date: string | null
           block_id: string | null
+          case_flags: Json | null
           created_at: string
+          current_strike_count: number | null
           date_of_birth: string | null
           departure_date: string | null
           first_name: string
           full_name: string
           gender: string | null
+          has_active_behavior_case: boolean | null
+          has_active_welfare_case: boolean | null
           id: string
           instance_id: string | null
           is_off_site: boolean | null
+          last_case_update: string | null
           light_load: boolean | null
           off_site_comment: string | null
           photo_link: string | null
           pronouns: string | null
           rank: string | null
+          requires_welfare_check_in: boolean | null
           room_id: string | null
           room_number: string | null
           school_institute: string | null
@@ -997,22 +1074,29 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          active_case_ids?: string[] | null
           arrival_date?: string | null
           block_id?: string | null
+          case_flags?: Json | null
           created_at?: string
+          current_strike_count?: number | null
           date_of_birth?: string | null
           departure_date?: string | null
           first_name: string
           full_name: string
           gender?: string | null
+          has_active_behavior_case?: boolean | null
+          has_active_welfare_case?: boolean | null
           id: string
           instance_id?: string | null
           is_off_site?: boolean | null
+          last_case_update?: string | null
           light_load?: boolean | null
           off_site_comment?: string | null
           photo_link?: string | null
           pronouns?: string | null
           rank?: string | null
+          requires_welfare_check_in?: boolean | null
           room_id?: string | null
           room_number?: string | null
           school_institute?: string | null
@@ -1027,22 +1111,29 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          active_case_ids?: string[] | null
           arrival_date?: string | null
           block_id?: string | null
+          case_flags?: Json | null
           created_at?: string
+          current_strike_count?: number | null
           date_of_birth?: string | null
           departure_date?: string | null
           first_name?: string
           full_name?: string
           gender?: string | null
+          has_active_behavior_case?: boolean | null
+          has_active_welfare_case?: boolean | null
           id?: string
           instance_id?: string | null
           is_off_site?: boolean | null
+          last_case_update?: string | null
           light_load?: boolean | null
           off_site_comment?: string | null
           photo_link?: string | null
           pronouns?: string | null
           rank?: string | null
+          requires_welfare_check_in?: boolean | null
           room_id?: string | null
           room_number?: string | null
           school_institute?: string | null
