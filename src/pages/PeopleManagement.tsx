@@ -214,10 +214,6 @@ const PeopleManagement = () => {
                   </Select>
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
-                  {filtered.length < users.length && <span> (filtered from {users.length} total)</span>}
-                </div>
               </>
             )}
           </div>
