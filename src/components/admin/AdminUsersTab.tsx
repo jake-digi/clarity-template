@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Search, ArrowUpDown, ChevronLeft, ChevronRight, User,
+  Search, ArrowUpDown, ChevronLeft, ChevronRight, User, UserPlus,
 } from "lucide-react";
 import { useUsers, type UserRow } from "@/hooks/useUsers";
+import InviteUserDialog from "./InviteUserDialog";
 
 const statusVariant = (status: string) => {
   switch (status?.toLowerCase()) {
