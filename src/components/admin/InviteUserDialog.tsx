@@ -66,6 +66,7 @@ const InviteUserDialog = ({ open, onOpenChange }: InviteUserDialogProps) => {
             first_name: firstName,
             last_name: lastName || undefined,
             role_id: roleId || undefined,
+            invite_type: inviteType,
           }),
         }
       );
@@ -87,6 +88,7 @@ const InviteUserDialog = ({ open, onOpenChange }: InviteUserDialogProps) => {
       setFirstName("");
       setLastName("");
       setRoleId("");
+      setInviteType("checkpoint");
     } catch (err: any) {
       toast({
         title: "Failed to invite user",
@@ -118,6 +120,19 @@ const InviteUserDialog = ({ open, onOpenChange }: InviteUserDialogProps) => {
           <div className="space-y-1.5">
             <Label htmlFor="inv-email">Email *</Label>
             <Input id="inv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@example.com" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Invite type</Label>
+            <Select value={inviteType} onValueChange={(v) => setInviteType(v as "checkpoint" | "developer")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="checkpoint">Checkpoint</SelectItem>
+                <SelectItem value="developer">CheckPoint Developer</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {inviteType === "checkpoint" ? "Operations dashboard for your team" : "API and developer platform"}
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label>Role</Label>
