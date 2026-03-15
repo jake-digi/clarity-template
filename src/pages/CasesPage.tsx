@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FormalWarningsSheet from "@/components/FormalWarningsSheet";
+import CasesKanban from "@/components/CasesKanban";
 import { useCases } from "@/hooks/useCases";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, Search, Plus, Filter, Shield } from "lucide-react";
+import { AlertTriangle, Search, Plus, Filter, Shield, LayoutList, Columns3 } from "lucide-react";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
@@ -35,6 +36,7 @@ const CasesPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [warningsOpen, setWarningsOpen] = useState(false);
+  const [view, setView] = useState<"table" | "kanban">("table");
 
   const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
 
@@ -80,7 +82,7 @@ const CasesPage = () => {
           </div>
 
           <div className="p-6 space-y-4">
-            {/* Filters */}
+            {/* Filters + View Toggle */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -129,23 +131,44 @@ const CasesPage = () => {
                   <SelectItem value="critical">Critical</SelectItem>
                 </SelectContent>
               </Select>
+
+              <div className="ml-auto flex items-center border border-border rounded-md overflow-hidden">
+                <button
+                  onClick={() => setView("table")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
+                    view === "table" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <LayoutList className="w-4 h-4" /> Table
+                </button>
+                <button
+                  onClick={() => setView("kanban")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
+                    view === "kanban" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Columns3 className="w-4 h-4" /> Kanban
+                </button>
+              </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-card rounded-lg border border-border">
-              {isLoading ? (
-                <div className="p-6 space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <AlertTriangle className="w-10 h-10 mb-3 opacity-40" />
-                  <p className="font-medium">No cases found</p>
-                  <p className="text-sm mt-1">Adjust your filters or create a new case</p>
-                </div>
-              ) : (
+            {/* Content */}
+            {isLoading ? (
+              <div className="bg-card rounded-lg border border-border p-6 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : view === "kanban" ? (
+              <CasesKanban cases={filtered} />
+            ) : filtered.length === 0 ? (
+              <div className="bg-card rounded-lg border border-border flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <AlertTriangle className="w-10 h-10 mb-3 opacity-40" />
+                <p className="font-medium">No cases found</p>
+                <p className="text-sm mt-1">Adjust your filters or create a new case</p>
+              </div>
+            ) : (
+              <div className="bg-card rounded-lg border border-border">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -191,8 +214,8 @@ const CasesPage = () => {
                     ))}
                   </TableBody>
                 </Table>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
