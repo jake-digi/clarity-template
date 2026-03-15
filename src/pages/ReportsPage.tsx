@@ -251,7 +251,7 @@ const ReportsPage = () => {
                 <TabsContent key={tab} value={tab} className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filtered.map((report) => (
-                      <ReportCard key={report.id} report={report} />
+                      <ReportCard key={report.id} report={report} onRun={handleRun} />
                     ))}
 
                     {/* Create new card */}

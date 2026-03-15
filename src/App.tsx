@@ -59,6 +59,7 @@ const App = () => (
               <Route path="/sites" element={<ProtectedRoute><SitesPage /></ProtectedRoute>} />
               <Route path="/sites/:siteId" element={<ProtectedRoute><SiteDetailPage /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+              <Route path="/reports/:reportId" element={<ProtectedRoute><ReportDetailPage /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
