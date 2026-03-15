@@ -167,6 +167,7 @@ const CaseDetailPage = () => {
   const [actionDialog, setActionDialog] = useState<{ open: boolean; type: string; label: string }>({ open: false, type: "", label: "" });
   const [actionNotes, setActionNotes] = useState("");
   const [strikeConfirmed, setStrikeConfirmed] = useState<Record<string, boolean>>({});
+  const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
 
   // Fetch formal warning (strike) count for this participant
   const { data: strikeActions } = useQuery({
