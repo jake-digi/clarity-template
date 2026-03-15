@@ -247,6 +247,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           description: string | null
+          geo_polygon: Json | null
           id: string
           instance_id: string | null
           name: string
@@ -258,6 +259,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          geo_polygon?: Json | null
           id: string
           instance_id?: string | null
           name: string
@@ -269,6 +271,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          geo_polygon?: Json | null
           id?: string
           instance_id?: string | null
           name?: string
@@ -1500,6 +1503,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           description: string | null
+          geo_bounds: Json | null
           id: string
           location: string | null
           name: string
@@ -1511,6 +1515,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          geo_bounds?: Json | null
           id?: string
           location?: string | null
           name: string
@@ -1522,6 +1527,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          geo_bounds?: Json | null
           id?: string
           location?: string | null
           name?: string
