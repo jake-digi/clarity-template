@@ -81,7 +81,7 @@ const CasesPage = () => {
                   <Shield className="w-4 h-4" />
                   Formal Warnings
                 </Button>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setNewCaseOpen(true)}>
                   <Plus className="w-4 h-4" />
                   New Case
                 </Button>
