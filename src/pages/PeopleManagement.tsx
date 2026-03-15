@@ -135,6 +135,7 @@ const PeopleManagement = () => {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-1">Manage staff and personnel across all CheckPoint instances</p>
+          </div>
 
           {/* Toolbar — sticky below header */}
           <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3 space-y-2">
