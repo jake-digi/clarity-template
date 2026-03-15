@@ -306,33 +306,7 @@ const InstanceDetailPage = () => {
 
                 {/* Groups */}
                 <TabsContent value="groups" className="mt-0">
-                  {supergroups.length === 0 ? (
-                    <SectionCard title="Groups" icon={FolderTree}>
-                      <EmptyState icon={FolderTree} message="No groups configured for this instance." />
-                    </SectionCard>
-                  ) : (
-                    <div className="space-y-4">
-                      {supergroups.map((sg) => {
-                        const children = subgroups.filter((sub) => sub.parent_supergroup_id === sg.id);
-                        return (
-                          <SectionCard key={sg.id} title={sg.name} icon={FolderTree}>
-                            {children.length === 0 ? (
-                              <p className="text-sm text-muted-foreground">No subgroups</p>
-                            ) : (
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                {children.map((sub) => (
-                                  <div key={sub.id} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm">
-                                    <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                                    <span className="text-foreground">{sub.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </SectionCard>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <InstanceGroupsTab instanceId={instanceId!} />
                 </TabsContent>
 
                 {/* Accommodation */}
