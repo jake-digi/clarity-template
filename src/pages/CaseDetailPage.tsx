@@ -858,6 +858,18 @@ const CaseDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Check-In Monitoring Dialog */}
+      {c && (
+        <CheckInMonitoringDialog
+          open={checkInDialogOpen}
+          onOpenChange={setCheckInDialogOpen}
+          caseData={c}
+          actions={actions ?? []}
+          userId={user?.id ?? ""}
+          userName={user?.email ?? "Unknown"}
+        />
+      )}
     </div>
   );
 };
