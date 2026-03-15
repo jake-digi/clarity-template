@@ -305,11 +305,38 @@ const SiteDetailPage = () => {
 
   const handleRoomPinPlaced = useCallback((blockId: string, position: { lat: number; lng: number }) => {
     setPendingRoomPin({ blockId, position });
-    setRoomPinForm({ room_number: "", name: "", capacity: "" });
+    setRoomPinForm({ room_number: "", name: "", capacity: "", room_type: "room" });
     setRoomPinMode("new");
     setSelectedExistingRoomId("");
     setTimeout(() => setShowRoomPinDialog(true), 0);
   }, []);
+
+  const handleRoomClick = useCallback((room: SiteRoom) => {
+    setEditingRoom(room);
+    setEditRoomForm({
+      room_number: room.room_number,
+      name: room.name ?? "",
+      capacity: room.capacity?.toString() ?? "",
+      room_type: room.room_type ?? "room",
+    });
+    setShowEditRoomDialog(true);
+  }, []);
+
+  const handleSaveEditRoom = () => {
+    if (!editingRoom || !editRoomForm.room_number.trim()) return;
+    updateRoom.mutate({
+      id: editingRoom.id,
+      room_number: editRoomForm.room_number.trim(),
+      name: editRoomForm.name || undefined,
+      capacity: editRoomForm.capacity ? Number(editRoomForm.capacity) : undefined,
+      room_type: editRoomForm.room_type,
+    }, {
+      onSuccess: () => {
+        setShowEditRoomDialog(false);
+        setEditingRoom(null);
+      },
+    });
+  };
 
   const handleSaveRoomPin = () => {
     if (!pendingRoomPin) return;
