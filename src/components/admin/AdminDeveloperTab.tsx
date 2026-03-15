@@ -839,31 +839,6 @@ const AdminDeveloperTab = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Links */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base"><ExternalLink className="w-4 h-4" />Quick Links</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: "Dashboard", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}` },
-                  { label: "SQL Editor", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/sql/new` },
-                  { label: "Auth / Users", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/auth/users` },
-                  { label: "Table Editor", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/editor` },
-                  { label: "Storage", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/storage/buckets` },
-                  { label: "Edge Functions", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/functions` },
-                  { label: "API Docs", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/api` },
-                  { label: "Logs", url: `https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/logs/explorer` },
-                ].map((link) => (
-                  <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-3 py-2 rounded-md border border-border text-sm hover:bg-muted/50 transition-colors">
-                    <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0" />{link.label}
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 
