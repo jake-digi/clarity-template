@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus } from "@/hooks/useCases";
+import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus, useCases } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   ChevronRight, ArrowLeft, User, Calendar, MapPin, AlertTriangle,
-  Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown
+  Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown,
+  Heart, Smile, FileWarning, Users
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-100 text-blue-800",
@@ -35,6 +37,55 @@ type TimelineEntry = {
   author: string;
 };
 
+// Happiness gauge component (credit-score style)
+const HappinessGauge = ({ score }: { score: number }) => {
+  // score 1-5, map to 0-180 degrees
+  const clampedScore = Math.max(1, Math.min(5, score));
+  const angle = ((clampedScore - 1) / 4) * 180;
+  const needleAngle = angle - 90; // -90 to 90
+
+  const getLabel = (s: number) => {
+    if (s <= 1.5) return "Poor";
+    if (s <= 2.5) return "Fair";
+    if (s <= 3.5) return "Good";
+    if (s <= 4.2) return "Very Good";
+    return "Excellent";
+  };
+
+  const getColor = (s: number) => {
+    if (s <= 1.5) return "hsl(var(--destructive))";
+    if (s <= 2.5) return "hsl(30, 90%, 50%)";
+    if (s <= 3.5) return "hsl(45, 90%, 50%)";
+    if (s <= 4.2) return "hsl(90, 60%, 45%)";
+    return "hsl(var(--success))";
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 200 120" className="w-full max-w-[180px]">
+        {/* Background arcs */}
+        <path d="M 20 100 A 80 80 0 0 1 56 36" fill="none" stroke="hsl(var(--destructive))" strokeWidth="14" strokeLinecap="round" />
+        <path d="M 60 33 A 80 80 0 0 1 100 20" fill="none" stroke="hsl(30, 90%, 50%)" strokeWidth="14" strokeLinecap="round" />
+        <path d="M 104 20 A 80 80 0 0 1 140 33" fill="none" stroke="hsl(45, 90%, 50%)" strokeWidth="14" strokeLinecap="round" />
+        <path d="M 144 36 A 80 80 0 0 1 168 60" fill="none" stroke="hsl(90, 60%, 45%)" strokeWidth="14" strokeLinecap="round" />
+        <path d="M 170 64 A 80 80 0 0 1 180 100" fill="none" stroke="hsl(var(--success))" strokeWidth="14" strokeLinecap="round" />
+
+        {/* Needle */}
+        <g transform={`rotate(${needleAngle}, 100, 100)`}>
+          <line x1="100" y1="100" x2="100" y2="30" stroke="hsl(var(--foreground))" strokeWidth="3" strokeLinecap="round" />
+        </g>
+        {/* Center dot */}
+        <circle cx="100" cy="100" r="6" fill="hsl(var(--foreground))" />
+        <circle cx="100" cy="100" r="3" fill="hsl(var(--background))" />
+      </svg>
+      <div className="text-center -mt-2">
+        <p className="text-lg font-bold text-foreground">{clampedScore.toFixed(1)}/5</p>
+        <p className="text-xs font-medium" style={{ color: getColor(clampedScore) }}>{getLabel(clampedScore)}</p>
+      </div>
+    </div>
+  );
+};
+
 const CaseDetailPage = () => {
   const { caseId } = useParams<{ caseId: string }>();
   const navigate = useNavigate();
@@ -45,6 +96,21 @@ const CaseDetailPage = () => {
   const addComment = useAddCaseComment();
   const updateStatus = useUpdateCaseStatus();
   const [newComment, setNewComment] = useState("");
+
+  // Fetch all cases for this participant (for summary + related)
+  const { data: allParticipantCases } = useQuery({
+    queryKey: ["participant-cases", c?.participant_id],
+    enabled: !!c?.participant_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("behavior_cases")
+        .select("id, category, severity_level, status, overview, created_at, participant_id")
+        .eq("participant_id", c!.participant_id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const handleAddComment = () => {
     if (!newComment.trim() || !caseId || !user) return;
@@ -61,7 +127,6 @@ const CaseDetailPage = () => {
 
   const handleSeverityChange = async (newSeverity: string) => {
     if (!c || !caseId || newSeverity === c.severity_level) return;
-    const { supabase } = await import("@/integrations/supabase/client");
     const { error } = await supabase.from("behavior_cases").update({ severity_level: newSeverity, updated_at: new Date().toISOString() }).eq("id", caseId);
     if (error) { toast.error("Failed to update severity"); return; }
     toast.success(`Severity changed to ${newSeverity}`);
@@ -97,6 +162,22 @@ const CaseDetailPage = () => {
       author: cm.author_name,
     })),
   ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  // Participant summary stats
+  const relatedCases = (allParticipantCases ?? []).filter((rc) => rc.id !== caseId);
+  const totalCases = allParticipantCases?.length ?? 0;
+  const behaviourCases = (allParticipantCases ?? []).filter((rc) => rc.category === "Bullying" || rc.category === "Disruption" || rc.category === "Property Damage").length;
+  const welfareCases = (allParticipantCases ?? []).filter((rc) => rc.category === "Safeguarding" || rc.category === "Other").length;
+  const openCases = (allParticipantCases ?? []).filter((rc) => rc.status === "open" || rc.status === "in-progress" || rc.status === "pending").length;
+
+  // Happiness score: 5 = no cases, decreases with severity and count
+  const computeHappiness = () => {
+    if (!allParticipantCases || allParticipantCases.length === 0) return 5;
+    const severityWeight: Record<string, number> = { low: 0.3, medium: 0.6, high: 1.0, critical: 1.5 };
+    const total = allParticipantCases.reduce((acc, rc) => acc + (severityWeight[rc.severity_level] ?? 0.5), 0);
+    return Math.max(1, Math.min(5, 5 - total * 0.8));
+  };
+  const happinessScore = computeHappiness();
 
   if (isLoading) {
     return (
@@ -136,7 +217,7 @@ const CaseDetailPage = () => {
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
         <main className="flex-1 overflow-auto">
-          {/* Header with details moved here */}
+          {/* Header */}
           <div className="bg-card border-b border-border px-6 py-5">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
               <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
@@ -158,18 +239,13 @@ const CaseDetailPage = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       {(["low", "medium", "high", "critical"] as const).map((s) => (
-                        <DropdownMenuItem
-                          key={s}
-                          className="capitalize"
-                          onClick={() => handleSeverityChange(s)}
-                        >
+                        <DropdownMenuItem key={s} className="capitalize" onClick={() => handleSeverityChange(s)}>
                           {s}
                           {s === c.severity_level && <span className="ml-auto text-xs text-muted-foreground">current</span>}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  {/* Status dropdown in header */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border border-border bg-background text-foreground capitalize hover:bg-muted transition-colors">
@@ -179,11 +255,7 @@ const CaseDetailPage = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       {statusOptions.map((s) => (
-                        <DropdownMenuItem
-                          key={s}
-                          className="capitalize"
-                          onClick={() => handleStatusChange(s)}
-                        >
+                        <DropdownMenuItem key={s} className="capitalize" onClick={() => handleStatusChange(s)}>
                           {s}
                           {s === c.status && <span className="ml-auto text-xs text-muted-foreground">current</span>}
                         </DropdownMenuItem>
@@ -199,7 +271,6 @@ const CaseDetailPage = () => {
                   <DetailChip icon={Calendar} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
                   <DetailChip icon={MapPin} label="Location" value={c.location || "—"} />
                   <DetailChip icon={Shield} label="Category" value={c.category} />
-                  {/* Flags as small indicators */}
                   {c.requires_immediate_action && (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
                       <AlertTriangle className="w-3 h-3" /> Immediate Action
@@ -230,77 +301,157 @@ const CaseDetailPage = () => {
             </div>
           </div>
 
-          {/* Single-column content: overview + unified timeline */}
-          <div className="p-6 max-w-4xl space-y-6">
-            {/* Overview */}
-            <div className="bg-card rounded-lg border border-border p-5">
-              <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
-            </div>
-
-            {/* Unified Activity & Comments Timeline */}
-            <div className="bg-card rounded-lg border border-border p-5">
-              <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Activity className="w-4 h-4" /> Activity & Comments
-              </h2>
-              <div className="space-y-4">
-                {timeline.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No activity yet.</p>
-                ) : (
-                  timeline.map((entry) => (
-                    <div key={entry.id} className="flex gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                        entry.type === "comment" ? "bg-primary/10" : "bg-muted"
-                      }`}>
-                        {entry.type === "comment" ? (
-                          <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                        ) : (
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        {entry.type === "comment" ? (
-                          <div className="bg-muted/50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium text-foreground">{entry.author}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                              </p>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{entry.content}</p>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="text-sm text-foreground">{entry.content}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {entry.author} · {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
+          {/* Two-column layout */}
+          <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left: Overview + Timeline */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Overview */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
               </div>
 
-              {/* Add comment inline at bottom of timeline */}
-              <div className="mt-5 pt-4 border-t border-border">
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder="Add a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-[60px]"
-                  />
-                  <Button
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim() || addComment.isPending}
-                    size="icon"
-                    className="shrink-0 self-end"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
+              {/* Unified Activity & Comments Timeline */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Activity & Comments
+                </h2>
+                <div className="space-y-4">
+                  {timeline.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No activity yet.</p>
+                  ) : (
+                    timeline.map((entry) => (
+                      <div key={entry.id} className="flex gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          entry.type === "comment" ? "bg-primary/10" : "bg-muted"
+                        }`}>
+                          {entry.type === "comment" ? (
+                            <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                          ) : (
+                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {entry.type === "comment" ? (
+                            <div className="bg-muted/50 rounded-lg p-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <p className="text-sm font-medium text-foreground">{entry.author}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                </p>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{entry.content}</p>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-foreground">{entry.content}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {entry.author} · {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
+
+                <div className="mt-5 pt-4 border-t border-border">
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Add a comment..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      className="min-h-[60px]"
+                    />
+                    <Button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim() || addComment.isPending}
+                      size="icon"
+                      className="shrink-0 self-end"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right sidebar */}
+            <div className="space-y-6">
+              {/* Participant Summary */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Smile className="w-4 h-4" /> Participant Summary
+                </h3>
+
+                {/* Happiness Gauge */}
+                <HappinessGauge score={happinessScore} />
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <StatCard label="Total Cases" value={totalCases} icon={FileWarning} />
+                  <StatCard label="Open" value={openCases} icon={AlertTriangle} variant={openCases > 0 ? "warning" : "default"} />
+                  <StatCard label="Behaviour" value={behaviourCases} icon={Shield} />
+                  <StatCard label="Welfare" value={welfareCases} icon={Heart} />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-4 text-xs gap-1.5"
+                  onClick={() => navigate(`/participants/${c.participant_id}`)}
+                >
+                  <User className="w-3.5 h-3.5" /> View Participant Profile
+                </Button>
+              </div>
+
+              {/* Related Cases */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Related Cases ({relatedCases.length})
+                </h3>
+                {relatedCases.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No other cases for this participant.</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {relatedCases.slice(0, 5).map((rc) => (
+                      <button
+                        key={rc.id}
+                        onClick={() => navigate(`/cases/${rc.id}`)}
+                        className="w-full text-left flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                          rc.status === "open" || rc.status === "pending" || rc.status === "in-progress"
+                            ? "bg-primary"
+                            : "bg-muted-foreground/30"
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                            {rc.category}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`inline-flex items-center px-1.5 py-0 rounded text-[10px] font-medium capitalize ${severityColors[rc.severity_level]}`}>
+                              {rc.severity_level}
+                            </span>
+                            <span className="text-xs text-muted-foreground capitalize">{rc.status}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(rc.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                            </span>
+                          </div>
+                          {rc.overview && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{rc.overview}</p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                    {relatedCases.length > 5 && (
+                      <p className="text-xs text-muted-foreground text-center pt-1">
+                        +{relatedCases.length - 5} more cases
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -315,6 +466,14 @@ const DetailChip = ({ icon: Icon, label, value }: { icon: React.ElementType; lab
     <Icon className="w-3.5 h-3.5" />
     <span className="text-xs text-muted-foreground/70">{label}:</span>
     <span className="text-foreground text-xs font-medium capitalize">{value}</span>
+  </div>
+);
+
+const StatCard = ({ label, value, icon: Icon, variant = "default" }: { label: string; value: number; icon: React.ElementType; variant?: "default" | "warning" }) => (
+  <div className={`rounded-lg p-3 text-center ${variant === "warning" && value > 0 ? "bg-destructive/10 border border-destructive/20" : "bg-muted/50"}`}>
+    <Icon className={`w-4 h-4 mx-auto mb-1 ${variant === "warning" && value > 0 ? "text-destructive" : "text-muted-foreground"}`} />
+    <p className={`text-xl font-bold ${variant === "warning" && value > 0 ? "text-destructive" : "text-foreground"}`}>{value}</p>
+    <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">{label}</p>
   </div>
 );
 
