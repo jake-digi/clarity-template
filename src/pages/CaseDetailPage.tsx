@@ -641,6 +641,26 @@ const CaseDetailPage = () => {
           </div>
         </main>
       </div>
+      {/* Case Action Dialog */}
+      <Dialog open={actionDialog.open} onOpenChange={(open) => setActionDialog((prev) => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{actionDialog.label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Textarea
+              placeholder="Add notes or details about this action..."
+              value={actionNotes}
+              onChange={(e) => setActionNotes(e.target.value)}
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActionDialog({ open: false, type: "", label: "" })}>Cancel</Button>
+            <Button onClick={handleCaseAction}>Log Action</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
