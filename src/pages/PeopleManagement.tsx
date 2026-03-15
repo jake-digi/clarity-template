@@ -106,7 +106,7 @@ const PeopleManagement = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
             {/* Breadcrumb */}
