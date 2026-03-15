@@ -123,7 +123,7 @@ const ReportCard = ({ report, onRun }: { report: Report; onRun: (id: string) => 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem className="gap-2"><Play className="w-4 h-4" /> Run Now</DropdownMenuItem>
+              <DropdownMenuItem className="gap-2" onClick={() => onRun(report.id)}><Play className="w-4 h-4" /> Run Now</DropdownMenuItem>
               <DropdownMenuItem className="gap-2"><Calendar className="w-4 h-4" /> Schedule</DropdownMenuItem>
               <DropdownMenuItem className="gap-2"><Share2 className="w-4 h-4" /> Share</DropdownMenuItem>
               <DropdownMenuItem className="gap-2"><Star className="w-4 h-4" /> Favourite</DropdownMenuItem>
