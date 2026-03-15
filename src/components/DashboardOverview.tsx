@@ -1,6 +1,5 @@
 import { Users, Briefcase, Building2, Send, Smartphone } from "lucide-react";
 import qrCode from "@/assets/qr-checkpoint.png";
-import qrCode from "@/assets/qr-checkpoint.png";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
