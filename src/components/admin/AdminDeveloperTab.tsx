@@ -30,7 +30,8 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
-const API_BASE_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
+const API_INTERNAL_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
+const API_BASE_URL = "https://checkpoint.jlgb.org/functions/v1/api-gateway";
 
 interface ApiKey {
   id: string;
@@ -295,7 +296,7 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/list`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/list`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const data = await res.json();
@@ -308,7 +309,7 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/generate`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/generate`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ name: newKeyName || "Untitled", scopes: newKeyScopes, expires_at: newKeyExpiry || null }),
@@ -332,7 +333,7 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/revoke`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/revoke`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ id: revokeTarget.id }),
@@ -359,7 +360,7 @@ const AdminDeveloperTab = () => {
       const params = new URLSearchParams({ limit: "100" });
       if (logFilter.method) params.set("method", logFilter.method);
       if (logFilter.status) params.set("status", logFilter.status);
-      const res = await fetch(`${API_BASE_URL}/api/v1/logs?${params}`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/logs?${params}`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const data = await res.json();
@@ -392,7 +393,7 @@ const AdminDeveloperTab = () => {
       const start = Date.now();
       const headers: Record<string, string> = { "X-API-Key": pgApiKey };
       if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) headers["Content-Type"] = "application/json";
-      const res = await fetch(`${API_BASE_URL}${resolvedPath}`, {
+      const res = await fetch(`${API_INTERNAL_URL}${resolvedPath}`, {
         method: pgMethod, headers,
         body: ["POST", "PATCH", "PUT"].includes(pgMethod) && pgBody ? pgBody : undefined,
       });

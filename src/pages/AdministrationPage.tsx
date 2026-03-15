@@ -2,6 +2,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Users, Shield, Activity, Code2, ChevronRight, Wrench } from "lucide-react";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminRolesTab from "@/components/admin/AdminRolesTab";
@@ -31,59 +32,50 @@ const AdministrationPage = () => {
         <DashboardSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           <Tabs value={tab} onValueChange={setTab} className="flex flex-col flex-1 min-h-0">
-            {/* Sticky page header + tab bar */}
-            <div className="bg-card border-b border-border shrink-0">
-              <div className="px-6 pt-5 pb-0">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-                  <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-                  <ChevronRight className="w-3 h-3" />
-                  <span className="text-foreground font-medium">Administration</span>
-                </div>
-
-                {/* Title row */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Wrench className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg font-semibold text-foreground leading-tight">Administration</h1>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Manage users, roles, activity logs, and developer settings
-                    </p>
-                  </div>
-                </div>
+            {/* Page banner — matches Participants page */}
+            <div className="border-b border-border bg-card px-6 py-5 shrink-0">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+                <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
+                <ChevronRight className="w-3 h-3" />
+                <span className="text-foreground font-medium">Administration</span>
               </div>
 
-              {/* Tab bar */}
-              <div className="px-6">
-                <TabsList className="h-auto p-0 bg-transparent rounded-none border-none gap-0">
-                  {tabs.map((t) => (
-                    <TabsTrigger
-                      key={t.value}
-                      value={t.value}
-                      className="relative rounded-none border-none bg-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent gap-1.5 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary transition-colors hover:text-foreground"
-                    >
-                      <t.icon className="w-4 h-4" />
-                      {t.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-foreground tracking-tight">Administration</h1>
+                </div>
               </div>
+              <p className="text-sm text-muted-foreground mt-1">Manage users, roles, activity logs, and developer settings</p>
             </div>
 
-            {/* Scrollable tab content */}
-            <div className="flex-1 overflow-auto p-6">
-              <TabsContent value="users" className="mt-0">
+            {/* Tab bar — sticky below banner */}
+            <div className="sticky top-0 z-10 bg-card border-b border-border px-6 shrink-0">
+              <TabsList className="h-auto p-0 bg-transparent rounded-none border-none gap-0">
+                {tabs.map((t) => (
+                  <TabsTrigger
+                    key={t.value}
+                    value={t.value}
+                    className="relative rounded-none border-none bg-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent gap-1.5 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary transition-colors hover:text-foreground"
+                  >
+                    <t.icon className="w-4 h-4" />
+                    {t.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-auto">
+              <TabsContent value="users" className="mt-0 h-full">
                 <AdminUsersTab />
               </TabsContent>
-              <TabsContent value="roles" className="mt-0">
+              <TabsContent value="roles" className="mt-0 p-6">
                 <AdminRolesTab />
               </TabsContent>
-              <TabsContent value="activity" className="mt-0">
+              <TabsContent value="activity" className="mt-0 p-6">
                 <AdminActivityTab />
               </TabsContent>
-              <TabsContent value="developer" className="mt-0">
+              <TabsContent value="developer" className="mt-0 p-6">
                 <AdminDeveloperTab />
               </TabsContent>
             </div>
