@@ -32,6 +32,9 @@ const severityColors: Record<string, string> = {
   critical: "bg-red-100 text-red-800",
 };
 
+const categoryOptions = ["Bullying", "Disruption", "Property Damage", "Safeguarding", "Verbal Abuse", "Physical Altercation", "Homesickness", "Other"];
+const locationOptions = ["Main Hall", "Briefing Room", "Welfare Tent", "Dining Hall", "Accommodation Block", "Outdoor Area", "Sports Field", "Other"];
+
 const statusOptions = ["pending", "open", "in-progress", "closed", "resolved"];
 
 type TimelineEntry = {
