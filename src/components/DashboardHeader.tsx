@@ -53,23 +53,42 @@ const DashboardHeader = () => {
 
     if (!query.trim() || query.trim().length < 2) {
       setParticipantResults([]);
+      setCaseResults([]);
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
-      const { data } = await supabase
-        .from("participants")
-        .select("id, full_name")
-        .ilike("full_name", `%${query.trim()}%`)
-        .limit(8);
+      const [participantsRes, casesRes] = await Promise.all([
+        supabase
+          .from("participants")
+          .select("id, full_name")
+          .ilike("full_name", `%${query.trim()}%`)
+          .limit(8),
+        supabase
+          .from("behavior_cases")
+          .select("id, category, severity_level, overview, participant_id")
+          .or(`overview.ilike.%${query.trim()}%,category.ilike.%${query.trim()}%`)
+          .limit(6),
+      ]);
 
-      if (data) {
+      if (participantsRes.data) {
         setParticipantResults(
-          data.map((p) => ({
+          participantsRes.data.map((p) => ({
             label: p.full_name,
             category: "Participants",
             path: `/participants/${p.id}`,
             icon: User,
+          }))
+        );
+      }
+
+      if (casesRes.data) {
+        setCaseResults(
+          casesRes.data.map((c) => ({
+            label: `${c.category} — ${(c.overview ?? "").slice(0, 50)}${(c.overview ?? "").length > 50 ? "…" : ""}`,
+            category: "Cases",
+            path: `/cases/${c.id}`,
+            icon: AlertTriangle,
           }))
         );
       }
