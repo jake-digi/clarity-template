@@ -854,15 +854,21 @@ const AdminDeveloperTab = () => {
             <CopyButton value={API_BASE_URL} field="ref_base_url" />
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Input
-              placeholder="Search endpoints…"
-              value={refSearch}
-              onChange={(e) => setRefSearch(e.target.value)}
-              className="text-xs h-9 pl-8"
-            />
-            <Code2 className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+          {/* Search + Download */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search endpoints…"
+                value={refSearch}
+                onChange={(e) => setRefSearch(e.target.value)}
+                className="text-xs h-9 pl-8"
+              />
+              <Code2 className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+            </div>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5 shrink-0" onClick={downloadPdf}>
+              <Download className="w-3.5 h-3.5" />
+              Download PDF
+            </Button>
           </div>
 
           {/* Endpoint tables by group */}
