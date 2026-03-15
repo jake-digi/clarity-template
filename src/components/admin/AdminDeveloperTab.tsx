@@ -309,7 +309,7 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/generate`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/generate`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ name: newKeyName || "Untitled", scopes: newKeyScopes, expires_at: newKeyExpiry || null }),
