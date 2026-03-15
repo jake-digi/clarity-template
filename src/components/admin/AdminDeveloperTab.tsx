@@ -312,6 +312,9 @@ const AdminDeveloperTab = () => {
   const [newKeyExpiry, setNewKeyExpiry] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [newKeyAllowedIps, setNewKeyAllowedIps] = useState("");
+  const [ipDialogKey, setIpDialogKey] = useState<ApiKey | null>(null);
+  const [editingIps, setEditingIps] = useState("");
 
   // Logs state
   const [logs, setLogs] = useState<ApiLog[]>([]);
