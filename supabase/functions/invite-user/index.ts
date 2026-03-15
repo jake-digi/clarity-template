@@ -1,5 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Resend: from address must use a verified domain (e.g. checkpoint.jlgb.org in Resend dashboard)
+const INVITE_FROM_EMAIL = "Checkpoint <noreply@checkpoint.jlgb.org>";
+const DEFAULT_ORIGIN = "https://checkpoint.jlgb.org";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -53,21 +57,26 @@ Deno.serve(async (req) => {
       email_confirm: true,
       user_metadata: { first_name, last_name },
     });
-    if (createErr) return json({ error: createErr.message }, 400);
+    if (createErr) {
+      const msg = createErr.message?.includes("already been registered") || createErr.message?.includes("already exists")
+        ? "A user with this email is already registered."
+        : createErr.message;
+      return json({ error: msg }, 400);
+    }
 
     // Create user record in users table
     const newUserId = crypto.randomUUID();
-    await adminClient.from("users").insert({
+    const { error: insertErr } = await adminClient.from("users").insert({
       id: newUserId,
       auth_id: newAuth.user.id,
       email,
       first_name,
       last_name: last_name || null,
       surname: last_name || null,
-      full_name: `${first_name} ${last_name || ""}`.trim(),
       tenant_id: callerUser.tenant_id,
       status: "active",
     });
+    if (insertErr) return json({ error: insertErr.message || "Failed to create user record" }, 500);
 
     // Assign role if provided
     if (role_id) {
@@ -78,11 +87,13 @@ Deno.serve(async (req) => {
     }
 
     // Generate password reset link for the invite
+    const origin = req.headers.get("origin") || DEFAULT_ORIGIN;
     const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo: `${req.headers.get("origin") || "https://checkpoint.jlgb.org"}/reset-password` },
+      options: { redirectTo: `${origin}/reset-password` },
     });
+    if (linkErr) return json({ error: linkErr.message || "Failed to generate invite link" }, 500);
 
     const resetLink = linkData?.properties?.action_link || "";
 
@@ -94,7 +105,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Checkpoint <noreply@checkpoint.jlgb.org>",
+        from: INVITE_FROM_EMAIL,
         to: [email],
         subject: "You've been invited to Checkpoint",
         html: `

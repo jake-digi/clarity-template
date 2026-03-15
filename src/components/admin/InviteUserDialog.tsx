@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,7 +54,20 @@ const InviteUserDialog = ({ open, onOpenChange }: InviteUserDialogProps) => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error instanceof FunctionsHttpError && error.context) {
+          try {
+            const res = error.context as Response;
+            if (typeof res?.json === "function") {
+              const body = await res.json();
+              if (body?.error) throw new Error(body.error);
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message !== error.message) throw e;
+          }
+        }
+        throw error;
+      }
       if (data?.error) throw new Error(data.error);
 
       toast({
