@@ -76,6 +76,13 @@ const statusColor = (code: number) => {
 // ── Endpoint data ──
 const endpointGroups = [
   {
+    title: "Health",
+    description: "Public health check endpoint. No authentication required.",
+    endpoints: [
+      { method: "GET", path: "/health", description: "Health check — returns API status and timestamp", exampleResponse: `{"success":true,"status":"healthy","timestamp":"2025-07-01T12:00:00.000Z"}`, },
+    ],
+  },
+  {
     title: "Instances",
     description: "Supports ?type=dofe or ?type=standard filtering.",
     endpoints: [
@@ -443,17 +450,31 @@ const AdminDeveloperTab = () => {
     : endpointGroups;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="h-9 w-auto">
-          <TabsTrigger value="keys" className="gap-1.5 text-xs"><Key className="w-3.5 h-3.5" />API Keys</TabsTrigger>
-          <TabsTrigger value="playground" className="gap-1.5 text-xs"><Play className="w-3.5 h-3.5" />Playground</TabsTrigger>
-          <TabsTrigger value="logs" className="gap-1.5 text-xs" onClick={() => { if (logs.length === 0) fetchLogs(); }}><FileText className="w-3.5 h-3.5" />Logs</TabsTrigger>
-          <TabsTrigger value="reference" className="gap-1.5 text-xs"><Code2 className="w-3.5 h-3.5" />Reference</TabsTrigger>
-        </TabsList>
+        <div className="bg-card border-b border-border px-6">
+          <TabsList className="h-auto p-0 bg-transparent rounded-none border-none gap-0">
+            {[
+              { value: "keys", label: "API Keys", icon: Key },
+              { value: "playground", label: "Playground", icon: Play },
+              { value: "logs", label: "Logs", icon: FileText },
+              { value: "reference", label: "Reference", icon: Code2 },
+            ].map((t) => (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className="relative rounded-none border-none bg-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent gap-1.5 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary transition-colors hover:text-foreground"
+                onClick={() => { if (t.value === "logs" && logs.length === 0) fetchLogs(); }}
+              >
+                <t.icon className="w-3.5 h-3.5" />
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {/* ===== KEYS TAB ===== */}
-        <TabsContent value="keys" className="space-y-4 mt-4">
+        <TabsContent value="keys" className="space-y-4 p-6">
           {/* Connection info bar */}
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
             <Database className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -560,7 +581,7 @@ const AdminDeveloperTab = () => {
         </TabsContent>
 
         {/* ===== PLAYGROUND TAB ===== */}
-        <TabsContent value="playground" className="mt-4">
+        <TabsContent value="playground" className="p-6">
           <div className="rounded-lg border border-border">
             <div className="px-4 py-3 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground">API Playground</h3>
@@ -656,7 +677,7 @@ const AdminDeveloperTab = () => {
         </TabsContent>
 
         {/* ===== LOGS TAB ===== */}
-        <TabsContent value="logs" className="mt-4">
+        <TabsContent value="logs" className="p-6">
           <div className="rounded-lg border border-border">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div>
@@ -767,7 +788,7 @@ const AdminDeveloperTab = () => {
         </TabsContent>
 
         {/* ===== REFERENCE TAB ===== */}
-        <TabsContent value="reference" className="mt-4 space-y-4">
+        <TabsContent value="reference" className="p-6 space-y-4">
           {/* Auth info bar */}
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
             <Key className="w-4 h-4 text-muted-foreground shrink-0" />
