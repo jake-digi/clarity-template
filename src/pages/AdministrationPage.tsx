@@ -2,7 +2,6 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Shield, Activity, Code2, ChevronRight, Wrench } from "lucide-react";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminRolesTab from "@/components/admin/AdminRolesTab";
@@ -30,33 +29,33 @@ const AdministrationPage = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto">
-          {/* Page header */}
-          <div className="bg-card border-b border-border">
-            <div className="px-6 py-5">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
-                <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-                <ChevronRight className="w-3 h-3" />
-                <span className="text-foreground font-medium">Administration</span>
-              </div>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <Tabs value={tab} onValueChange={setTab} className="flex flex-col flex-1 min-h-0">
+            {/* Sticky page header + tab bar */}
+            <div className="bg-card border-b border-border shrink-0">
+              <div className="px-6 pt-5 pb-0">
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+                  <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
+                  <ChevronRight className="w-3 h-3" />
+                  <span className="text-foreground font-medium">Administration</span>
+                </div>
 
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                {/* Title row */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Wrench className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-semibold text-foreground">Administration</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <h1 className="text-lg font-semibold text-foreground leading-tight">Administration</h1>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Manage users, roles, activity logs, and developer settings
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Tab bar pinned to header */}
-            <Tabs value={tab} onValueChange={setTab}>
+              {/* Tab bar */}
               <div className="px-6">
                 <TabsList className="h-auto p-0 bg-transparent rounded-none border-none gap-0">
                   {tabs.map((t) => (
@@ -71,24 +70,24 @@ const AdministrationPage = () => {
                   ))}
                 </TabsList>
               </div>
+            </div>
 
-              {/* Tab content */}
-              <div className="p-6">
-                <TabsContent value="users" className="mt-0">
-                  <AdminUsersTab />
-                </TabsContent>
-                <TabsContent value="roles" className="mt-0">
-                  <AdminRolesTab />
-                </TabsContent>
-                <TabsContent value="activity" className="mt-0">
-                  <AdminActivityTab />
-                </TabsContent>
-                <TabsContent value="developer" className="mt-0">
-                  <AdminDeveloperTab />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
+            {/* Scrollable tab content */}
+            <div className="flex-1 overflow-auto p-6">
+              <TabsContent value="users" className="mt-0">
+                <AdminUsersTab />
+              </TabsContent>
+              <TabsContent value="roles" className="mt-0">
+                <AdminRolesTab />
+              </TabsContent>
+              <TabsContent value="activity" className="mt-0">
+                <AdminActivityTab />
+              </TabsContent>
+              <TabsContent value="developer" className="mt-0">
+                <AdminDeveloperTab />
+              </TabsContent>
+            </div>
+          </Tabs>
         </main>
       </div>
     </div>

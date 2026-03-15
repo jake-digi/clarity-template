@@ -4,11 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -24,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Copy, Check, ExternalLink, Key, Database, Code2,
+  Copy, Check, Key, Database, Code2,
   Plus, Trash2, AlertTriangle, Play, FileText,
   RefreshCw, Clock, Send, ChevronDown, ChevronRight,
 } from "lucide-react";
@@ -32,7 +30,6 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
-const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "";
 const API_BASE_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
 
 interface ApiKey {
@@ -61,8 +58,183 @@ interface ApiLog {
   created_at: string;
 }
 
+const methodColor: Record<string, string> = {
+  GET: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  POST: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  PATCH: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  PUT: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  DELETE: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+const statusColor = (code: number) => {
+  if (code >= 200 && code < 300) return "text-emerald-600";
+  if (code >= 400 && code < 500) return "text-amber-600";
+  return "text-destructive";
+};
+
+// ── Endpoint data ──
+const endpointGroups = [
+  {
+    title: "Instances",
+    description: "Supports ?type=dofe or ?type=standard filtering.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/instances", description: "List all instances", exampleResponse: `{"success":true,"data":[...],"meta":{"total":12}}`, },
+      { method: "GET", path: "/api/v1/instances/:id", description: "Get instance by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/instances", description: "Create instance", exampleBody: `{"name":"Autumn Expedition","type":"dofe","dofe_level":"silver","start_date":"2025-10-01"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/instances/:id", description: "Update instance", exampleBody: `{"name":"Updated Name","status":"active"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/instances/:id", description: "Soft-delete instance", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Participant Assignments",
+    description: "Manage participant-to-instance assignments.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/instances/:instanceId/participants", description: "List participants assigned to instance", exampleResponse: `{"success":true,"data":[...],"meta":{"total":45}}`, },
+      { method: "GET", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/instances/:instanceId/participants", description: "Assign participant to instance", exampleBody: `{"participant_id":"p-001","super_group_id":"sg-01","sub_group_id":"sub-01","room_id":"room-101"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site)", exampleBody: `{"room_id":"room-202","is_off_site":false}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Participants (Global)",
+    description: "Global participant records.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/participants", description: "List participants (?instance_id=)", exampleResponse: `{"success":true,"data":[...],"meta":{"total":150}}`, },
+      { method: "GET", path: "/api/v1/participants/:id", description: "Get participant by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/participants", description: "Create participant", exampleBody: `{"first_name":"Jane","surname":"Doe","date_of_birth":"2009-06-20","gender":"female"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/participants/:id", description: "Update participant", exampleBody: `{"school_year":"12","status":"active"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/participants/:id", description: "Delete participant", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Supergroups",
+    description: "Instance-scoped. Deleting cascades to subgroups.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups", description: "List supergroups for instance", exampleResponse: `{"success":true,"data":[...]}`, },
+      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/instances/:instanceId/supergroups", description: "Create supergroup", exampleBody: `{"name":"Blue House","color":"#3498db"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Update supergroup", exampleBody: `{"name":"Updated House Name"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Subgroups",
+    description: "Nested under supergroups within an instance.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups", exampleResponse: `{"success":true,"data":[...]}`, },
+      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup", exampleBody: `{"name":"Team Bravo"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup", exampleBody: `{"name":"Team Charlie"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Blocks",
+    description: "Filter with ?instance_id= or ?site_id=. Soft-delete.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/blocks", description: "List blocks (?instance_id=, ?site_id=)", exampleResponse: `{"success":true,"data":[...]}`, },
+      { method: "GET", path: "/api/v1/blocks/:blockId", description: "Get block by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/blocks", description: "Create block", exampleBody: `{"name":"Block C","instance_id":"inst-001"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/blocks/:blockId", description: "Update block", exampleBody: `{"name":"Block A - Updated"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/blocks/:blockId", description: "Soft-delete block", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Rooms",
+    description: "Filter with ?block_id=, ?instance_id=, or ?site_id=.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/rooms", description: "List rooms (?block_id=, ?instance_id=)", exampleResponse: `{"success":true,"data":[...]}`, },
+      { method: "GET", path: "/api/v1/rooms/:roomId", description: "Get room by ID", exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "POST", path: "/api/v1/rooms", description: "Create room", exampleBody: `{"room_number":"205","block_id":"block-a","capacity":6}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "PATCH", path: "/api/v1/rooms/:roomId", description: "Update room", exampleBody: `{"capacity":8}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "DELETE", path: "/api/v1/rooms/:roomId", description: "Soft-delete room", exampleResponse: `{"success":true}`, },
+    ],
+  },
+  {
+    title: "Groups (Legacy)",
+    description: "Backward-compatible. Prefer instance-scoped routes.",
+    endpoints: [
+      { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups (?instance_id=)", exampleResponse: `{"success":true,"data":[...]}`, },
+      { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup", exampleBody: `{"name":"Green House","instance_id":"inst-001"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+      { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups (?instance_id=)", exampleResponse: `{"success":true,"data":[...]}`, },
+      { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup", exampleBody: `{"name":"Team Delta","supergroup_id":"sg-01","instance_id":"inst-001"}`, exampleResponse: `{"success":true,"data":{...}}`, },
+    ],
+  },
+];
+
+// ── Reference endpoint detail dialog ──
+interface EndpointDetailProps {
+  endpoint: { method: string; path: string; description: string; exampleBody?: string; exampleResponse?: string } | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onTryIt: (method: string, path: string, body?: string) => void;
+}
+
+const EndpointDetailDialog = ({ endpoint, open, onOpenChange, onTryIt }: EndpointDetailProps) => {
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  if (!endpoint) return null;
+
+  const copy = (value: string, field: string) => {
+    navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const curlCmd = `curl '${API_BASE_URL}${endpoint.path}' \\\n  -X ${endpoint.method} \\\n  -H "X-API-Key: chk_your_key_here"${endpoint.exampleBody ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${endpoint.exampleBody}'` : ""}`;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Badge variant="outline" className={`font-mono text-xs ${methodColor[endpoint.method] ?? ""}`}>{endpoint.method}</Badge>
+            <code className="text-sm font-mono">{endpoint.path}</code>
+          </DialogTitle>
+          <DialogDescription>{endpoint.description}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          {/* cURL */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">cURL</Label>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copy(curlCmd, "curl")}>
+                {copiedField === "curl" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+              </Button>
+            </div>
+            <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-muted-foreground">{curlCmd}</pre>
+          </div>
+
+          {/* Request body */}
+          {endpoint.exampleBody && (
+            <div>
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Request Body</Label>
+              <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-foreground/80 mt-1">
+                {JSON.stringify(JSON.parse(endpoint.exampleBody), null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* Response */}
+          <div>
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Example Response</Label>
+            <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-foreground/80 mt-1">
+              {JSON.stringify(JSON.parse(endpoint.exampleResponse || "{}"), null, 2)}
+            </pre>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => { onTryIt(endpoint.method, endpoint.path, endpoint.exampleBody); onOpenChange(false); }}>
+            <Play className="w-3.5 h-3.5 mr-1.5" />Try in Playground
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ── Main component ──
 const AdminDeveloperTab = () => {
-  // Tab state
   const [activeTab, setActiveTab] = useState("keys");
 
   // Keys state
@@ -94,7 +266,8 @@ const AdminDeveloperTab = () => {
   const [pgParams, setPgParams] = useState<Record<string, string>>({});
 
   // Reference state
-  const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
+  const [detailEndpoint, setDetailEndpoint] = useState<typeof endpointGroups[0]["endpoints"][0] | null>(null);
+  const [refSearch, setRefSearch] = useState("");
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -195,16 +368,12 @@ const AdminDeveloperTab = () => {
   }, [logFilter]);
 
   // --- Playground ---
-  // Extract param names from path template
   const pgPathParams = (pgPath.match(/:([a-zA-Z_]+)/g) || []).map((p) => p.slice(1));
-
-  // Resolve path by replacing :param with actual values
   const resolvedPath = pgPath.replace(/:([a-zA-Z_]+)/g, (_, name) => pgParams[name] || `:${name}`);
   const hasUnresolvedParams = pgPathParams.some((p) => !pgParams[p]);
 
   const updatePgPath = (newPath: string) => {
     setPgPath(newPath);
-    // Reset params when path changes, keeping any that still apply
     const newParams = (newPath.match(/:([a-zA-Z_]+)/g) || []).map((p) => p.slice(1));
     setPgParams((prev) => {
       const next: Record<string, string> = {};
@@ -218,25 +387,18 @@ const AdminDeveloperTab = () => {
       toast({ title: "Missing parameters", description: "Please fill in all path parameters before sending.", variant: "destructive" });
       return;
     }
-    setPgLoading(true);
-    setPgResponse(null);
-    setPgStatus(null);
-    setPgTime(null);
+    setPgLoading(true); setPgResponse(null); setPgStatus(null); setPgTime(null);
     try {
       const start = Date.now();
       const headers: Record<string, string> = { "X-API-Key": pgApiKey };
-      if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) {
-        headers["Content-Type"] = "application/json";
-      }
+      if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) headers["Content-Type"] = "application/json";
       const res = await fetch(`${API_BASE_URL}${resolvedPath}`, {
-        method: pgMethod,
-        headers,
+        method: pgMethod, headers,
         body: ["POST", "PATCH", "PUT"].includes(pgMethod) && pgBody ? pgBody : undefined,
       });
       const elapsed = Date.now() - start;
       const text = await res.text();
-      setPgStatus(res.status);
-      setPgTime(elapsed);
+      setPgStatus(res.status); setPgTime(elapsed);
       try { setPgResponse(JSON.stringify(JSON.parse(text), null, 2)); } catch { setPgResponse(text); }
     } catch (e) {
       setPgResponse(`Error: ${e instanceof Error ? e.message : "Unknown error"}`);
@@ -256,168 +418,10 @@ const AdminDeveloperTab = () => {
     return { label: "Active", variant: "default" as const };
   };
 
-  const methodColor: Record<string, string> = {
-    GET: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-    POST: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-    PATCH: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    DELETE: "bg-destructive/10 text-destructive border-destructive/20",
-  };
-
-  const statusColor = (code: number) => {
-    if (code >= 200 && code < 300) return "text-emerald-600";
-    if (code >= 400 && code < 500) return "text-amber-600";
-    return "text-destructive";
-  };
-
-  const endpointGroups = [
-    {
-      title: "Instances",
-      description: "Supports ?type=dofe or ?type=standard filtering. Responses include type, dofe_level, expedition_type.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/instances", description: "List all instances",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "inst-001",\n      "name": "Summer Camp 2025",\n      "status": "active",\n      "start_date": "2025-07-01",\n      "end_date": "2025-07-14",\n      "location": "Peak District",\n      "type": "dofe",\n      "dofe_level": "gold",\n      "expedition_type": "practice"\n    }\n  ],\n  "meta": { "total": 12, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/instances/:id", description: "Get instance by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-001",\n    "name": "Summer Camp 2025",\n    "status": "active",\n    "start_date": "2025-07-01",\n    "end_date": "2025-07-14",\n    "location": "Peak District",\n    "type": "dofe",\n    "dofe_level": "gold"\n  }\n}` },
-        { method: "POST", path: "/api/v1/instances", description: "Create instance",
-          exampleBody: `{\n  "name": "Autumn Expedition",\n  "type": "dofe",\n  "dofe_level": "silver",\n  "start_date": "2025-10-01",\n  "end_date": "2025-10-05",\n  "location": "Lake District"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-new",\n    "name": "Autumn Expedition",\n    "status": "upcoming",\n    "type": "dofe",\n    "dofe_level": "silver"\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/instances/:id", description: "Update instance",
-          exampleBody: `{\n  "name": "Updated Name",\n  "status": "active"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-001",\n    "name": "Updated Name",\n    "status": "active"\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/instances/:id", description: "Soft-delete instance",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Participant Assignments",
-      description: "Manage participant-to-instance assignments. Assign participants to instances, move rooms/groups, update off-site status.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/instances/:instanceId/participants", description: "List participants assigned to instance (includes participant data)",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "asgn-001",\n      "instance_id": "inst-001",\n      "participant_id": "p-001",\n      "room_id": "room-101",\n      "block_id": "block-a",\n      "super_group_id": "sg-01",\n      "sub_group_id": "sub-01",\n      "is_off_site": false,\n      "arrival_date": "2025-07-01T10:00:00Z",\n      "participants": {\n        "id": "p-001",\n        "first_name": "John",\n        "surname": "Smith",\n        "full_name": "John Smith"\n      }\n    }\n  ],\n  "meta": { "total": 45, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-001",\n    "instance_id": "inst-001",\n    "participant_id": "p-001",\n    "room_id": "room-101",\n    "is_off_site": false,\n    "participants": { "full_name": "John Smith" }\n  }\n}` },
-        { method: "POST", path: "/api/v1/instances/:instanceId/participants", description: "Assign participant to instance (requires participant_id)",
-          exampleBody: `{\n  "participant_id": "p-001",\n  "super_group_id": "sg-01",\n  "sub_group_id": "sub-01",\n  "room_id": "room-101",\n  "arrival_date": "2025-07-01T10:00:00Z",\n  "departure_date": "2025-07-14T14:00:00Z"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-new",\n    "instance_id": "inst-001",\n    "participant_id": "p-001",\n    "room_id": "room-101",\n    "participants": { "full_name": "John Smith" }\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site, dates)",
-          exampleBody: `{\n  "room_id": "room-202",\n  "block_id": "block-b",\n  "is_off_site": false\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-001",\n    "room_id": "room-202",\n    "block_id": "block-b",\n    "is_off_site": false\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Participants (Global)",
-      endpoints: [
-        { method: "GET", path: "/api/v1/participants", description: "List participants (?instance_id=)",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "p-001",\n      "first_name": "John",\n      "surname": "Smith",\n      "full_name": "John Smith",\n      "gender": "male",\n      "school_year": "12",\n      "status": "active"\n    }\n  ],\n  "meta": { "total": 150, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/participants/:id", description: "Get participant by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-001",\n    "first_name": "John",\n    "surname": "Smith",\n    "full_name": "John Smith",\n    "date_of_birth": "2008-03-15",\n    "gender": "male",\n    "status": "active"\n  }\n}` },
-        { method: "POST", path: "/api/v1/participants", description: "Create participant",
-          exampleBody: `{\n  "first_name": "Jane",\n  "surname": "Doe",\n  "date_of_birth": "2009-06-20",\n  "gender": "female",\n  "school_year": "11"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-new",\n    "first_name": "Jane",\n    "surname": "Doe",\n    "full_name": "Jane Doe",\n    "status": "active"\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/participants/:id", description: "Update participant",
-          exampleBody: `{\n  "school_year": "12",\n  "status": "active"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-001",\n    "first_name": "John",\n    "surname": "Smith",\n    "school_year": "12"\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/participants/:id", description: "Delete participant",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Supergroups (Instance-scoped)",
-      description: "Groups are scoped to instances. Full CRUD with soft-delete. Deleting a supergroup cascades to its subgroups.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups", description: "List supergroups for instance",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "sg-01",\n      "name": "Red House",\n      "instance_id": "inst-001",\n      "color": "#e74c3c"\n    }\n  ],\n  "meta": { "total": 4, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-01",\n    "name": "Red House",\n    "instance_id": "inst-001",\n    "color": "#e74c3c"\n  }\n}` },
-        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups", description: "Create supergroup",
-          exampleBody: `{\n  "name": "Blue House",\n  "color": "#3498db"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-new",\n    "name": "Blue House",\n    "instance_id": "inst-001",\n    "color": "#3498db"\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Update supergroup",
-          exampleBody: `{\n  "name": "Updated House Name"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-01",\n    "name": "Updated House Name"\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup (cascades to subgroups)",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Subgroups (Nested under Supergroup)",
-      description: "Subgroups are nested under supergroups within an instance.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "sub-01",\n      "name": "Team Alpha",\n      "supergroup_id": "sg-01",\n      "instance_id": "inst-001"\n    }\n  ],\n  "meta": { "total": 3, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-01",\n    "name": "Team Alpha",\n    "supergroup_id": "sg-01"\n  }\n}` },
-        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup",
-          exampleBody: `{\n  "name": "Team Bravo"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-new",\n    "name": "Team Bravo",\n    "supergroup_id": "sg-01",\n    "instance_id": "inst-001"\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup",
-          exampleBody: `{\n  "name": "Team Charlie"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-01",\n    "name": "Team Charlie"\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Blocks",
-      description: "Filter with ?instance_id= or ?site_id=. Full CRUD with soft-delete.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/blocks", description: "List blocks (?instance_id=, ?site_id=)",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "block-a",\n      "name": "Block A - Main Building",\n      "instance_id": "inst-001",\n      "description": "Main accommodation block"\n    }\n  ],\n  "meta": { "total": 3, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/blocks/:blockId", description: "Get block by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-a",\n    "name": "Block A - Main Building",\n    "description": "Main accommodation block"\n  }\n}` },
-        { method: "POST", path: "/api/v1/blocks", description: "Create block",
-          exampleBody: `{\n  "name": "Block C - Annexe",\n  "instance_id": "inst-001",\n  "description": "Overflow accommodation"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-new",\n    "name": "Block C - Annexe",\n    "instance_id": "inst-001"\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/blocks/:blockId", description: "Update block",
-          exampleBody: `{\n  "name": "Block A - Updated"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-a",\n    "name": "Block A - Updated"\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/blocks/:blockId", description: "Soft-delete block",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Rooms",
-      description: "Filter with ?block_id=, ?instance_id=, or ?site_id=. Full CRUD with soft-delete.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/rooms", description: "List rooms (?block_id=, ?instance_id=, ?site_id=)",
-          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "room-101",\n      "room_number": "101",\n      "name": "Room 101",\n      "block_id": "block-a",\n      "capacity": 4,\n      "room_type": "room"\n    }\n  ],\n  "meta": { "total": 20, "limit": 50, "offset": 0 }\n}` },
-        { method: "GET", path: "/api/v1/rooms/:roomId", description: "Get room by ID",
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-101",\n    "room_number": "101",\n    "name": "Room 101",\n    "block_id": "block-a",\n    "capacity": 4,\n    "room_type": "room"\n  }\n}` },
-        { method: "POST", path: "/api/v1/rooms", description: "Create room",
-          exampleBody: `{\n  "room_number": "205",\n  "name": "Room 205",\n  "block_id": "block-a",\n  "capacity": 6,\n  "room_type": "room",\n  "instance_id": "inst-001"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-new",\n    "room_number": "205",\n    "name": "Room 205",\n    "block_id": "block-a",\n    "capacity": 6\n  }\n}` },
-        { method: "PATCH", path: "/api/v1/rooms/:roomId", description: "Update room",
-          exampleBody: `{\n  "capacity": 8,\n  "name": "Large Room 101"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-101",\n    "capacity": 8,\n    "name": "Large Room 101"\n  }\n}` },
-        { method: "DELETE", path: "/api/v1/rooms/:roomId", description: "Soft-delete room",
-          exampleResponse: `{\n  "success": true\n}` },
-      ],
-    },
-    {
-      title: "Groups (Legacy)",
-      description: "Backward-compatible endpoints. Prefer instance-scoped routes above.",
-      endpoints: [
-        { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups (?instance_id=)",
-          exampleResponse: `{\n  "success": true,\n  "data": [...],\n  "meta": { "total": 4, "limit": 50, "offset": 0 }\n}` },
-        { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup",
-          exampleBody: `{\n  "name": "Green House",\n  "instance_id": "inst-001"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": { "id": "sg-new", "name": "Green House" }\n}` },
-        { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups (?instance_id=)",
-          exampleResponse: `{\n  "success": true,\n  "data": [...],\n  "meta": { "total": 12, "limit": 50, "offset": 0 }\n}` },
-        { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup",
-          exampleBody: `{\n  "name": "Team Delta",\n  "supergroup_id": "sg-01",\n  "instance_id": "inst-001"\n}`,
-          exampleResponse: `{\n  "success": true,\n  "data": { "id": "sub-new", "name": "Team Delta" }\n}` },
-      ],
-    },
-  ];
-
   const tryEndpoint = (method: string, path: string, body?: string) => {
     setPgMethod(method);
     updatePgPath(path);
-    if (body) setPgBody(body);
-    else setPgBody("");
+    if (body) setPgBody(body); else setPgBody("");
     setActiveTab("playground");
   };
 
@@ -425,27 +429,50 @@ const AdminDeveloperTab = () => {
     g.endpoints.map((ep) => ({ method: ep.method, path: ep.path, label: `${ep.method} ${ep.path}` }))
   );
 
+  // Filtered reference endpoints
+  const filteredGroups = refSearch
+    ? endpointGroups.map((g) => ({
+        ...g,
+        endpoints: g.endpoints.filter((ep) =>
+          ep.path.toLowerCase().includes(refSearch.toLowerCase()) ||
+          ep.description.toLowerCase().includes(refSearch.toLowerCase()) ||
+          ep.method.toLowerCase().includes(refSearch.toLowerCase())
+        ),
+      })).filter((g) => g.endpoints.length > 0)
+    : endpointGroups;
+
   return (
-    <div className="space-y-4 max-w-5xl">
+    <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="keys" className="flex items-center gap-1.5"><Key className="w-3.5 h-3.5" />Keys</TabsTrigger>
-          <TabsTrigger value="playground" className="flex items-center gap-1.5"><Play className="w-3.5 h-3.5" />Playground</TabsTrigger>
-          <TabsTrigger value="logs" className="flex items-center gap-1.5" onClick={() => { if (logs.length === 0) fetchLogs(); }}><FileText className="w-3.5 h-3.5" />Logs</TabsTrigger>
-          <TabsTrigger value="reference" className="flex items-center gap-1.5"><Code2 className="w-3.5 h-3.5" />Reference</TabsTrigger>
+        <TabsList className="h-9 w-auto">
+          <TabsTrigger value="keys" className="gap-1.5 text-xs"><Key className="w-3.5 h-3.5" />API Keys</TabsTrigger>
+          <TabsTrigger value="playground" className="gap-1.5 text-xs"><Play className="w-3.5 h-3.5" />Playground</TabsTrigger>
+          <TabsTrigger value="logs" className="gap-1.5 text-xs" onClick={() => { if (logs.length === 0) fetchLogs(); }}><FileText className="w-3.5 h-3.5" />Logs</TabsTrigger>
+          <TabsTrigger value="reference" className="gap-1.5 text-xs"><Code2 className="w-3.5 h-3.5" />Reference</TabsTrigger>
         </TabsList>
 
         {/* ===== KEYS TAB ===== */}
-        <TabsContent value="keys" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+        <TabsContent value="keys" className="space-y-4 mt-4">
+          {/* Connection info bar */}
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+            <Database className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-xs text-muted-foreground mr-2">Base URL</span>
+              <code className="text-xs font-mono text-foreground">{API_BASE_URL}</code>
+            </div>
+            <CopyButton value={API_BASE_URL} field="base_url" />
+          </div>
+
+          {/* Keys table */}
+          <div className="rounded-lg border border-border">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div>
-                <CardTitle className="text-base">API Keys</CardTitle>
-                <CardDescription>Create and manage API keys for programmatic access</CardDescription>
+                <h3 className="text-sm font-semibold text-foreground">API Keys</h3>
+                <p className="text-xs text-muted-foreground">Create and manage API keys for programmatic access</p>
               </div>
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm"><Plus className="w-3.5 h-3.5 mr-1.5" />Create Key</Button>
+                  <Button size="sm" className="h-8"><Plus className="w-3.5 h-3.5 mr-1.5" />Create Key</Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -478,91 +505,71 @@ const AdminDeveloperTab = () => {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </CardHeader>
-            <CardContent>
-              {keysLoading ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">Loading keys…</p>
-              ) : keys.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No API keys yet. Create one to get started.</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Key</TableHead>
-                      <TableHead>Scopes</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Last Used</TableHead>
-                      
-                      <TableHead className="w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {keys.map((key) => {
-                      const status = getKeyStatus(key);
-                      return (
-                        <TableRow key={key.id}>
-                          <TableCell className="font-medium text-sm">{key.name}</TableCell>
-                          <TableCell><code className="text-xs font-mono text-muted-foreground">{key.key_prefix}…</code></TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              {key.scopes.map((s) => <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>)}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{new Date(key.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}</TableCell>
-                          <TableCell><Badge variant={status.variant} className="text-[10px]">{status.label}</Badge></TableCell>
-                          <TableCell>
-                            {!key.revoked_at && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRevokeTarget(key)}>
-                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Connection Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base"><Database className="w-4 h-4" />Connection Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">API Base URL</Label>
-                <div className="flex items-center gap-2">
-                  <Input value={API_BASE_URL} readOnly className="font-mono text-xs h-9 bg-muted/50" />
-                  <CopyButton value={API_BASE_URL} field="base_url" />
-                </div>
+            </div>
+            {keysLoading ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">Loading keys…</p>
+            ) : keys.length === 0 ? (
+              <div className="py-12 text-center">
+                <Key className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No API keys yet</p>
+                <p className="text-xs text-muted-foreground/60">Create one to get started with the API</p>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Key</TableHead>
+                    <TableHead>Scopes</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Last Used</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {keys.map((key) => {
+                    const status = getKeyStatus(key);
+                    return (
+                      <TableRow key={key.id}>
+                        <TableCell className="font-medium text-sm">{key.name}</TableCell>
+                        <TableCell><code className="text-xs font-mono text-muted-foreground">{key.key_prefix}…</code></TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {key.scopes.map((s) => <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>)}
+                          </div>
+                        </TableCell>
+                        <TableCell><Badge variant={status.variant} className="text-[10px]">{status.label}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{new Date(key.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}</TableCell>
+                        <TableCell>
+                          {!key.revoked_at && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRevokeTarget(key)}>
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </TabsContent>
 
         {/* ===== PLAYGROUND TAB ===== */}
-        <TabsContent value="playground" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2"><Play className="w-4 h-4" />API Playground</CardTitle>
-              <CardDescription>Test API endpoints with your API key</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <TabsContent value="playground" className="mt-4">
+          <div className="rounded-lg border border-border">
+            <div className="px-4 py-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">API Playground</h3>
+              <p className="text-xs text-muted-foreground">Test API endpoints with your API key</p>
+            </div>
+            <div className="p-4 space-y-4">
               {/* API Key input */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">API Key</Label>
-                <Input
-                  type="password"
-                  placeholder="chk_..."
-                  value={pgApiKey}
-                  onChange={(e) => setPgApiKey(e.target.value)}
-                  className="font-mono text-xs"
-                />
+                <Input type="password" placeholder="chk_..." value={pgApiKey} onChange={(e) => setPgApiKey(e.target.value)} className="font-mono text-xs" />
               </div>
 
               {/* Method + Path */}
@@ -577,12 +584,7 @@ const AdminDeveloperTab = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Input
-                  value={pgPath}
-                  onChange={(e) => updatePgPath(e.target.value)}
-                  placeholder="/api/v1/instances"
-                  className="font-mono text-xs flex-1"
-                />
+                <Input value={pgPath} onChange={(e) => updatePgPath(e.target.value)} placeholder="/api/v1/instances" className="font-mono text-xs flex-1" />
                 <Button onClick={sendRequest} disabled={pgLoading || !pgApiKey} className="gap-1.5">
                   <Send className="w-3.5 h-3.5" />{pgLoading ? "Sending…" : "Send"}
                 </Button>
@@ -614,13 +616,7 @@ const AdminDeveloperTab = () => {
               {/* Quick endpoint selector */}
               <div className="flex flex-wrap gap-1">
                 {playgroundEndpoints.slice(0, 10).map((ep, i) => (
-                  <Button
-                    key={i}
-                    variant="outline"
-                    size="sm"
-                    className="text-[10px] h-6 px-2"
-                    onClick={() => { setPgMethod(ep.method); updatePgPath(ep.path); }}
-                  >
+                  <Button key={i} variant="outline" size="sm" className="text-[10px] h-6 px-2" onClick={() => { setPgMethod(ep.method); updatePgPath(ep.path); }}>
                     <Badge variant="outline" className={`text-[9px] font-mono mr-1 px-1 ${methodColor[ep.method] ?? ""}`}>{ep.method}</Badge>
                     {ep.path.replace("/api/v1/", "")}
                   </Button>
@@ -631,12 +627,7 @@ const AdminDeveloperTab = () => {
               {["POST", "PATCH", "PUT"].includes(pgMethod) && (
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Request Body (JSON)</Label>
-                  <Textarea
-                    value={pgBody}
-                    onChange={(e) => setPgBody(e.target.value)}
-                    placeholder='{"name": "Test Instance", "type": "dofe"}'
-                    className="font-mono text-xs min-h-[80px]"
-                  />
+                  <Textarea value={pgBody} onChange={(e) => setPgBody(e.target.value)} placeholder='{"name": "Test"}' className="font-mono text-xs min-h-[80px]" />
                 </div>
               )}
 
@@ -659,38 +650,34 @@ const AdminDeveloperTab = () => {
                   </ScrollArea>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* ===== LOGS TAB ===== */}
-        <TabsContent value="logs" className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+        <TabsContent value="logs" className="mt-4">
+          <div className="rounded-lg border border-border">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div>
-                <CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" />Request Logs</CardTitle>
-                <CardDescription>View all API requests made with your keys</CardDescription>
+                <h3 className="text-sm font-semibold text-foreground">Request Logs</h3>
+                <p className="text-xs text-muted-foreground">View all API requests made with your keys</p>
               </div>
-              <Button variant="outline" size="sm" onClick={fetchLogs} disabled={logsLoading}>
+              <Button variant="outline" size="sm" className="h-8" onClick={fetchLogs} disabled={logsLoading}>
                 <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${logsLoading ? "animate-spin" : ""}`} />Refresh
               </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            </div>
+            <div className="p-4 space-y-3">
               {/* Filters */}
               <div className="flex gap-2">
-                <Select value={logFilter.method || "all"} onValueChange={(v) => { setLogFilter((f) => ({ ...f, method: v === "all" ? undefined : v })); }}>
-                  <SelectTrigger className="w-28 h-8 text-xs">
-                    <SelectValue placeholder="Method" />
-                  </SelectTrigger>
+                <Select value={logFilter.method || "all"} onValueChange={(v) => setLogFilter((f) => ({ ...f, method: v === "all" ? undefined : v }))}>
+                  <SelectTrigger className="w-28 h-8 text-xs"><SelectValue placeholder="Method" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Methods</SelectItem>
                     {["GET", "POST", "PATCH", "DELETE"].map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Select value={logFilter.status || "all"} onValueChange={(v) => { setLogFilter((f) => ({ ...f, status: v === "all" ? undefined : v })); }}>
-                  <SelectTrigger className="w-28 h-8 text-xs">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
+                <Select value={logFilter.status || "all"} onValueChange={(v) => setLogFilter((f) => ({ ...f, status: v === "all" ? undefined : v }))}>
+                  <SelectTrigger className="w-28 h-8 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="success">Success</SelectItem>
@@ -703,7 +690,10 @@ const AdminDeveloperTab = () => {
               {logsLoading ? (
                 <p className="text-sm text-muted-foreground py-8 text-center">Loading logs…</p>
               ) : logs.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-8 text-center">No API request logs yet.</p>
+                <div className="py-12 text-center">
+                  <FileText className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No API request logs yet</p>
+                </div>
               ) : (
                 <ScrollArea className="h-[500px]">
                   <Table>
@@ -719,15 +709,9 @@ const AdminDeveloperTab = () => {
                     </TableHeader>
                     <TableBody>
                       {logs.map((log) => (
-                        <TableRow
-                          key={log.id}
-                          className="cursor-pointer"
-                          onClick={() => setSelectedLog(log)}
-                        >
+                        <TableRow key={log.id} className="cursor-pointer" onClick={() => setSelectedLog(log)}>
                           <TableCell>
-                            <Badge variant="outline" className={`text-[10px] font-mono ${methodColor[log.method] ?? ""}`}>
-                              {log.method}
-                            </Badge>
+                            <Badge variant="outline" className={`text-[10px] font-mono ${methodColor[log.method] ?? ""}`}>{log.method}</Badge>
                           </TableCell>
                           <TableCell className="font-mono text-xs truncate max-w-[200px]">{log.path}</TableCell>
                           <TableCell>
@@ -742,8 +726,8 @@ const AdminDeveloperTab = () => {
                   </Table>
                 </ScrollArea>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Log detail dialog */}
           <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
@@ -769,16 +753,12 @@ const AdminDeveloperTab = () => {
                 {selectedLog?.request_body && (
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1 block">Request Body</Label>
-                    <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-auto max-h-[200px]">
-                      {JSON.stringify(selectedLog.request_body, null, 2)}
-                    </pre>
+                    <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-auto max-h-[200px]">{JSON.stringify(selectedLog.request_body, null, 2)}</pre>
                   </div>
                 )}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">Response Body</Label>
-                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-auto max-h-[300px]">
-                    {selectedLog?.response_body ? JSON.stringify(selectedLog.response_body, null, 2) : "—"}
-                  </pre>
+                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-auto max-h-[300px]">{selectedLog?.response_body ? JSON.stringify(selectedLog.response_body, null, 2) : "—"}</pre>
                 </div>
               </div>
             </DialogContent>
@@ -786,109 +766,89 @@ const AdminDeveloperTab = () => {
         </TabsContent>
 
         {/* ===== REFERENCE TAB ===== */}
-        <TabsContent value="reference" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base"><Code2 className="w-4 h-4" />API Reference</CardTitle>
-              <CardDescription>
-                All endpoints use <code className="text-xs font-mono bg-muted px-1 rounded">X-API-Key</code> header.
-                Base URL: <code className="text-xs font-mono bg-muted px-1 rounded">{API_BASE_URL}</code>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {endpointGroups.map((group) => (
-                <div key={group.title}>
-                  <div className="mb-2">
-                    <h4 className="text-sm font-semibold">{group.title}</h4>
-                    {group.description && <p className="text-xs text-muted-foreground">{group.description}</p>}
-                  </div>
-                  <div className="space-y-0.5">
-                    {group.endpoints.map((ep, i) => {
-                      const epKey = `${group.title}-${i}`;
-                      const isExpanded = expandedEndpoint === epKey;
-                      return (
-                        <div key={i} className="rounded-md border border-transparent hover:border-border transition-colors">
-                          <div
-                            className="flex items-center gap-3 py-1.5 px-3 cursor-pointer hover:bg-muted/30 rounded-md transition-colors"
-                            onClick={() => setExpandedEndpoint(isExpanded ? null : epKey)}
-                          >
-                            {isExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
-                            <Badge variant="outline" className={`text-[10px] font-mono w-16 justify-center shrink-0 ${methodColor[ep.method] ?? ""}`}>
-                              {ep.method}
-                            </Badge>
-                            <code className="text-xs font-mono text-foreground flex-1 truncate">{ep.path}</code>
-                            <span className="text-xs text-muted-foreground hidden sm:block shrink-0">{ep.description}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 px-2 text-[10px] shrink-0 ml-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                tryEndpoint(ep.method, ep.path, ep.exampleBody);
-                              }}
-                            >
-                              <Play className="w-3 h-3 mr-1" />Try it
-                            </Button>
-                          </div>
-                          {isExpanded && (
-                            <div className="px-3 pb-3 pt-1 space-y-3 ml-6 border-t border-border/50">
-                              <p className="text-xs text-muted-foreground">{ep.description}</p>
+        <TabsContent value="reference" className="mt-4 space-y-4">
+          {/* Auth info bar */}
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+            <Key className="w-4 h-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 text-xs text-muted-foreground">
+              All endpoints require <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">X-API-Key</code> header · Base URL: <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-foreground">{API_BASE_URL}</code>
+            </div>
+            <CopyButton value={API_BASE_URL} field="ref_base_url" />
+          </div>
 
-                              {/* cURL example */}
-                              <div>
-                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">cURL</Label>
-                                <div className="relative mt-1">
-                                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-muted-foreground">
-{`curl '${API_BASE_URL}${ep.path}' \\
-  -X ${ep.method} \\
-  -H "X-API-Key: chk_your_key_here"${ep.exampleBody ? ` \\
-  -H "Content-Type: application/json" \\
-  -d '${ep.exampleBody.replace(/\n/g, "")}'` : ""}`}
-                                  </pre>
-                                  <Button
-                                    variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6"
-                                    onClick={() => copyToClipboard(
-                                      `curl '${API_BASE_URL}${ep.path}' \\\n  -X ${ep.method} \\\n  -H "X-API-Key: chk_your_key_here"${ep.exampleBody ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${ep.exampleBody}'` : ""}`,
-                                      `curl-${epKey}`
-                                    )}
-                                  >
-                                    {copiedField === `curl-${epKey}` ? <Check className="w-2.5 h-2.5 text-emerald-500" /> : <Copy className="w-2.5 h-2.5" />}
-                                  </Button>
-                                </div>
-                              </div>
+          {/* Search */}
+          <div className="relative">
+            <Input
+              placeholder="Search endpoints…"
+              value={refSearch}
+              onChange={(e) => setRefSearch(e.target.value)}
+              className="text-xs h-9 pl-8"
+            />
+            <Code2 className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+          </div>
 
-                              {/* Request body example */}
-                              {ep.exampleBody && (
-                                <div>
-                                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Request Body</Label>
-                                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-foreground/80 mt-1">
-                                    {ep.exampleBody}
-                                  </pre>
-                                </div>
-                              )}
-
-                              {/* Response example */}
-                              <div>
-                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Example Response</Label>
-                                <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-foreground/80 mt-1">
-                                  {ep.exampleResponse}
-                                </pre>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
+          {/* Endpoint tables by group */}
+          {filteredGroups.map((group) => (
+            <div key={group.title} className="rounded-lg border border-border overflow-hidden">
+              <div className="px-4 py-2.5 bg-muted/30 border-b border-border">
+                <h4 className="text-sm font-semibold text-foreground">{group.title}</h4>
+                {group.description && <p className="text-[11px] text-muted-foreground mt-0.5">{group.description}</p>}
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-20">Method</TableHead>
+                    <TableHead>Endpoint</TableHead>
+                    <TableHead className="hidden md:table-cell">Description</TableHead>
+                    <TableHead className="w-16"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {group.endpoints.map((ep, i) => (
+                    <TableRow
+                      key={i}
+                      className="cursor-pointer hover:bg-muted/30"
+                      onClick={() => setDetailEndpoint(ep)}
+                    >
+                      <TableCell className="py-2">
+                        <Badge variant="outline" className={`text-[10px] font-mono w-[52px] justify-center ${methodColor[ep.method] ?? ""}`}>
+                          {ep.method}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <code className="text-xs font-mono text-foreground">{ep.path}</code>
+                      </TableCell>
+                      <TableCell className="py-2 text-xs text-muted-foreground hidden md:table-cell">
+                        {ep.description}
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-[10px]"
+                          onClick={(e) => { e.stopPropagation(); tryEndpoint(ep.method, ep.path, ep.exampleBody); }}
+                        >
+                          <Play className="w-3 h-3 mr-1" />Try
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ))}
         </TabsContent>
       </Tabs>
 
-      {/* Created key display dialog */}
+      {/* Endpoint detail dialog */}
+      <EndpointDetailDialog
+        endpoint={detailEndpoint}
+        open={!!detailEndpoint}
+        onOpenChange={(open) => { if (!open) setDetailEndpoint(null); }}
+        onTryIt={tryEndpoint}
+      />
+
+      {/* Created key display */}
       <Dialog open={!!createdKey} onOpenChange={() => setCreatedKey(null)}>
         <DialogContent>
           <DialogHeader>
