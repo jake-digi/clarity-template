@@ -193,13 +193,13 @@ const InstanceDetailPage = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <div className="border-t border-border bg-muted/50">
-                <TabsList className="bg-transparent h-11 w-full justify-start p-0 rounded-none gap-0">
+              <div className="border-t border-border bg-muted/50 overflow-x-auto">
+                <TabsList className="bg-transparent h-11 w-max min-w-full justify-start p-0 rounded-none gap-0">
                   {tabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="rounded-none h-full px-5 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors shrink-0"
+                      className="rounded-none h-full px-4 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors shrink-0"
                     >
                       <tab.icon className="w-3.5 h-3.5" />
                       {tab.label}
