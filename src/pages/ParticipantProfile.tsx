@@ -74,6 +74,7 @@ const ParticipantProfile = () => {
   const tabs = [
     { value: "personal", label: "Personal", icon: User },
     { value: "instances", label: "Instances", icon: Building2, count: p.assignments?.length },
+    { value: "cases", label: "Cases", icon: AlertTriangle },
     { value: "timeline", label: "Timeline", icon: Clock },
     { value: "medical", label: "Medical", icon: Heart },
     { value: "dietary", label: "Dietary", icon: UtensilsCrossed },
