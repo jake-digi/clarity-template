@@ -151,11 +151,11 @@ const SiteMapEditor = ({
         const latlngs = (layer.getLatLngs()[0] as L.LatLng[]).map((ll) => [ll.lat, ll.lng] as [number, number]);
         map.removeLayer(layer);
         if (isBounds) {
-          onBoundsChange(latlngs);
+          onBoundsChangeRef.current(latlngs);
         } else {
-          window.dispatchEvent(new CustomEvent("block-polygon-drawn", { detail: { polygon: latlngs } }));
+          onBlockPolygonDrawnRef.current?.(latlngs);
         }
-        onModeChange("view");
+        onModeChangeRef.current("view");
       };
 
       map.on(LDraw.Event.CREATED, onCreated);
