@@ -200,6 +200,11 @@ const ParticipantProfile = () => {
                   />
                 </TabsContent>
 
+                {/* Cases */}
+                <TabsContent value="cases" className="mt-0">
+                  <CasesTab participantId={id ?? ""} />
+                </TabsContent>
+
                 {/* Timeline */}
                 <TabsContent value="timeline" className="mt-0">
                   <TimelineTab
