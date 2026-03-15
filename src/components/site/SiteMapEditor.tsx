@@ -285,7 +285,7 @@ const SiteMapEditor = ({
               <Pentagon className="w-3.5 h-3.5" />
               Draw Block
             </Button>
-          )}
+          ) : null}
           {mode !== "view" && (
             <Button
               variant="ghost"
