@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import FormalWarningsSheet from "@/components/FormalWarningsSheet";
 import { useCases } from "@/hooks/useCases";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, Search, Plus, Filter } from "lucide-react";
+import { AlertTriangle, Search, Plus, Filter, Shield } from "lucide-react";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
