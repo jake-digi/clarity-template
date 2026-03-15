@@ -195,7 +195,29 @@ const AdminDeveloperTab = () => {
   }, [logFilter]);
 
   // --- Playground ---
+  // Extract param names from path template
+  const pgPathParams = (pgPath.match(/:([a-zA-Z_]+)/g) || []).map((p) => p.slice(1));
+
+  // Resolve path by replacing :param with actual values
+  const resolvedPath = pgPath.replace(/:([a-zA-Z_]+)/g, (_, name) => pgParams[name] || `:${name}`);
+  const hasUnresolvedParams = pgPathParams.some((p) => !pgParams[p]);
+
+  const updatePgPath = (newPath: string) => {
+    setPgPath(newPath);
+    // Reset params when path changes, keeping any that still apply
+    const newParams = (newPath.match(/:([a-zA-Z_]+)/g) || []).map((p) => p.slice(1));
+    setPgParams((prev) => {
+      const next: Record<string, string> = {};
+      newParams.forEach((p) => { if (prev[p]) next[p] = prev[p]; });
+      return next;
+    });
+  };
+
   const sendRequest = async () => {
+    if (hasUnresolvedParams) {
+      toast({ title: "Missing parameters", description: "Please fill in all path parameters before sending.", variant: "destructive" });
+      return;
+    }
     setPgLoading(true);
     setPgResponse(null);
     setPgStatus(null);
@@ -206,7 +228,7 @@ const AdminDeveloperTab = () => {
       if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) {
         headers["Content-Type"] = "application/json";
       }
-      const res = await fetch(`${API_BASE_URL}${pgPath}`, {
+      const res = await fetch(`${API_BASE_URL}${resolvedPath}`, {
         method: pgMethod,
         headers,
         body: ["POST", "PATCH", "PUT"].includes(pgMethod) && pgBody ? pgBody : undefined,
