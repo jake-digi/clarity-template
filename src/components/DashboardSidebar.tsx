@@ -8,20 +8,19 @@ const coreItems = [
   { icon: Home, label: "Dashboard", path: "/" },
   { icon: Users, label: "Participants", path: "/participants" },
   { icon: Building2, label: "Instances", path: "/instances" },
-  { icon: UserCog, label: "Users", path: "/people" },
-  { icon: FolderTree, label: "Groups", path: "/groups" },
-  { icon: Tent, label: "Sites", path: "/sites" },
 ];
 
 const opsItems = [
   { icon: ClipboardList, label: "Stages", path: "/stages" },
   { icon: MapPin, label: "Tracking", path: "/tracking" },
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
-  { icon: Activity, label: "Activity Log", path: "/activity" },
   { icon: FileWarning, label: "Cases", path: "/cases" },
+  { icon: Tent, label: "Sites", path: "/sites" },
 ];
 
 const adminItems = [
+  { icon: UserCog, label: "Users", path: "/people" },
+  { icon: Activity, label: "Activity Log", path: "/activity" },
   { icon: Settings, label: "Settings", path: "/settings" },
   { icon: Shield, label: "Roles", path: "/roles" },
 ];
