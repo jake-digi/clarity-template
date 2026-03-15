@@ -27,6 +27,21 @@ export interface SiteBlock {
   rooms: SiteRoom[];
 }
 
+export const ROOM_TYPES = [
+  { value: "room", label: "Room", icon: "home" },
+  { value: "dormitory", label: "Dormitory", icon: "bed-double" },
+  { value: "medical", label: "Medical", icon: "heart-pulse" },
+  { value: "staff", label: "Staff Room", icon: "briefcase" },
+  { value: "storage", label: "Storage", icon: "archive" },
+  { value: "kitchen", label: "Kitchen", icon: "cooking-pot" },
+  { value: "bathroom", label: "Bathroom", icon: "bath" },
+  { value: "office", label: "Office", icon: "monitor" },
+  { value: "common", label: "Common Area", icon: "sofa" },
+  { value: "other", label: "Other", icon: "map-pin" },
+] as const;
+
+export type RoomType = typeof ROOM_TYPES[number]["value"];
+
 export interface SiteRoom {
   id: string;
   block_id: string;
@@ -36,6 +51,7 @@ export interface SiteRoom {
   site_id: string;
   tenant_id: string;
   geo_position: { lat: number; lng: number } | null;
+  room_type: RoomType;
 }
 
 export function useSites() {
@@ -108,6 +124,7 @@ export function useSiteDetail(siteId: string) {
             site_id: r.site_id!,
             tenant_id: r.tenant_id,
             geo_position: (r as any).geo_position as { lat: number; lng: number } | null,
+            room_type: ((r as any).room_type ?? "room") as RoomType,
           })),
       }));
 
@@ -233,7 +250,7 @@ export function useDeleteBlock() {
 export function useCreateRoom() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; block_id: string; room_number: string; name?: string; capacity?: number; site_id: string; tenant_id: string; geo_position?: { lat: number; lng: number } }) => {
+    mutationFn: async (input: { id: string; block_id: string; room_number: string; name?: string; capacity?: number; site_id: string; tenant_id: string; geo_position?: { lat: number; lng: number }; room_type?: string }) => {
       const { data, error } = await supabase.from("rooms").insert(input).select().single();
       if (error) throw error;
       return data;
@@ -250,7 +267,7 @@ export function useCreateRoom() {
 export function useUpdateRoom() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; room_number?: string; name?: string; capacity?: number; geo_position?: { lat: number; lng: number } | null }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; room_number?: string; name?: string; capacity?: number; geo_position?: { lat: number; lng: number } | null; room_type?: string }) => {
       const { error } = await supabase.from("rooms").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
     },

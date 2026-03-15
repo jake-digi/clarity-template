@@ -1383,6 +1383,7 @@ export type Database = {
           instance_id: string | null
           name: string | null
           room_number: string
+          room_type: string
           site_id: string | null
           tenant_id: string
           updated_at: string
@@ -1397,6 +1398,7 @@ export type Database = {
           instance_id?: string | null
           name?: string | null
           room_number: string
+          room_type?: string
           site_id?: string | null
           tenant_id: string
           updated_at?: string
@@ -1411,6 +1413,7 @@ export type Database = {
           instance_id?: string | null
           name?: string | null
           room_number?: string
+          room_type?: string
           site_id?: string | null
           tenant_id?: string
           updated_at?: string
