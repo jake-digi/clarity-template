@@ -125,6 +125,7 @@ const Participants = () => {
     return [...names].sort();
   }, [participants]);
   const statuses = useMemo(() => [...new Set(participants.map((p) => p.status))], [participants]);
+  const [drawerParticipantId, setDrawerParticipantId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return participants
