@@ -50,7 +50,7 @@ const CasesKanban = ({ cases }: Props) => {
         oldStatus,
         newStatus,
         performedBy: user?.id ?? "",
-        performedByName: user?.full_name ?? "Unknown",
+        performedByName: user?.email ?? "Unknown",
       },
       {
         onSuccess: () => toast.success(`Case moved to ${columns.find((c) => c.key === newStatus)?.label}`),
