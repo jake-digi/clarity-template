@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { AlertTriangle, Clock, User, GripVertical } from "lucide-react";
 import type { BehaviorCase } from "@/hooks/useCases";
 import { useUpdateCaseStatus } from "@/hooks/useCases";
-import { useUser } from "@/hooks/useUser";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const columns = [
