@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
       const limit = parseInt(params.get("limit") || "50");
       const offset = parseInt(params.get("offset") || "0");
       const method = params.get("method");
-      const status = params.get("status"); // "success" | "error"
+      const status = params.get("status");
       const keyId = params.get("key_id");
 
       let query = sb.from("api_request_logs")
@@ -259,7 +259,6 @@ Deno.serve(async (req) => {
 
   const resource = segments[2];
   const resourceId = segments[3];
-  const subResource = segments[3];
   const sb = serviceClient();
 
   const isWrite = ["POST", "PATCH", "PUT", "DELETE"].includes(req.method);
@@ -289,8 +288,221 @@ Deno.serve(async (req) => {
     return json(body, statusCode);
   };
 
-  // ---- INSTANCES ----
-  if (resource === "instances") {
+  // ================================================================
+  // INSTANCE-SCOPED SUB-RESOURCES
+  // /api/v1/instances/:instanceId/participants|supergroups|...
+  // ================================================================
+  if (resource === "instances" && resourceId && segments[4]) {
+    const instanceId = resourceId;
+    const subResource = segments[4];
+
+    // ---- PARTICIPANT INSTANCE ASSIGNMENTS ----
+    // POST/GET   /api/v1/instances/:instanceId/participants
+    // PATCH/DEL  /api/v1/instances/:instanceId/participants/:assignmentId
+    if (subResource === "participants") {
+      const assignmentId = segments[5];
+
+      if (req.method === "GET" && !assignmentId) {
+        const { data, error: qErr, count } = await sb
+          .from("participant_instance_assignments")
+          .select("*, participants(*)", { count: "exact" })
+          .eq("instance_id", instanceId)
+          .range(offset, offset + limit - 1);
+        if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+        return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
+      }
+
+      if (req.method === "GET" && assignmentId) {
+        const { data, error: qErr } = await sb
+          .from("participant_instance_assignments")
+          .select("*, participants(*)")
+          .eq("id", assignmentId)
+          .eq("instance_id", instanceId)
+          .maybeSingle();
+        if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+        if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+        return respond({ success: true, data }, 200);
+      }
+
+      if (req.method === "POST") {
+        const body = await req.json();
+        if (!body.participant_id) return respond({ success: false, error: "participant_id is required" }, 400, body, "participant_id is required");
+        const row = {
+          id: body.id || crypto.randomUUID(),
+          instance_id: instanceId,
+          participant_id: body.participant_id,
+          super_group_id: body.super_group_id || null,
+          sub_group_id: body.sub_group_id || null,
+          block_id: body.block_id || null,
+          room_id: body.room_id || null,
+          room_number: body.room_number || null,
+          is_off_site: body.is_off_site || false,
+          off_site_comment: body.off_site_comment || null,
+          arrival_date: body.arrival_date || null,
+          departure_date: body.departure_date || null,
+        };
+        const { data, error: iErr } = await sb.from("participant_instance_assignments").insert(row).select("*, participants(*)").single();
+        if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+        return respond({ success: true, data }, 201, body);
+      }
+
+      if (req.method === "PATCH" && assignmentId) {
+        const body = await req.json();
+        // Allow updating: room_id, block_id, room_number, super_group_id, sub_group_id,
+        // is_off_site, off_site_comment, arrival_date, departure_date
+        const { data, error: uErr } = await sb
+          .from("participant_instance_assignments")
+          .update(body)
+          .eq("id", assignmentId)
+          .eq("instance_id", instanceId)
+          .select("*, participants(*)")
+          .single();
+        if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+        return respond({ success: true, data }, 200, body);
+      }
+
+      if (req.method === "DELETE" && assignmentId) {
+        const { error: dErr } = await sb
+          .from("participant_instance_assignments")
+          .delete()
+          .eq("id", assignmentId)
+          .eq("instance_id", instanceId);
+        if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+        return respond({ success: true }, 200);
+      }
+    }
+
+    // ---- INSTANCE-SCOPED SUPERGROUPS ----
+    // /api/v1/instances/:instanceId/supergroups[/:sgId[/subgroups[/:subId]]]
+    if (subResource === "supergroups") {
+      const sgId = segments[5];
+      const subSub = segments[6]; // "subgroups" or undefined
+      const subId = segments[7];
+
+      // ---- SUBGROUPS (nested under supergroup) ----
+      if (sgId && subSub === "subgroups") {
+        if (req.method === "GET" && !subId) {
+          const { data, error: qErr, count } = await sb
+            .from("subgroups")
+            .select("*", { count: "exact" })
+            .eq("instance_id", instanceId)
+            .eq("supergroup_id", sgId)
+            .eq("tenant_id", tenant_id)
+            .is("deleted_at", null)
+            .range(offset, offset + limit - 1);
+          if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+          return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
+        }
+        if (req.method === "GET" && subId) {
+          const { data, error: qErr } = await sb
+            .from("subgroups")
+            .select("*")
+            .eq("id", subId)
+            .eq("instance_id", instanceId)
+            .eq("supergroup_id", sgId)
+            .eq("tenant_id", tenant_id)
+            .maybeSingle();
+          if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+          if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+          return respond({ success: true, data }, 200);
+        }
+        if (req.method === "POST") {
+          const body = await req.json();
+          const row = { ...body, tenant_id, instance_id: instanceId, supergroup_id: sgId, id: body.id || crypto.randomUUID() };
+          const { data, error: iErr } = await sb.from("subgroups").insert(row).select().single();
+          if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+          return respond({ success: true, data }, 201, body);
+        }
+        if (req.method === "PATCH" && subId) {
+          const body = await req.json();
+          const { data, error: uErr } = await sb
+            .from("subgroups")
+            .update(body)
+            .eq("id", subId)
+            .eq("instance_id", instanceId)
+            .eq("tenant_id", tenant_id)
+            .select()
+            .single();
+          if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+          return respond({ success: true, data }, 200, body);
+        }
+        if (req.method === "DELETE" && subId) {
+          const { error: dErr } = await sb
+            .from("subgroups")
+            .update({ deleted_at: new Date().toISOString() })
+            .eq("id", subId)
+            .eq("instance_id", instanceId)
+            .eq("tenant_id", tenant_id);
+          if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+          return respond({ success: true }, 200);
+        }
+      }
+
+      // ---- SUPERGROUPS CRUD ----
+      if (req.method === "GET" && !sgId) {
+        const { data, error: qErr, count } = await sb
+          .from("supergroups")
+          .select("*", { count: "exact" })
+          .eq("instance_id", instanceId)
+          .eq("tenant_id", tenant_id)
+          .is("deleted_at", null)
+          .range(offset, offset + limit - 1);
+        if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+        return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
+      }
+      if (req.method === "GET" && sgId && !subSub) {
+        const { data, error: qErr } = await sb
+          .from("supergroups")
+          .select("*")
+          .eq("id", sgId)
+          .eq("instance_id", instanceId)
+          .eq("tenant_id", tenant_id)
+          .maybeSingle();
+        if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+        if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+        return respond({ success: true, data }, 200);
+      }
+      if (req.method === "POST" && !sgId) {
+        const body = await req.json();
+        const row = { ...body, tenant_id, instance_id: instanceId, id: body.id || crypto.randomUUID() };
+        const { data, error: iErr } = await sb.from("supergroups").insert(row).select().single();
+        if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+        return respond({ success: true, data }, 201, body);
+      }
+      if (req.method === "PATCH" && sgId && !subSub) {
+        const body = await req.json();
+        const { data, error: uErr } = await sb
+          .from("supergroups")
+          .update(body)
+          .eq("id", sgId)
+          .eq("instance_id", instanceId)
+          .eq("tenant_id", tenant_id)
+          .select()
+          .single();
+        if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+        return respond({ success: true, data }, 200, body);
+      }
+      if (req.method === "DELETE" && sgId && !subSub) {
+        // Soft-delete supergroup + cascade to subgroups
+        const now = new Date().toISOString();
+        const { error: dErr } = await sb
+          .from("supergroups")
+          .update({ deleted_at: now })
+          .eq("id", sgId)
+          .eq("instance_id", instanceId)
+          .eq("tenant_id", tenant_id);
+        if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+        // Cascade soft-delete child subgroups
+        await sb.from("subgroups").update({ deleted_at: now }).eq("supergroup_id", sgId).eq("tenant_id", tenant_id);
+        return respond({ success: true }, 200);
+      }
+    }
+
+    // If we got here with a sub-resource we didn't match, fall through
+  }
+
+  // ---- INSTANCES (top-level) ----
+  if (resource === "instances" && !segments[4]) {
     if (req.method === "GET" && !resourceId) {
       const query = sb.from("instances").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
       const typeFilter = params.get("type");
@@ -340,7 +552,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ---- PARTICIPANTS ----
+  // ---- PARTICIPANTS (top-level, global) ----
   if (resource === "participants") {
     if (req.method === "GET" && !resourceId) {
       let query = sb.from("participants").select("*", { count: "exact" }).eq("tenant_id", tenant_id).range(offset, offset + limit - 1);
@@ -375,13 +587,13 @@ Deno.serve(async (req) => {
     }
   }
 
-  // ---- GROUPS ----
+  // ---- GROUPS (legacy routes — backward compat) ----
   if (resource === "groups") {
+    const subResource = segments[3];
     if (subResource === "supergroups") {
-      const table = "supergroups";
       if (req.method === "GET") {
         const instanceId = params.get("instance_id");
-        let query = sb.from(table).select("*", { count: "exact" }).eq("tenant_id", tenant_id).range(offset, offset + limit - 1);
+        let query = sb.from("supergroups").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
         if (instanceId) query = query.eq("instance_id", instanceId);
         const { data, error: qErr, count } = await query;
         if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
@@ -389,16 +601,15 @@ Deno.serve(async (req) => {
       }
       if (req.method === "POST") {
         const body = await req.json();
-        const { data, error: iErr } = await sb.from(table).insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
+        const { data, error: iErr } = await sb.from("supergroups").insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
         if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
         return respond({ success: true, data }, 201, body);
       }
     }
     if (subResource === "subgroups") {
-      const table = "subgroups";
       if (req.method === "GET") {
         const instanceId = params.get("instance_id");
-        let query = sb.from(table).select("*", { count: "exact" }).eq("tenant_id", tenant_id).range(offset, offset + limit - 1);
+        let query = sb.from("subgroups").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
         if (instanceId) query = query.eq("instance_id", instanceId);
         const { data, error: qErr, count } = await query;
         if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
@@ -406,19 +617,30 @@ Deno.serve(async (req) => {
       }
       if (req.method === "POST") {
         const body = await req.json();
-        const { data, error: iErr } = await sb.from(table).insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
+        const { data, error: iErr } = await sb.from("subgroups").insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
         if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
         return respond({ success: true, data }, 201, body);
       }
     }
   }
 
-  // ---- BLOCKS ----
+  // ---- BLOCKS (full CRUD) ----
   if (resource === "blocks") {
-    if (req.method === "GET") {
-      const { data, error: qErr, count } = await sb.from("blocks").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
+    if (req.method === "GET" && !resourceId) {
+      let query = sb.from("blocks").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
+      const instanceId = params.get("instance_id");
+      const siteId = params.get("site_id");
+      if (instanceId) query = query.eq("instance_id", instanceId);
+      if (siteId) query = query.eq("site_id", siteId);
+      const { data, error: qErr, count } = await query;
       if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
       return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
+    }
+    if (req.method === "GET" && resourceId) {
+      const { data, error: qErr } = await sb.from("blocks").select("*").eq("id", resourceId).eq("tenant_id", tenant_id).maybeSingle();
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+      return respond({ success: true, data }, 200);
     }
     if (req.method === "POST") {
       const body = await req.json();
@@ -426,20 +648,55 @@ Deno.serve(async (req) => {
       if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
       return respond({ success: true, data }, 201, body);
     }
+    if (req.method === "PATCH" && resourceId) {
+      const body = await req.json();
+      const { data, error: uErr } = await sb.from("blocks").update(body).eq("id", resourceId).eq("tenant_id", tenant_id).select().single();
+      if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+      return respond({ success: true, data }, 200, body);
+    }
+    if (req.method === "DELETE" && resourceId) {
+      const { error: dErr } = await sb.from("blocks").update({ deleted_at: new Date().toISOString() }).eq("id", resourceId).eq("tenant_id", tenant_id);
+      if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+      return respond({ success: true }, 200);
+    }
   }
 
-  // ---- ROOMS ----
+  // ---- ROOMS (full CRUD) ----
   if (resource === "rooms") {
-    if (req.method === "GET") {
-      const { data, error: qErr, count } = await sb.from("rooms").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
+    if (req.method === "GET" && !resourceId) {
+      let query = sb.from("rooms").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
+      const instanceId = params.get("instance_id");
+      const blockId = params.get("block_id");
+      const siteId = params.get("site_id");
+      if (instanceId) query = query.eq("instance_id", instanceId);
+      if (blockId) query = query.eq("block_id", blockId);
+      if (siteId) query = query.eq("site_id", siteId);
+      const { data, error: qErr, count } = await query;
       if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
       return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
+    }
+    if (req.method === "GET" && resourceId) {
+      const { data, error: qErr } = await sb.from("rooms").select("*").eq("id", resourceId).eq("tenant_id", tenant_id).maybeSingle();
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+      return respond({ success: true, data }, 200);
     }
     if (req.method === "POST") {
       const body = await req.json();
       const { data, error: iErr } = await sb.from("rooms").insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
       if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
       return respond({ success: true, data }, 201, body);
+    }
+    if (req.method === "PATCH" && resourceId) {
+      const body = await req.json();
+      const { data, error: uErr } = await sb.from("rooms").update(body).eq("id", resourceId).eq("tenant_id", tenant_id).select().single();
+      if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+      return respond({ success: true, data }, 200, body);
+    }
+    if (req.method === "DELETE" && resourceId) {
+      const { error: dErr } = await sb.from("rooms").update({ deleted_at: new Date().toISOString() }).eq("id", resourceId).eq("tenant_id", tenant_id);
+      if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+      return respond({ success: true }, 200);
     }
   }
 
