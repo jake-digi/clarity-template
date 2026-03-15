@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import CheckInMonitoringDialog from "@/components/CheckInMonitoringDialog";
 import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -166,6 +167,7 @@ const CaseDetailPage = () => {
   const [actionDialog, setActionDialog] = useState<{ open: boolean; type: string; label: string }>({ open: false, type: "", label: "" });
   const [actionNotes, setActionNotes] = useState("");
   const [strikeConfirmed, setStrikeConfirmed] = useState<Record<string, boolean>>({});
+  const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
 
   // Fetch formal warning (strike) count for this participant
   const { data: strikeActions } = useQuery({
@@ -520,7 +522,13 @@ const CaseDetailPage = () => {
                   {caseActionTypes.map((action) => (
                     <button
                       key={action.type}
-                      onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
+                      onClick={() => {
+                        if (action.type === "checkin_monitoring") {
+                          setCheckInDialogOpen(true);
+                        } else {
+                          setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes("");
+                        }
+                      }}
                       className={cn(
                         "flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors",
                         action.variant === "warning" && "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
@@ -850,6 +858,18 @@ const CaseDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Check-In Monitoring Dialog */}
+      {c && (
+        <CheckInMonitoringDialog
+          open={checkInDialogOpen}
+          onOpenChange={setCheckInDialogOpen}
+          caseData={c}
+          actions={actions ?? []}
+          userId={user?.id ?? ""}
+          userName={user?.email ?? "Unknown"}
+        />
+      )}
     </div>
   );
 };
