@@ -96,6 +96,7 @@ const SiteMapEditor = ({
   const mapRef = useRef<L.Map | null>(null);
   const boundsLayerRef = useRef<L.Polygon | null>(null);
   const blockLayersRef = useRef<globalThis.Map<string, L.Polygon>>(new globalThis.Map());
+  const blockLabelLayersRef = useRef<L.Marker[]>([]);
   const roomMarkersRef = useRef<L.Marker[]>([]);
   const drawControlRef = useRef<any>(null);
   const [satellite, setSatellite] = useState(false);
