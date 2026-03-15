@@ -1723,6 +1723,95 @@ export type Database = {
           },
         ]
       }
+      schedule_activities: {
+        Row: {
+          activity_type: string
+          color: string | null
+          created_at: string
+          created_by: string | null
+          day_date: string
+          deleted_at: string | null
+          description: string | null
+          end_time: string
+          id: string
+          instance_id: string
+          is_published: boolean
+          location: string | null
+          start_time: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity_type?: string
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_date: string
+          deleted_at?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          instance_id: string
+          is_published?: boolean
+          location?: string | null
+          start_time: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_date?: string
+          deleted_at?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          instance_id?: string
+          is_published?: boolean
+          location?: string | null
+          start_time?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule_activity_groups: {
+        Row: {
+          activity_id: string
+          created_at: string
+          group_id: string
+          group_type: string
+          id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          group_id: string
+          group_type?: string
+          id?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          group_id?: string
+          group_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_activity_groups_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_features: {
         Row: {
           color: string | null

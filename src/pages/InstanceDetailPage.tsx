@@ -13,6 +13,7 @@ import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
   Navigation, Briefcase, UserCheck, Building, Bus, Package,
+  CalendarDays, Heart,
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
@@ -22,6 +23,8 @@ import InstanceAccommodationTab from "@/components/instance/InstanceAccommodatio
 import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
 import InstanceTransportTab from "@/components/instance/InstanceTransportTab";
 import InstanceEquipmentTab from "@/components/instance/InstanceEquipmentTab";
+import InstanceScheduleTab from "@/components/instance/InstanceScheduleTab";
+import InstanceMedicalTab from "@/components/instance/InstanceMedicalTab";
 import StageTemplateManager from "@/components/instance/StageTemplateManager";
 import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
 import StageDetailsModal from "@/components/instance/StageDetailsModal";
@@ -129,10 +132,12 @@ const InstanceDetailPage = () => {
 
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
+    { value: "schedule", label: "Schedule", icon: CalendarDays },
     { value: "participants", label: "Participants", icon: Users },
     { value: "staff", label: "Staff", icon: UserCheck },
     { value: "groups", label: "Groups", icon: FolderTree },
     { value: "accommodation", label: "Accommodation", icon: Building },
+    { value: "medical", label: "Medical", icon: Heart },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
     { value: "transport", label: "Transport", icon: Bus },
@@ -220,6 +225,10 @@ const InstanceDetailPage = () => {
                     </SectionCard>
                   </div>
                 </TabsContent>
+                {/* Schedule */}
+                <TabsContent value="schedule" className="mt-0">
+                  <InstanceScheduleTab instanceId={instanceId!} />
+                </TabsContent>
 
                 {/* Participants */}
                 <TabsContent value="participants" className="mt-0">
@@ -262,6 +271,11 @@ const InstanceDetailPage = () => {
                 {/* Accommodation */}
                 <TabsContent value="accommodation" className="mt-0">
                   <InstanceAccommodationTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Medical & Dietary */}
+                <TabsContent value="medical" className="mt-0">
+                  <InstanceMedicalTab instanceId={instanceId!} />
                 </TabsContent>
 
                 {/* Cases */}
