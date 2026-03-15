@@ -181,7 +181,7 @@ const DashboardHeader = () => {
             />
             {query ? (
               <button
-                onClick={() => { setQuery(""); setParticipantResults([]); inputRef.current?.focus(); }}
+                onClick={() => { setQuery(""); setParticipantResults([]); setCaseResults([]); inputRef.current?.focus(); }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
               >
                 ✕
