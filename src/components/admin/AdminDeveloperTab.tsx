@@ -788,7 +788,7 @@ const AdminDeveloperTab = () => {
         </TabsContent>
 
         {/* ===== REFERENCE TAB ===== */}
-        <TabsContent value="reference" className="mt-4 space-y-4">
+        <TabsContent value="reference" className="p-6 space-y-4">
           {/* Auth info bar */}
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
             <Key className="w-4 h-4 text-muted-foreground shrink-0" />
