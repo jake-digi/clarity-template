@@ -168,18 +168,15 @@ const Participants = () => {
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-              <ChevronRightIcon className="w-3 h-3" />
-              <span className="text-foreground font-medium">Participants</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Participants</h1>
-                {!isLoading && (
-                  <Badge variant="secondary" className="text-sm font-medium">{participants.length}</Badge>
-                )}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-foreground tracking-tight">Participants</h1>
+                  {!isLoading && (
+                    <Badge variant="secondary" className="text-sm font-medium">{participants.length}</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Manage participant records across all CheckPoint instances</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2">
@@ -192,11 +189,7 @@ const Participants = () => {
                 </Button>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Manage participant records across all CheckPoint instances</p>
-          </div>
 
-          {/* Sticky toolbar */}
-          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
             {isLoading ? (
               <div className="flex items-center gap-3">
                 <Skeleton className="h-10 flex-1 max-w-sm" />

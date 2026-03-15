@@ -195,11 +195,14 @@ const ReportsPage = () => {
         <DashboardSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="p-6 border-b bg-card">
-            <div className="flex items-center justify-between mb-6">
+          <div className="border-b border-border bg-card px-6 py-5">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reports</h1>
-                <p className="text-muted-foreground mt-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reports</h1>
+                  <Badge variant="secondary" className="text-sm font-medium">{reports.length}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
                   Produce, run, and schedule analytics across your organisation.
                 </p>
               </div>
@@ -229,10 +232,6 @@ const ReportsPage = () => {
               <Button variant="outline" className="h-10 px-3 gap-2">
                 <Filter className="w-4 h-4" /> Filters
               </Button>
-              <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground mr-4">
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
-                <span>{reports.length} Report Templates</span>
-              </div>
             </div>
           </div>
 

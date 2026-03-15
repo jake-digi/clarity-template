@@ -55,27 +55,24 @@ const SitesPage = () => {
         <main className="flex-1 flex flex-col min-h-0">
           {/* Banner */}
           <div className="border-b border-border bg-card px-6 py-5 shrink-0">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-foreground font-medium">Sites</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Sites</h1>
-                {!isLoading && <Badge variant="secondary" className="text-sm font-medium">{sites.length}</Badge>}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-foreground tracking-tight">Sites</h1>
+                  {!isLoading && <Badge variant="secondary" className="text-sm font-medium">{sites.length}</Badge>}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Manage venues, campsites and accommodation locations</p>
               </div>
               <Button className="gap-2" onClick={() => setShowCreate(true)}>
                 <Plus className="w-4 h-4" />New Site
               </Button>
             </div>
-          </div>
 
-          {/* Toolbar */}
-          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3 shrink-0">
-            <div className="relative max-w-xl">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search sites..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Search sites..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              </div>
             </div>
           </div>
 
