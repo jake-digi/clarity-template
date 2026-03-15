@@ -17,6 +17,7 @@ const opsItems = [
 ];
 
 const adminItems = [
+  { icon: Users, label: "Users", path: "/people" },
   { icon: Wrench, label: "Administration", path: "/admin" },
 ];
 

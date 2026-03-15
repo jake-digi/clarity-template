@@ -64,9 +64,6 @@ const AdministrationPage = () => {
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-auto">
-              <TabsContent value="users" className="mt-0 h-full">
-                <AdminUsersTab />
-              </TabsContent>
               <TabsContent value="roles" className="mt-0 p-6">
                 <AdminRolesTab />
               </TabsContent>
