@@ -393,7 +393,7 @@ const AdminDeveloperTab = () => {
       const start = Date.now();
       const headers: Record<string, string> = { "X-API-Key": pgApiKey };
       if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) headers["Content-Type"] = "application/json";
-      const res = await fetch(`${API_BASE_URL}${resolvedPath}`, {
+      const res = await fetch(`${API_INTERNAL_URL}${resolvedPath}`, {
         method: pgMethod, headers,
         body: ["POST", "PATCH", "PUT"].includes(pgMethod) && pgBody ? pgBody : undefined,
       });
