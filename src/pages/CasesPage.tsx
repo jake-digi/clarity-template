@@ -63,7 +63,13 @@ const CasesPage = () => {
         <DashboardSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
-          <div className="bg-card border-b border-border px-6 py-5">
+          <div className="border-b border-border bg-card px-6 py-5">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
+              <span className="text-muted-foreground">›</span>
+              <span className="text-foreground font-medium">Cases</span>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">Case Management</h1>
