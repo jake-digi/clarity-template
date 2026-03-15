@@ -1230,6 +1230,51 @@ export type Database = {
           },
         ]
       }
+      rbac_audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          id: string
+          performed_by: string | null
+          performed_by_name: string | null
+          target_user_id: string | null
+          target_user_name: string | null
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          performed_by?: string | null
+          performed_by_name?: string | null
+          target_user_id?: string | null
+          target_user_name?: string | null
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          performed_by?: string | null
+          performed_by_name?: string | null
+          target_user_id?: string | null
+          target_user_name?: string | null
+          tenant_id?: string
+        }
+        Relationships: []
+      }
       role_permission_mappings: {
         Row: {
           granted_at: string
