@@ -135,11 +135,13 @@ const SiteMapEditor = ({
     }
   }, [bounds]);
 
-  // Draw block polygons
+  // Draw block polygons + labels
   useEffect(() => {
     if (!mapRef.current) return;
     blockLayersRef.current.forEach((layer) => mapRef.current!.removeLayer(layer));
     blockLayersRef.current.clear();
+    blockLabelLayersRef.current.forEach((m) => mapRef.current!.removeLayer(m));
+    blockLabelLayersRef.current = [];
 
     blocks.forEach((block, i) => {
       const polygon = block.geo_polygon;
@@ -152,6 +154,11 @@ const SiteMapEditor = ({
       poly.bindTooltip(`<strong>${block.name}</strong><br/>${block.rooms.length} room${block.rooms.length !== 1 ? "s" : ""}`, { sticky: true, className: "site-map-tooltip" });
       poly.on("click", () => onBlockClick?.(block));
       blockLayersRef.current.set(block.id, poly);
+
+      // Add persistent label at polygon center
+      const center = poly.getBounds().getCenter();
+      const label = L.marker(center, { icon: makeBlockLabel(block.name, color), interactive: false }).addTo(mapRef.current!);
+      blockLabelLayersRef.current.push(label);
     });
   }, [blocks, selectedBlockId, onBlockClick]);
 
