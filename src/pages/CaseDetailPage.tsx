@@ -3,22 +3,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus, useCases } from "@/hooks/useCases";
+import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ChevronRight, ArrowLeft, User, Calendar, MapPin, AlertTriangle,
+  ChevronRight, ArrowLeft, User, Calendar as CalendarIcon, MapPin, AlertTriangle,
   Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown,
-  Heart, Smile, FileWarning, Users
+  Heart, Smile, FileWarning, Users, Pencil
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-100 text-blue-800",
