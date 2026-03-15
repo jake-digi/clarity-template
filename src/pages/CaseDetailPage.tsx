@@ -50,65 +50,80 @@ type TimelineEntry = {
 };
 
 // Happiness gauge component (credit-score style)
+const gaugeSegments = [
+  { label: "POOR", range: "1.0-1.8", color: "#4CAF50", startAngle: 180, endAngle: 144 },
+  { label: "FAIR", range: "1.8-2.6", color: "#8BC34A", startAngle: 144, endAngle: 108 },
+  { label: "GOOD", range: "2.6-3.4", color: "#CDDC39", startAngle: 108, endAngle: 72 },
+  { label: "V.GOOD", range: "3.4-4.2", color: "#FF9800", startAngle: 72, endAngle: 36 },
+  { label: "EXCELLENT", range: "4.2-5.0", color: "#F44336", startAngle: 36, endAngle: 0 },
+];
+
+function gaugePolar(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+}
+
+function scoreToAngle(score: number) {
+  const clamped = Math.max(1, Math.min(5, score));
+  return 180 - ((clamped - 1) / 4) * 180;
+}
+
+function getScoreColor(score: number) {
+  if (score < 1.8) return "#4CAF50";
+  if (score < 2.6) return "#8BC34A";
+  if (score < 3.4) return "#CDDC39";
+  if (score < 4.2) return "#FF9800";
+  return "#F44336";
+}
+
+function getScoreLabel(score: number) {
+  if (score <= 1.8) return "Poor";
+  if (score <= 2.6) return "Fair";
+  if (score <= 3.4) return "Good";
+  if (score <= 4.2) return "Very Good";
+  return "Excellent";
+}
+
 const HappinessGauge = ({ score }: { score: number }) => {
+  const cx = 200, cy = 190, outerR = 150, innerR = 90, labelR = 170, rangeR = 120;
   const clampedScore = Math.max(1, Math.min(5, score));
-  const needleAngleDeg = 180 - ((clampedScore - 1) / 4) * 180;
+  const needleAngle = scoreToAngle(clampedScore);
 
-  const getLabel = (s: number) => {
-    if (s <= 1.8) return "Poor";
-    if (s <= 2.6) return "Fair";
-    if (s <= 3.4) return "Good";
-    if (s <= 4.2) return "Very Good";
-    return "Excellent";
-  };
-
-  const cx = 150, cy = 130, r = 80;
-  const sw = 18; // stroke width
-
-  const polarToXY = (angleDeg: number, radius: number) => ({
-    x: cx + radius * Math.cos((angleDeg * Math.PI) / 180),
-    y: cy - radius * Math.sin((angleDeg * Math.PI) / 180),
-  });
-
-  const arcPath = (startDeg: number, endDeg: number) => {
-    const p1 = polarToXY(startDeg, r);
-    const p2 = polarToXY(endDeg, r);
-    return `M ${p1.x} ${p1.y} A ${r} ${r} 0 0 0 ${p2.x} ${p2.y}`;
-  };
-
-  const segments = [
-    { start: 180, end: 145, color: "#22c55e", label: "POOR", range: "1.0-1.8" },
-    { start: 143, end: 109, color: "#84cc16", label: "FAIR", range: "1.8-2.6" },
-    { start: 107, end: 73, color: "#eab308", label: "GOOD", range: "2.6-3.4" },
-    { start: 71, end: 37, color: "#f97316", label: "V.GOOD", range: "3.4-4.2" },
-    { start: 35, end: 0, color: "#ef4444", label: "EXCELLENT", range: "4.2-5.0" },
-  ];
-
-  const needleTip = polarToXY(needleAngleDeg, r - sw / 2 - 4);
-  const segIdx = Math.min(4, Math.floor(((clampedScore - 1) / 4) * 5));
+  const needleEnd = gaugePolar(cx, cy, outerR - 10, needleAngle);
+  const needleBase1 = gaugePolar(cx, cy, 8, needleAngle + 90);
+  const needleBase2 = gaugePolar(cx, cy, 8, needleAngle - 90);
 
   return (
-    <div className="flex flex-col items-center py-2">
-      <svg viewBox="0 0 300 165" className="w-full max-w-[260px]">
-        {/* Arc segments with gaps */}
-        {segments.map((seg, i) => (
-          <path key={i} d={arcPath(seg.start, seg.end)} fill="none"
-            stroke={seg.color} strokeWidth={sw} strokeLinecap="round" />
-        ))}
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 400 240" className="w-full max-w-[300px]">
+        {gaugeSegments.map((seg, i) => {
+          const outerStart = gaugePolar(cx, cy, outerR, seg.startAngle);
+          const outerEnd = gaugePolar(cx, cy, outerR, seg.endAngle);
+          const innerStart = gaugePolar(cx, cy, innerR, seg.endAngle);
+          const innerEnd = gaugePolar(cx, cy, innerR, seg.startAngle);
+          const largeArc = seg.startAngle - seg.endAngle > 180 ? 1 : 0;
 
-        {/* Labels outside the arc */}
-        {segments.map((seg, i) => {
-          const midAngle = (seg.start + seg.end) / 2;
-          const lp = polarToXY(midAngle, r + sw / 2 + 14);
-          const rp = polarToXY(midAngle, r + sw / 2 + 22);
+          const d = [
+            `M ${outerStart.x} ${outerStart.y}`,
+            `A ${outerR} ${outerR} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+            `L ${innerStart.x} ${innerStart.y}`,
+            `A ${innerR} ${innerR} 0 ${largeArc} 0 ${innerEnd.x} ${innerEnd.y}`,
+            "Z",
+          ].join(" ");
+
+          const midAngle = (seg.startAngle + seg.endAngle) / 2;
+          const labelPos = gaugePolar(cx, cy, labelR, midAngle);
+          const rangePos = gaugePolar(cx, cy, rangeR, midAngle);
+
           return (
-            <g key={`lbl-${i}`}>
-              <text x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="central"
-                className="fill-muted-foreground" fontSize="7.5" fontWeight="700">
+            <g key={i}>
+              <path d={d} fill={seg.color} />
+              <text x={labelPos.x} y={labelPos.y} textAnchor="middle" dominantBaseline="middle"
+                fontSize="10" fontWeight="700" className="fill-foreground">
                 {seg.label}
               </text>
-              <text x={rp.x} y={rp.y} textAnchor="middle" dominantBaseline="central"
-                className="fill-muted-foreground" fontSize="6" fontWeight="500">
+              <text x={rangePos.x} y={rangePos.y} textAnchor="middle" dominantBaseline="middle"
+                fontSize="9" fontWeight="500" className="fill-muted-foreground">
                 {seg.range}
               </text>
             </g>
@@ -116,20 +131,22 @@ const HappinessGauge = ({ score }: { score: number }) => {
         })}
 
         {/* Needle */}
-        <line x1={cx} y1={cy} x2={needleTip.x} y2={needleTip.y}
-          stroke="hsl(var(--foreground))" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx={cx} cy={cy} r="6" fill="hsl(210, 10%, 45%)" />
-        <circle cx={cx} cy={cy} r="3" fill="hsl(var(--card))" />
+        <polygon
+          points={`${needleEnd.x},${needleEnd.y} ${needleBase1.x},${needleBase1.y} ${needleBase2.x},${needleBase2.y}`}
+          fill="hsl(var(--foreground))"
+        />
+        <circle cx={cx} cy={cy} r={12} fill="hsl(210, 10%, 40%)" />
+        <circle cx={cx} cy={cy} r={6} fill="hsl(var(--card))" />
       </svg>
 
-      <div className="text-center -mt-1">
-        <p className="text-[10px] font-bold tracking-widest text-muted-foreground mb-1">HAPPINESS SCORE</p>
-        <p className="text-2xl font-bold text-foreground leading-none">
+      <div className="text-center -mt-3">
+        <p className="text-[10px] font-bold tracking-[3px] text-muted-foreground mb-1">HAPPINESS SCORE</p>
+        <p className="text-2xl font-extrabold leading-none" style={{ color: getScoreColor(clampedScore) }}>
           {clampedScore.toFixed(1)}
           <span className="text-sm text-muted-foreground font-normal"> / 5</span>
         </p>
-        <p className="text-xs font-semibold mt-0.5" style={{ color: segments[segIdx].color }}>
-          {getLabel(clampedScore)}
+        <p className="text-xs font-semibold mt-0.5" style={{ color: getScoreColor(clampedScore) }}>
+          {getScoreLabel(clampedScore)}
         </p>
       </div>
     </div>
