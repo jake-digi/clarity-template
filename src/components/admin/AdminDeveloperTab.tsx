@@ -17,7 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Copy, Check, Eye, EyeOff, ExternalLink, Globe, Key, Database, Code2,
+  Copy, Check, ExternalLink, Key, Database, Code2,
   Plus, Trash2, Shield, Clock, AlertTriangle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
