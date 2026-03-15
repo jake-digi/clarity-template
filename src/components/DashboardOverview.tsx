@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from
+"@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,19 +18,19 @@ const DashboardOverview = () => {
   const { data: tenant } = useQuery({
     queryKey: ["tenant-info"],
     queryFn: async () => {
-      const { data: userData } = await supabase
-        .from("users")
-        .select("tenant_id")
-        .limit(1)
-        .single();
+      const { data: userData } = await supabase.
+      from("users").
+      select("tenant_id").
+      limit(1).
+      single();
       if (!userData) return null;
-      const { data: tenantData } = await supabase
-        .from("tenants")
-        .select("*")
-        .eq("id", userData.tenant_id)
-        .single();
+      const { data: tenantData } = await supabase.
+      from("tenants").
+      select("*").
+      eq("id", userData.tenant_id).
+      single();
       return tenantData;
-    },
+    }
   });
 
   // Fetch quick stats
@@ -38,18 +38,18 @@ const DashboardOverview = () => {
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
       const [usersRes, participantsRes, instancesRes, casesRes] = await Promise.all([
-        supabase.from("users").select("id", { count: "exact", head: true }).is("deleted_at", null),
-        supabase.from("participants").select("id", { count: "exact", head: true }),
-        supabase.from("instances").select("id", { count: "exact", head: true }).is("deleted_at", null).eq("status", "active"),
-        supabase.from("behavior_cases").select("id", { count: "exact", head: true }).eq("status", "open"),
-      ]);
+      supabase.from("users").select("id", { count: "exact", head: true }).is("deleted_at", null),
+      supabase.from("participants").select("id", { count: "exact", head: true }),
+      supabase.from("instances").select("id", { count: "exact", head: true }).is("deleted_at", null).eq("status", "active"),
+      supabase.from("behavior_cases").select("id", { count: "exact", head: true }).eq("status", "open")]
+      );
       return {
         users: usersRes.count ?? 0,
         participants: participantsRes.count ?? 0,
         instances: instancesRes.count ?? 0,
-        openCases: casesRes.count ?? 0,
+        openCases: casesRes.count ?? 0
       };
-    },
+    }
   });
 
   const handleSend = () => {
@@ -57,11 +57,11 @@ const DashboardOverview = () => {
   };
 
   const quickStats = [
-    { label: "Users", value: stats?.users ?? "—", icon: Users },
-    { label: "Participants", value: stats?.participants ?? "—", icon: Users },
-    { label: "Active Instances", value: stats?.instances ?? "—", icon: Building2 },
-    { label: "Open Cases", value: stats?.openCases ?? "—", icon: Briefcase },
-  ];
+  { label: "Users", value: stats?.users ?? "—", icon: Users },
+  { label: "Participants", value: stats?.participants ?? "—", icon: Users },
+  { label: "Active Instances", value: stats?.instances ?? "—", icon: Building2 },
+  { label: "Open Cases", value: stats?.openCases ?? "—", icon: Briefcase }];
+
 
   return (
     <div className="space-y-3">
@@ -96,21 +96,21 @@ const DashboardOverview = () => {
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Since</p>
               <p className="text-sm font-medium text-foreground">
-                {tenant?.created_at
-                  ? new Date(tenant.created_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })
-                  : "—"}
+                {tenant?.created_at ?
+                new Date(tenant.created_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) :
+                "—"}
               </p>
             </div>
           </div>
 
           {/* Quick stats */}
           <div className="grid grid-cols-4 gap-3">
-            {quickStats.map((s) => (
-              <div key={s.label} className="bg-muted/50 rounded-md px-3 py-2.5">
+            {quickStats.map((s) =>
+            <div key={s.label} className="bg-muted/50 rounded-md px-3 py-2.5">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
                 <p className="text-lg font-bold text-foreground leading-tight mt-0.5">{s.value}</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -124,7 +124,7 @@ const DashboardOverview = () => {
           <Dialog>
             <DialogTrigger asChild>
               <button className="w-full aspect-square max-w-[180px] rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-border">
-                <img src={qrCode} alt="QR Code" className="w-full h-full object-cover" />
+                <img alt="QR Code" className="w-full h-full object-cover" src="https://docs.lightburnsoftware.com/legacy/img/QRCode/ExampleCode.png" />
               </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-xs flex flex-col items-center gap-4 p-8">
@@ -150,40 +150,40 @@ const DashboardOverview = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setSendMode("single")}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "single" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
-                  >
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "single" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                    
                     Single
                   </button>
                   <button
                     onClick={() => setSendMode("bulk")}
-                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "bulk" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
-                  >
+                    className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "bulk" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                    
                     Bulk
                   </button>
                 </div>
-                {sendMode === "single" ? (
-                  <div className="space-y-2">
+                {sendMode === "single" ?
+                <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Email or phone</label>
                     <input
-                      type="text"
-                      value={recipient}
-                      onChange={(e) => setRecipient(e.target.value)}
-                      placeholder="email@example.com or +44..."
-                      className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-2">
+                    type="text"
+                    value={recipient}
+                    onChange={(e) => setRecipient(e.target.value)}
+                    placeholder="email@example.com or +44..."
+                    className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                  
+                  </div> :
+
+                <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">Recipients (one per line)</label>
                     <textarea
-                      value={bulkRecipients}
-                      onChange={(e) => setBulkRecipients(e.target.value)}
-                      placeholder={"email1@example.com\nemail2@example.com"}
-                      rows={5}
-                      className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                    />
+                    value={bulkRecipients}
+                    onChange={(e) => setBulkRecipients(e.target.value)}
+                    placeholder={"email1@example.com\nemail2@example.com"}
+                    rows={5}
+                    className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+                  
                   </div>
-                )}
+                }
                 <Button onClick={handleSend} className="w-full gap-2">
                   <Send className="w-4 h-4" />
                   {sendMode === "single" ? "Send Link" : "Send to All"}
@@ -193,8 +193,8 @@ const DashboardOverview = () => {
           </Dialog>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default DashboardOverview;
