@@ -626,6 +626,19 @@ const SiteDetailPage = () => {
                       <Input placeholder="e.g. Eagle Room" value={roomPinForm.name} onChange={(e) => setRoomPinForm({ ...roomPinForm, name: e.target.value })} />
                     </div>
                     <div className="space-y-1.5">
+                      <Label>Room Type</Label>
+                      <Select value={roomPinForm.room_type} onValueChange={(v) => setRoomPinForm({ ...roomPinForm, room_type: v })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ROOM_TYPES.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
                       <Label>Capacity</Label>
                       <Input type="number" placeholder="e.g. 4" value={roomPinForm.capacity} onChange={(e) => setRoomPinForm({ ...roomPinForm, capacity: e.target.value })} />
                     </div>
@@ -643,6 +656,48 @@ const SiteDetailPage = () => {
                 createRoom.isPending || updateRoom.isPending
               }>
               {createRoom.isPending || updateRoom.isPending ? "Saving..." : roomPinMode === "existing" ? "Assign Pin" : "Create Room"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Room Dialog */}
+      <Dialog open={showEditRoomDialog} onOpenChange={setShowEditRoomDialog}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Edit Room</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Room Number *</Label>
+              <Input value={editRoomForm.room_number} onChange={(e) => setEditRoomForm({ ...editRoomForm, room_number: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input placeholder="e.g. Eagle Room" value={editRoomForm.name} onChange={(e) => setEditRoomForm({ ...editRoomForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Room Type</Label>
+              <Select value={editRoomForm.room_type} onValueChange={(v) => setEditRoomForm({ ...editRoomForm, room_type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROOM_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Capacity</Label>
+              <Input type="number" placeholder="e.g. 4" value={editRoomForm.capacity} onChange={(e) => setEditRoomForm({ ...editRoomForm, capacity: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowEditRoomDialog(false); setEditingRoom(null); }}>Cancel</Button>
+            <Button onClick={handleSaveEditRoom} disabled={!editRoomForm.room_number.trim() || updateRoom.isPending}>
+              {updateRoom.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
