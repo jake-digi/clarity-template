@@ -149,7 +149,7 @@ export function useUpdateSite() {
 export function useUpdateBlockPolygon() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, geo_polygon }: { id: string; geo_polygon: [number, number][] }) => {
+    mutationFn: async ({ id, geo_polygon }: { id: string; geo_polygon: [number, number][] | null }) => {
       const { error } = await supabase.from("blocks").update({ geo_polygon, updated_at: new Date().toISOString() } as any).eq("id", id);
       if (error) throw error;
     },

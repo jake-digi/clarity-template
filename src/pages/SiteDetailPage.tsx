@@ -271,13 +271,13 @@ const SiteDetailPage = () => {
     setShowAssignPolygon(false);
   };
 
-  const handleBoundsChange = useCallback((newBounds: GeoBounds) => {
+  const handleBoundsChange = useCallback((newBounds: GeoBounds | null) => {
     if (!siteId) return;
     updateSite.mutate({ id: siteId, geo_bounds: newBounds }, { onSuccess: () => {} });
   }, [siteId, updateSite]);
 
-  const handleBlockPolygonChange = useCallback((blockId: string, polygon: GeoPolygon) => {
-    updateBlockPolygon.mutate({ id: blockId, geo_polygon: polygon });
+  const handleBlockPolygonChange = useCallback((blockId: string, polygon: GeoPolygon | null) => {
+    updateBlockPolygon.mutate({ id: blockId, geo_polygon: polygon as any });
   }, [updateBlockPolygon]);
 
   const handleBlockClick = useCallback((block: SiteBlock) => {
