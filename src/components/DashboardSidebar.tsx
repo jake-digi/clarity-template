@@ -18,6 +18,7 @@ const opsItems = [
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: Activity, label: "Activity Log", path: "/activity" },
   { icon: FileWarning, label: "Cases", path: "/cases" },
+  { icon: Shield, label: "Warnings", path: "/warnings" },
 ];
 
 const adminItems = [
