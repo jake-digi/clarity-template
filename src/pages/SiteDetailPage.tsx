@@ -458,8 +458,8 @@ const SiteDetailPage = () => {
       </Dialog>
 
       {/* Assign Polygon to Block Dialog */}
-      <Dialog open={showAssignPolygon} onOpenChange={(v) => { if (!v) { setShowAssignPolygon(false); setPendingPolygon(null); } }}>
-        <DialogContent className="sm:max-w-sm">
+      <Dialog open={showAssignPolygon} onOpenChange={setShowAssignPolygon}>
+        <DialogContent className="sm:max-w-sm" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader><DialogTitle>Assign Area to Block</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Select which block this drawn area belongs to:</p>
           <Select value={assignBlockId} onValueChange={setAssignBlockId}>
