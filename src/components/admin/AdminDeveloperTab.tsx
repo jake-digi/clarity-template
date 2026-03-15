@@ -245,7 +245,18 @@ const AdminDeveloperTab = () => {
       ],
     },
     {
-      title: "Participants",
+      title: "Participant Assignments",
+      description: "Manage participant-to-instance assignments. Assign participants to instances, move rooms/groups, update off-site status.",
+      endpoints: [
+        { method: "GET", path: "/api/v1/instances/:instanceId/participants", description: "List participants assigned to instance (includes participant data)" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID" },
+        { method: "POST", path: "/api/v1/instances/:instanceId/participants", description: "Assign participant to instance (requires participant_id)" },
+        { method: "PATCH", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site, dates)" },
+        { method: "DELETE", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance" },
+      ],
+    },
+    {
+      title: "Participants (Global)",
       endpoints: [
         { method: "GET", path: "/api/v1/participants", description: "List participants (?instance_id=)" },
         { method: "GET", path: "/api/v1/participants/:id", description: "Get participant by ID" },
@@ -255,21 +266,57 @@ const AdminDeveloperTab = () => {
       ],
     },
     {
-      title: "Groups",
+      title: "Supergroups (Instance-scoped)",
+      description: "Groups are scoped to instances. Full CRUD with soft-delete. Deleting a supergroup cascades to its subgroups.",
       endpoints: [
-        { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups" },
-        { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup" },
-        { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups" },
-        { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups", description: "List supergroups for instance" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID" },
+        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups", description: "Create supergroup" },
+        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Update supergroup" },
+        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup (cascades to subgroups)" },
       ],
     },
     {
-      title: "Blocks & Rooms",
+      title: "Subgroups (Nested under Supergroup)",
+      description: "Subgroups are nested under supergroups within an instance.",
       endpoints: [
-        { method: "GET", path: "/api/v1/blocks", description: "List blocks" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID" },
+        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup" },
+        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup" },
+        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup" },
+      ],
+    },
+    {
+      title: "Blocks",
+      description: "Filter with ?instance_id= or ?site_id=. Full CRUD with soft-delete.",
+      endpoints: [
+        { method: "GET", path: "/api/v1/blocks", description: "List blocks (?instance_id=, ?site_id=)" },
+        { method: "GET", path: "/api/v1/blocks/:blockId", description: "Get block by ID" },
         { method: "POST", path: "/api/v1/blocks", description: "Create block" },
-        { method: "GET", path: "/api/v1/rooms", description: "List rooms" },
+        { method: "PATCH", path: "/api/v1/blocks/:blockId", description: "Update block" },
+        { method: "DELETE", path: "/api/v1/blocks/:blockId", description: "Soft-delete block" },
+      ],
+    },
+    {
+      title: "Rooms",
+      description: "Filter with ?block_id=, ?instance_id=, or ?site_id=. Full CRUD with soft-delete.",
+      endpoints: [
+        { method: "GET", path: "/api/v1/rooms", description: "List rooms (?block_id=, ?instance_id=, ?site_id=)" },
+        { method: "GET", path: "/api/v1/rooms/:roomId", description: "Get room by ID" },
         { method: "POST", path: "/api/v1/rooms", description: "Create room" },
+        { method: "PATCH", path: "/api/v1/rooms/:roomId", description: "Update room" },
+        { method: "DELETE", path: "/api/v1/rooms/:roomId", description: "Soft-delete room" },
+      ],
+    },
+    {
+      title: "Groups (Legacy)",
+      description: "Backward-compatible endpoints. Prefer instance-scoped routes above.",
+      endpoints: [
+        { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups (?instance_id=)" },
+        { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup" },
+        { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups (?instance_id=)" },
+        { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup" },
       ],
     },
   ];
