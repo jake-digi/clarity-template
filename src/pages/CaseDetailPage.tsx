@@ -228,7 +228,10 @@ const CaseDetailPage = () => {
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
-  const caseActionTypes = [
+  const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
+  const isWelfareCase = welfareCategoriesList.includes(c?.category ?? "");
+
+  const behaviourActionTypes = [
     { type: "formal_warning", label: "Formal Warning", icon: Gavel, variant: "warning" as const },
     { type: "phone_call", label: "Log Phone Call", icon: Phone, variant: "default" as const },
     { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, variant: "default" as const },
@@ -237,6 +240,18 @@ const CaseDetailPage = () => {
     { type: "escalate", label: "Escalate", icon: Siren, variant: "danger" as const },
     { type: "add_note", label: "Add Case Note", icon: BookOpen, variant: "default" as const },
   ];
+
+  const welfareActionTypes = [
+    { type: "checkin_monitoring", label: "Check-in Monitoring", icon: Heart, variant: "warning" as const },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone, variant: "default" as const },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, variant: "default" as const },
+    { type: "email_parent", label: "Email Parent", icon: Mail, variant: "default" as const },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, variant: "danger" as const },
+    { type: "escalate", label: "Escalate", icon: Siren, variant: "danger" as const },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen, variant: "default" as const },
+  ];
+
+  const caseActionTypes = isWelfareCase ? welfareActionTypes : behaviourActionTypes;
 
   const handleCaseAction = async () => {
     if (!caseId || !user || !c) return;
