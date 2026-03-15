@@ -10,6 +10,7 @@ import {
   useUpdateBlockPolygon,
   SiteBlock, SiteRoom, ROOM_TYPES, RoomType,
 } from "@/hooks/useSites";
+import { useSiteFeatures, useCreateSiteFeature, useUpdateSiteFeature, useDeleteSiteFeature, FEATURE_TYPES, SiteFeature } from "@/hooks/useSiteFeatures";
 import SiteMapEditor, { GeoBounds, GeoPolygon, MapMode } from "@/components/site/SiteMapEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
