@@ -365,10 +365,10 @@ const NewInstancePage = () => {
                       </div>
                       <div>
                         <Label className="text-sm font-medium">Site</Label>
-                        <Select value={details.siteId} onValueChange={(v) => updateDetail("siteId", v)}>
+                        <Select value={details.siteId || "none"} onValueChange={(v) => updateDetail("siteId", v === "none" ? "" : v)}>
                           <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select a site (optional)" /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {sites.map((s) => (
                               <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                             ))}
