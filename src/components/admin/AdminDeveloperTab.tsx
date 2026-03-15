@@ -62,6 +62,9 @@ interface ApiLog {
 }
 
 const AdminDeveloperTab = () => {
+  // Tab state
+  const [activeTab, setActiveTab] = useState("keys");
+
   // Keys state
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [keysLoading, setKeysLoading] = useState(true);
@@ -88,6 +91,9 @@ const AdminDeveloperTab = () => {
   const [pgStatus, setPgStatus] = useState<number | null>(null);
   const [pgTime, setPgTime] = useState<number | null>(null);
   const [pgLoading, setPgLoading] = useState(false);
+
+  // Reference state
+  const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
