@@ -57,14 +57,16 @@ const CaseDetailPage = () => {
     );
   };
 
+  const qc = useQueryClient();
+
   const handleSeverityChange = async (newSeverity: string) => {
     if (!c || !caseId || newSeverity === c.severity_level) return;
     const { supabase } = await import("@/integrations/supabase/client");
     const { error } = await supabase.from("behavior_cases").update({ severity_level: newSeverity, updated_at: new Date().toISOString() }).eq("id", caseId);
     if (error) { toast.error("Failed to update severity"); return; }
     toast.success(`Severity changed to ${newSeverity}`);
-    // Refetch
-    window.location.reload();
+    qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
+    qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
   const handleStatusChange = (newStatus: string) => {
