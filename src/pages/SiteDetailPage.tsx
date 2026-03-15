@@ -343,7 +343,7 @@ const SiteDetailPage = () => {
     const closeDialog = () => {
       setShowRoomPinDialog(false);
       setPendingRoomPin(null);
-      setRoomPinForm({ room_number: "", name: "", capacity: "" });
+      setRoomPinForm({ room_number: "", name: "", capacity: "", room_type: "room" });
       setSelectedExistingRoomId("");
     };
 
