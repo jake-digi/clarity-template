@@ -109,19 +109,15 @@ const PeopleManagement = () => {
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-              <ChevronRightIcon className="w-3 h-3" />
-              <span className="text-foreground font-medium">Users</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Users</h1>
-                {!isLoading && (
-                  <Badge variant="secondary" className="text-sm font-medium">{users.length}</Badge>
-                )}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-foreground tracking-tight">Users</h1>
+                  {!isLoading && (
+                    <Badge variant="secondary" className="text-sm font-medium">{users.length}</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Manage staff and personnel across all CheckPoint instances</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2">
@@ -134,47 +130,38 @@ const PeopleManagement = () => {
                 </Button>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Manage staff and personnel across all CheckPoint instances</p>
-          </div>
 
-          {/* Toolbar — sticky below header */}
-          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3 space-y-2">
             {isLoading ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 flex-1 max-w-sm" />
-                  <Skeleton className="h-10 w-[180px]" />
-                  <Skeleton className="h-10 w-[160px]" />
-                </div>
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 flex-1 max-w-sm" />
+                <Skeleton className="h-10 w-[180px]" />
+                <Skeleton className="h-10 w-[160px]" />
               </div>
             ) : (
-              <>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="relative flex-1 min-w-[320px] max-w-xl">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search by name, email or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-                  </div>
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      {allRoles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative flex-1 min-w-[320px] max-w-xl">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Search by name, email or ID..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                 </div>
-
-              </>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    {allRoles.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
           </div>
 

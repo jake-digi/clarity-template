@@ -64,18 +64,15 @@ const CasesPage = () => {
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-              <span className="text-muted-foreground">›</span>
-              <span className="text-foreground font-medium">Cases</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Case Management</h1>
-                {!isLoading && (
-                  <Badge variant="secondary" className="text-sm font-medium">{(cases ?? []).length}</Badge>
-                )}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-semibold text-foreground tracking-tight">Case Management</h1>
+                  {!isLoading && (
+                    <Badge variant="secondary" className="text-sm font-medium">{(cases ?? []).length}</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">Track and manage behaviour cases across instances</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2" onClick={() => setWarningsOpen(true)}>
@@ -88,13 +85,9 @@ const CasesPage = () => {
                 </Button>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Track and manage behaviour cases across instances</p>
-          </div>
 
-          {/* Sticky toolbar */}
-          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <div className="relative flex-1 min-w-[200px] max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search cases..."
