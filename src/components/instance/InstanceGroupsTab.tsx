@@ -54,6 +54,7 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
   const [deleteTarget, setDeleteTarget] = useState<{ type: "supergroup" | "subgroup"; id: string; name: string } | null>(null);
   const [assignDialog, setAssignDialog] = useState<{ open: boolean; subgroupId: string; supergroupId: string } | null>(null);
   const [assignSearch, setAssignSearch] = useState("");
+  const [drawerParticipantId, setDrawerParticipantId] = useState<string | null>(null);
 
   // Form state
   const [formName, setFormName] = useState("");
