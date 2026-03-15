@@ -119,6 +119,92 @@ export type Database = {
           },
         ]
       }
+      announcement_read_receipts: {
+        Row: {
+          announcement_id: string
+          id: string
+          read_at: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_read_receipts_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          deleted_at: string | null
+          expires_at: string | null
+          id: string
+          instance_id: string | null
+          is_pinned: boolean | null
+          priority: string
+          published_at: string | null
+          target_groups: string[] | null
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          deleted_at?: string | null
+          expires_at?: string | null
+          id?: string
+          instance_id?: string | null
+          is_pinned?: boolean | null
+          priority?: string
+          published_at?: string | null
+          target_groups?: string[] | null
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          deleted_at?: string | null
+          expires_at?: string | null
+          id?: string
+          instance_id?: string | null
+          is_pinned?: boolean | null
+          priority?: string
+          published_at?: string | null
+          target_groups?: string[] | null
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           allowed_ips: string[] | null
@@ -1050,6 +1136,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      instance_documents: {
+        Row: {
+          category: string
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          instance_id: string
+          tenant_id: string
+          updated_at: string
+          uploaded_by: string | null
+          uploaded_by_name: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          instance_id: string
+          tenant_id: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          instance_id?: string
+          tenant_id?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+        }
+        Relationships: []
       }
       instances: {
         Row: {
