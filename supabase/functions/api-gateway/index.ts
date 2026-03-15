@@ -194,6 +194,7 @@ Deno.serve(async (req) => {
         name: body.name || "Untitled",
         scopes: body.scopes || ["read"],
         expires_at: body.expires_at || null,
+        allowed_ips: body.allowed_ips || [],
         created_by: user_id,
       });
 
@@ -204,7 +205,7 @@ Deno.serve(async (req) => {
     if (req.method === "GET" && action === "list") {
       const { data, error: listErr } = await sb
         .from("api_keys")
-        .select("id, key_prefix, name, scopes, created_at, last_used_at, expires_at, revoked_at")
+        .select("id, key_prefix, name, scopes, created_at, last_used_at, expires_at, revoked_at, allowed_ips")
         .eq("tenant_id", tenant_id)
         .order("created_at", { ascending: false });
 
