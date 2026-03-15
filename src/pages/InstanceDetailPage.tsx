@@ -135,6 +135,8 @@ const InstanceDetailPage = () => {
     { value: "accommodation", label: "Accommodation", icon: Building },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
+    { value: "transport", label: "Transport", icon: Bus },
+    { value: "equipment", label: "Equipment", icon: Package },
     { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
   ];
