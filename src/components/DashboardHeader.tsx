@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle, LogOut, Settings, Sun, Moon } from "lucide-react";
+import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle, LogOut, Settings, Sun, Moon, Plus, UserPlus, FilePlus, MapPin, FolderPlus, Zap, Download, Upload, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,20 +16,38 @@ interface SearchItem {
   initials?: string;
 }
 
-const searchIndex: SearchItem[] = [
+interface SearchAction extends SearchItem {
+  action?: string;
+}
+
+const searchIndex: SearchAction[] = [
+  // Navigation
   { label: "Dashboard", category: "Navigation", path: "/", icon: Building2 },
-  { label: "Users", category: "Tenant Overview", path: "/people", icon: Users },
-  { label: "Participants", category: "Tenant Overview", path: "/participants", icon: UserCheck },
-  { label: "Groups", category: "Tenant Overview", path: "/", icon: UsersRound },
-  { label: "Accommodation", category: "Tenant Overview", path: "/", icon: BedDouble },
-  { label: "Case Management", category: "Case Management", path: "/cases", icon: Briefcase },
-  { label: "Strikes Report", category: "Reporting", path: "/", icon: FileWarning },
-  { label: "Participant Reports", category: "Reporting", path: "/", icon: BarChart3 },
-  { label: "Cross-Instance Reports", category: "Reporting", path: "/", icon: GitCompareArrows },
-  { label: "Instances", category: "System", path: "/instances", icon: Building2 },
-  { label: "Roles & Permissions", category: "System", path: "/roles", icon: ShieldCheck },
-  { label: "Audit & History", category: "System", path: "/", icon: History },
-  { label: "Attendance", category: "System", path: "/", icon: ClipboardCheck },
+  { label: "Users", category: "Navigation", path: "/people", icon: Users },
+  { label: "Participants", category: "Navigation", path: "/participants", icon: UserCheck },
+  { label: "Groups", category: "Navigation", path: "/", icon: UsersRound },
+  { label: "Accommodation", category: "Navigation", path: "/", icon: BedDouble },
+  { label: "Case Management", category: "Navigation", path: "/cases", icon: Briefcase },
+  { label: "Reports", category: "Navigation", path: "/reports", icon: BarChart3 },
+  { label: "Instances", category: "Navigation", path: "/instances", icon: Building2 },
+  { label: "Roles & Permissions", category: "Navigation", path: "/roles", icon: ShieldCheck },
+  { label: "Sites", category: "Navigation", path: "/sites", icon: MapPin },
+  { label: "Administration", category: "Navigation", path: "/admin", icon: Settings },
+  { label: "Audit & History", category: "Navigation", path: "/", icon: History },
+  { label: "Attendance", category: "Navigation", path: "/", icon: ClipboardCheck },
+
+  // Quick Actions
+  { label: "Invite User", category: "Actions", path: "/admin", icon: UserPlus, action: "invite-user" },
+  { label: "Add New Instance", category: "Actions", path: "/instances/new", icon: Plus },
+  { label: "Create New Report", category: "Actions", path: "/reports/builder", icon: FilePlus },
+  { label: "Add New Case", category: "Actions", path: "/cases", icon: FolderPlus, action: "new-case" },
+  { label: "Add New Site", category: "Actions", path: "/sites", icon: MapPin, action: "new-site" },
+  { label: "Create New Role", category: "Actions", path: "/roles", icon: ShieldCheck, action: "new-role" },
+  { label: "Export Participants", category: "Actions", path: "/participants", icon: Download, action: "export-participants" },
+  { label: "Bulk Upload Participants", category: "Actions", path: "/participants", icon: Upload, action: "bulk-upload" },
+  { label: "Send Announcement", category: "Actions", path: "/", icon: Send, action: "announcement" },
+  { label: "Generate Cross-Instance Report", category: "Actions", path: "/reports/builder", icon: GitCompareArrows },
+  { label: "View Strikes Report", category: "Actions", path: "/reports", icon: FileWarning },
 ];
 
 function getInitials(name: string): string {
@@ -263,7 +281,7 @@ const DashboardHeader = () => {
               onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search pages, participants, users, cases..."
+              placeholder="Search pages, actions, people, cases..."
               className="w-full pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query ? (
@@ -286,7 +304,7 @@ const DashboardHeader = () => {
                 <div className="py-3 px-4 space-y-3">
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Try searching for</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {["Participants", "Cases", "Users", "Groups", "Instances"].map((hint) => (
+                    {["Participants", "Cases", "Users", "Invite", "New Instance", "New Report"].map((hint) => (
                       <button
                         key={hint}
                         onClick={() => { setQuery(hint); }}
@@ -300,6 +318,7 @@ const DashboardHeader = () => {
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2"><User className="w-3.5 h-3.5" /><span>Participant or user name — e.g. "Aaron"</span></div>
                     <div className="flex items-center gap-2"><Building2 className="w-3.5 h-3.5" /><span>Page or module name</span></div>
+                    <div className="flex items-center gap-2"><Zap className="w-3.5 h-3.5" /><span>Actions — e.g. "Invite", "New Report"</span></div>
                   </div>
                   <div className="border-t border-border pt-2 flex items-center gap-4 text-[10px] text-muted-foreground">
                     <span><kbd className="px-1 py-0.5 bg-muted border border-border rounded text-[9px]">↑↓</kbd> Navigate</span>
@@ -323,6 +342,7 @@ const DashboardHeader = () => {
                         const idx = flatIndex;
                         const Icon = item.icon;
                         const hasAvatar = item.category === "Participants" || item.category === "Users";
+                        const isAction = item.category === "Actions";
                         return (
                           <button
                             key={`${item.path}-${item.label}`}
@@ -340,10 +360,17 @@ const DashboardHeader = () => {
                                   {item.initials ?? <Icon className="w-3 h-3" />}
                                 </AvatarFallback>
                               </Avatar>
+                            ) : isAction ? (
+                              <span className="flex items-center justify-center w-5 h-5 rounded bg-primary/10 shrink-0">
+                                <Icon className="w-3.5 h-3.5 text-primary" />
+                              </span>
                             ) : (
                               <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                             )}
                             <span className="font-medium truncate">{item.label}</span>
+                            {isAction && (
+                              <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Action</span>
+                            )}
                           </button>
                         );
                       })}
