@@ -56,6 +56,16 @@ const CaseDetailPage = () => {
     );
   };
 
+  const handleSeverityChange = async (newSeverity: string) => {
+    if (!c || !caseId || newSeverity === c.severity_level) return;
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("behavior_cases").update({ severity_level: newSeverity, updated_at: new Date().toISOString() }).eq("id", caseId);
+    if (error) { toast.error("Failed to update severity"); return; }
+    toast.success(`Severity changed to ${newSeverity}`);
+    // Refetch
+    window.location.reload();
+  };
+
   const handleStatusChange = (newStatus: string) => {
     if (!c || !caseId || !user || newStatus === c.status) return;
     updateStatus.mutate(
