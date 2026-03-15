@@ -212,7 +212,7 @@ const InstanceDetailPage = () => {
                 </TabsList>
               </div>
 
-              <div className="px-6 py-6">
+              <div className="px-3 md:px-6 py-4 md:py-6">
                 {/* Overview */}
                 <TabsContent value="overview" className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
