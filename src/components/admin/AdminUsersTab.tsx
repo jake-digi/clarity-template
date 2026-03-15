@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Search, ArrowUpDown, ChevronLeft, ChevronRight, User,
+  Search, ArrowUpDown, ChevronLeft, ChevronRight, User, UserPlus,
 } from "lucide-react";
 import { useUsers, type UserRow } from "@/hooks/useUsers";
+import InviteUserDialog from "./InviteUserDialog";
 
 const statusVariant = (status: string) => {
   switch (status?.toLowerCase()) {
@@ -35,6 +36,7 @@ const AdminUsersTab = () => {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(0);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const pageSize = 25;
 
   const toggleSort = (field: SortField) => {
@@ -93,7 +95,13 @@ const AdminUsersTab = () => {
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground ml-auto">{filtered.length} user{filtered.length !== 1 ? "s" : ""}</p>
+        <Button size="sm" className="h-9 gap-1.5" onClick={() => setInviteOpen(true)}>
+          <UserPlus className="w-4 h-4" />
+          Invite User
+        </Button>
       </div>
+
+      <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
