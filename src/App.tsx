@@ -18,6 +18,8 @@ import UserProfile from "./pages/UserProfile.tsx";
 import Login from "./pages/Login.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import CasesPage from "./pages/CasesPage.tsx";
+import CaseDetailPage from "./pages/CaseDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
               <Route path="/instances" element={<ProtectedRoute><InstancesPage /></ProtectedRoute>} />
               <Route path="/instances/:instanceId" element={<ProtectedRoute><InstanceDetailPage /></ProtectedRoute>} />
               <Route path="/tracking" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
+              <Route path="/cases" element={<ProtectedRoute><CasesPage /></ProtectedRoute>} />
+              <Route path="/cases/:caseId" element={<ProtectedRoute><CaseDetailPage /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

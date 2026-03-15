@@ -1,4 +1,4 @@
-import { Home, Users, Building2, UserCog, FolderTree, ClipboardList, MapPin, CheckSquare, Activity, Settings, Shield, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Home, Users, Building2, UserCog, FolderTree, ClipboardList, MapPin, CheckSquare, Activity, Settings, Shield, PanelLeftClose, PanelLeft, FileWarning } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +17,7 @@ const opsItems = [
   { icon: MapPin, label: "Tracking", path: "/tracking" },
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: Activity, label: "Activity Log", path: "/activity" },
+  { icon: FileWarning, label: "Cases", path: "/cases" },
 ];
 
 const adminItems = [

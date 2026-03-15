@@ -119,6 +119,126 @@ export type Database = {
           },
         ]
       }
+      behavior_cases: {
+        Row: {
+          assigned_to_id: string | null
+          assigned_to_name: string | null
+          associated_strike_id: string | null
+          category: string
+          created_at: string
+          id: string
+          instance_id: string
+          involved_staff: string[] | null
+          involves_staff_member: boolean | null
+          is_sensitive_safeguarding: boolean | null
+          location: string | null
+          metadata: Json | null
+          overview: string | null
+          parent_notification_date: string | null
+          parent_notification_sent: boolean | null
+          participant_id: string
+          privacy_level: string
+          raised_by: string | null
+          requires_immediate_action: boolean | null
+          severity_level: string
+          status: string
+          tenant_id: string
+          timestamp: string
+          updated_at: string
+          witnesses: string[] | null
+        }
+        Insert: {
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          associated_strike_id?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          instance_id: string
+          involved_staff?: string[] | null
+          involves_staff_member?: boolean | null
+          is_sensitive_safeguarding?: boolean | null
+          location?: string | null
+          metadata?: Json | null
+          overview?: string | null
+          parent_notification_date?: string | null
+          parent_notification_sent?: boolean | null
+          participant_id: string
+          privacy_level?: string
+          raised_by?: string | null
+          requires_immediate_action?: boolean | null
+          severity_level?: string
+          status?: string
+          tenant_id: string
+          timestamp?: string
+          updated_at?: string
+          witnesses?: string[] | null
+        }
+        Update: {
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          associated_strike_id?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          instance_id?: string
+          involved_staff?: string[] | null
+          involves_staff_member?: boolean | null
+          is_sensitive_safeguarding?: boolean | null
+          location?: string | null
+          metadata?: Json | null
+          overview?: string | null
+          parent_notification_date?: string | null
+          parent_notification_sent?: boolean | null
+          participant_id?: string
+          privacy_level?: string
+          raised_by?: string | null
+          requires_immediate_action?: boolean | null
+          severity_level?: string
+          status?: string
+          tenant_id?: string
+          timestamp?: string
+          updated_at?: string
+          witnesses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "behavior_cases_assigned_to_id_fkey"
+            columns: ["assigned_to_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "behavior_cases_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "behavior_cases_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "behavior_cases_raised_by_fkey"
+            columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "behavior_cases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocks: {
         Row: {
           created_at: string
@@ -163,6 +283,134 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_actions: {
+        Row: {
+          action_type: string
+          case_id: string
+          case_type: string
+          created_at: string
+          description: string | null
+          id: string
+          instance_id: string
+          metadata: Json | null
+          new_status: string | null
+          old_status: string | null
+          outcome: string | null
+          participant_id: string | null
+          performed_by: string | null
+          performed_by_name: string | null
+          timestamp: string
+        }
+        Insert: {
+          action_type?: string
+          case_id: string
+          case_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          instance_id: string
+          metadata?: Json | null
+          new_status?: string | null
+          old_status?: string | null
+          outcome?: string | null
+          participant_id?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
+          timestamp?: string
+        }
+        Update: {
+          action_type?: string
+          case_id?: string
+          case_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          instance_id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          old_status?: string | null
+          outcome?: string | null
+          participant_id?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_actions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "behavior_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_actions_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_actions_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_actions_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_comments: {
+        Row: {
+          author_id: string
+          author_name: string
+          case_id: string
+          content: string
+          created_at: string
+          id: string
+          timestamp: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          case_id: string
+          content: string
+          created_at?: string
+          id?: string
+          timestamp?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          case_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_comments_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "behavior_cases"
             referencedColumns: ["id"]
           },
         ]
