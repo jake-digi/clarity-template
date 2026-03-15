@@ -134,12 +134,15 @@ const makeFeatureIcon = (featureType: string, name: string, customColor?: string
 const SiteMapEditor = ({
   bounds,
   blocks,
+  features = [],
   onBoundsChange,
   onBlockPolygonChange,
   onBlockPolygonDrawn,
   onRoomPinPlaced,
   onRoomClick,
   onBlockClick,
+  onFeaturePinPlaced,
+  onFeatureClick,
   selectedBlockId,
   mode,
   onModeChange,
@@ -152,6 +155,10 @@ const SiteMapEditor = ({
   onRoomPinPlacedRef.current = onRoomPinPlaced;
   const onRoomClickRef = useRef(onRoomClick);
   onRoomClickRef.current = onRoomClick;
+  const onFeaturePinPlacedRef = useRef(onFeaturePinPlaced);
+  onFeaturePinPlacedRef.current = onFeaturePinPlaced;
+  const onFeatureClickRef = useRef(onFeatureClick);
+  onFeatureClickRef.current = onFeatureClick;
   const onModeChangeRef = useRef(onModeChange);
   onModeChangeRef.current = onModeChange;
 
@@ -161,6 +168,7 @@ const SiteMapEditor = ({
   const blockLayersRef = useRef<globalThis.Map<string, L.Polygon>>(new globalThis.Map());
   const blockLabelLayersRef = useRef<L.Marker[]>([]);
   const roomMarkersRef = useRef<L.Marker[]>([]);
+  const featureMarkersRef = useRef<L.Marker[]>([]);
   const drawControlRef = useRef<any>(null);
   const [satellite, setSatellite] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
