@@ -48,7 +48,6 @@ type TimelineEntry = {
 // Happiness gauge component (credit-score style)
 const HappinessGauge = ({ score }: { score: number }) => {
   const clampedScore = Math.max(1, Math.min(5, score));
-  // Map score 1-5 to angle 180°(left) to 0°(right) — higher score = more right
   const needleAngleDeg = 180 - ((clampedScore - 1) / 4) * 180;
 
   const getLabel = (s: number) => {
@@ -59,64 +58,52 @@ const HappinessGauge = ({ score }: { score: number }) => {
     return "Excellent";
   };
 
-  const cx = 150, cy = 140, r = 100;
+  const cx = 150, cy = 130, r = 80;
+  const sw = 18; // stroke width
 
-  // Convert polar (angle in degrees, 0=right, CCW) to cartesian
   const polarToXY = (angleDeg: number, radius: number) => ({
     x: cx + radius * Math.cos((angleDeg * Math.PI) / 180),
     y: cy - radius * Math.sin((angleDeg * Math.PI) / 180),
   });
 
-  // Create arc path between two angles (degrees, 0=right, going CCW)
-  const arcPath = (startDeg: number, endDeg: number, radius: number) => {
-    const p1 = polarToXY(startDeg, radius);
-    const p2 = polarToXY(endDeg, radius);
-    const largeArc = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
-    // Sweep flag 0 = CCW in SVG (which is CW visually since Y is flipped)
-    return `M ${p1.x} ${p1.y} A ${radius} ${radius} 0 ${largeArc} 0 ${p2.x} ${p2.y}`;
+  const arcPath = (startDeg: number, endDeg: number) => {
+    const p1 = polarToXY(startDeg, r);
+    const p2 = polarToXY(endDeg, r);
+    return `M ${p1.x} ${p1.y} A ${r} ${r} 0 0 0 ${p2.x} ${p2.y}`;
   };
 
-  // 5 segments: left(180°) to right(0°). Left=Poor(green), Right=Excellent(red)
   const segments = [
-    { start: 180, end: 144, color: "#22c55e", label: "POOR", range: "1.0-1.8" },
-    { start: 144, end: 108, color: "#84cc16", label: "FAIR", range: "1.8-2.6" },
-    { start: 108, end: 72, color: "#eab308", label: "GOOD", range: "2.6-3.4" },
-    { start: 72, end: 36, color: "#f97316", label: "V.GOOD", range: "3.4-4.2" },
-    { start: 36, end: 0, color: "#ef4444", label: "EXCELLENT", range: "4.2-5.0" },
+    { start: 180, end: 145, color: "#22c55e", label: "POOR", range: "1.0-1.8" },
+    { start: 143, end: 109, color: "#84cc16", label: "FAIR", range: "1.8-2.6" },
+    { start: 107, end: 73, color: "#eab308", label: "GOOD", range: "2.6-3.4" },
+    { start: 71, end: 37, color: "#f97316", label: "V.GOOD", range: "3.4-4.2" },
+    { start: 35, end: 0, color: "#ef4444", label: "EXCELLENT", range: "4.2-5.0" },
   ];
 
-  // Needle endpoint
-  const needleTip = polarToXY(needleAngleDeg, r - 15);
-
+  const needleTip = polarToXY(needleAngleDeg, r - sw / 2 - 4);
   const segIdx = Math.min(4, Math.floor(((clampedScore - 1) / 4) * 5));
 
   return (
     <div className="flex flex-col items-center py-2">
-      <svg viewBox="0 0 300 175" className="w-full max-w-[280px]">
-        {/* Colored arc segments */}
+      <svg viewBox="0 0 300 165" className="w-full max-w-[260px]">
+        {/* Arc segments with gaps */}
         {segments.map((seg, i) => (
-          <path
-            key={i}
-            d={arcPath(seg.start, seg.end, r)}
-            fill="none"
-            stroke={seg.color}
-            strokeWidth="24"
-            strokeLinecap="butt"
-          />
+          <path key={i} d={arcPath(seg.start, seg.end)} fill="none"
+            stroke={seg.color} strokeWidth={sw} strokeLinecap="round" />
         ))}
 
-        {/* Segment labels */}
+        {/* Labels outside the arc */}
         {segments.map((seg, i) => {
           const midAngle = (seg.start + seg.end) / 2;
-          const labelPt = polarToXY(midAngle, r + 22);
-          const rangePt = polarToXY(midAngle, r + 12);
+          const lp = polarToXY(midAngle, r + sw / 2 + 14);
+          const rp = polarToXY(midAngle, r + sw / 2 + 22);
           return (
             <g key={`lbl-${i}`}>
-              <text x={labelPt.x} y={labelPt.y} textAnchor="middle" dominantBaseline="middle"
-                className="fill-muted-foreground" fontSize="7" fontWeight="700" letterSpacing="0.5">
+              <text x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="central"
+                className="fill-muted-foreground" fontSize="7.5" fontWeight="700">
                 {seg.label}
               </text>
-              <text x={rangePt.x} y={rangePt.y + 7} textAnchor="middle" dominantBaseline="middle"
+              <text x={rp.x} y={rp.y} textAnchor="middle" dominantBaseline="central"
                 className="fill-muted-foreground" fontSize="6" fontWeight="500">
                 {seg.range}
               </text>
@@ -124,27 +111,20 @@ const HappinessGauge = ({ score }: { score: number }) => {
           );
         })}
 
-        {/* HAPPINESS SCORE label */}
-        <text x={cx} y={cy - 30} textAnchor="middle" className="fill-foreground"
-          fontSize="11" fontWeight="700" letterSpacing="1">
-          HAPPINESS SCORE
-        </text>
-
         {/* Needle */}
         <line x1={cx} y1={cy} x2={needleTip.x} y2={needleTip.y}
-          stroke="hsl(var(--foreground))" strokeWidth="3" strokeLinecap="round" />
-
-        {/* Center dot */}
-        <circle cx={cx} cy={cy} r="8" fill="hsl(210, 10%, 45%)" />
-        <circle cx={cx} cy={cy} r="4" fill="hsl(var(--card))" />
+          stroke="hsl(var(--foreground))" strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx={cx} cy={cy} r="6" fill="hsl(210, 10%, 45%)" />
+        <circle cx={cx} cy={cy} r="3" fill="hsl(var(--card))" />
       </svg>
 
-      <div className="text-center -mt-3">
-        <p className="text-xl font-bold text-foreground">
+      <div className="text-center -mt-1">
+        <p className="text-[10px] font-bold tracking-widest text-muted-foreground mb-1">HAPPINESS SCORE</p>
+        <p className="text-2xl font-bold text-foreground leading-none">
           {clampedScore.toFixed(1)}
           <span className="text-sm text-muted-foreground font-normal"> / 5</span>
         </p>
-        <p className="text-xs font-semibold" style={{ color: segments[segIdx].color }}>
+        <p className="text-xs font-semibold mt-0.5" style={{ color: segments[segIdx].color }}>
           {getLabel(clampedScore)}
         </p>
       </div>
