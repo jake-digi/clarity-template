@@ -67,9 +67,9 @@ const DashboardOverview = () => {
   return (
     <div className="space-y-3">
       {/* Hero Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* Welcome + Tenant Info */}
-        <div className="lg:col-span-2 bg-card rounded-lg border border-border p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+        {/* Welcome + Tenant Info — 4/5 */}
+        <div className="lg:col-span-4 bg-card rounded-lg border border-border p-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Dashboard</p>
