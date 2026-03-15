@@ -82,7 +82,7 @@ export function useAccommodation(instanceId: string) {
       const pMap = Object.fromEntries((participants ?? []).map((p) => [p.id, p]));
 
       const result: RoomOccupant[] = (pAssignments ?? []).map((a) => {
-        const p = pMap.get(a.participant_id);
+        const p = pMap[a.participant_id];
         return {
           assignmentId: a.id,
           personId: a.participant_id,
