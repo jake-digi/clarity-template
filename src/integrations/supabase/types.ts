@@ -669,6 +669,119 @@ export type Database = {
           },
         ]
       }
+      equipment_checkouts: {
+        Row: {
+          checked_out_at: string
+          checked_out_by: string | null
+          checked_out_by_name: string | null
+          checked_out_to: string
+          checked_out_to_type: string
+          created_at: string
+          equipment_id: string
+          expected_return_at: string | null
+          id: string
+          instance_id: string
+          notes: string | null
+          quantity: number
+          return_condition: string | null
+          returned_at: string | null
+          returned_by: string | null
+        }
+        Insert: {
+          checked_out_at?: string
+          checked_out_by?: string | null
+          checked_out_by_name?: string | null
+          checked_out_to: string
+          checked_out_to_type?: string
+          created_at?: string
+          equipment_id: string
+          expected_return_at?: string | null
+          id?: string
+          instance_id: string
+          notes?: string | null
+          quantity?: number
+          return_condition?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+        }
+        Update: {
+          checked_out_at?: string
+          checked_out_by?: string | null
+          checked_out_by_name?: string | null
+          checked_out_to?: string
+          checked_out_to_type?: string
+          created_at?: string
+          equipment_id?: string
+          expected_return_at?: string | null
+          id?: string
+          instance_id?: string
+          notes?: string | null
+          quantity?: number
+          return_condition?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipment_checkouts_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      equipment_items: {
+        Row: {
+          available_quantity: number
+          category: string
+          condition: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          instance_id: string | null
+          location: string | null
+          name: string
+          notes: string | null
+          serial_number: string | null
+          tenant_id: string
+          total_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          available_quantity?: number
+          category?: string
+          condition?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          instance_id?: string | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          serial_number?: string | null
+          tenant_id: string
+          total_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          available_quantity?: number
+          category?: string
+          condition?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          instance_id?: string | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          serial_number?: string | null
+          tenant_id?: string
+          total_quantity?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       formal_warnings: {
         Row: {
           acknowledged_at: string | null
@@ -2124,6 +2237,157 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transport_legs: {
+        Row: {
+          arrival_location: string
+          arrival_time: string | null
+          created_at: string
+          departure_location: string
+          departure_time: string | null
+          id: string
+          instance_id: string
+          leg_type: string
+          notes: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          arrival_location: string
+          arrival_time?: string | null
+          created_at?: string
+          departure_location: string
+          departure_time?: string | null
+          id?: string
+          instance_id: string
+          leg_type?: string
+          notes?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          arrival_location?: string
+          arrival_time?: string | null
+          created_at?: string
+          departure_location?: string
+          departure_time?: string | null
+          id?: string
+          instance_id?: string
+          leg_type?: string
+          notes?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_legs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "transport_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_passengers: {
+        Row: {
+          checked_in: boolean
+          checked_in_at: string | null
+          checked_in_by: string | null
+          created_at: string
+          id: string
+          leg_id: string
+          notes: string | null
+          participant_id: string
+          pickup_point: string | null
+        }
+        Insert: {
+          checked_in?: boolean
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          created_at?: string
+          id?: string
+          leg_id: string
+          notes?: string | null
+          participant_id: string
+          pickup_point?: string | null
+        }
+        Update: {
+          checked_in?: boolean
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          created_at?: string
+          id?: string
+          leg_id?: string
+          notes?: string | null
+          participant_id?: string
+          pickup_point?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transport_passengers_leg_id_fkey"
+            columns: ["leg_id"]
+            isOneToOne: false
+            referencedRelation: "transport_legs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transport_vehicles: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          deleted_at: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          instance_id: string
+          name: string
+          notes: string | null
+          operator: string | null
+          registration: string | null
+          tenant_id: string
+          updated_at: string
+          vehicle_type: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          instance_id: string
+          name: string
+          notes?: string | null
+          operator?: string | null
+          registration?: string | null
+          tenant_id: string
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          deleted_at?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          instance_id?: string
+          name?: string
+          notes?: string | null
+          operator?: string | null
+          registration?: string | null
+          tenant_id?: string
+          updated_at?: string
+          vehicle_type?: string
+        }
+        Relationships: []
       }
       user_group_assignments: {
         Row: {

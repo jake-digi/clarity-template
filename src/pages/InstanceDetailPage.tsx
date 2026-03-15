@@ -12,7 +12,7 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  Navigation, Briefcase, UserCheck, Building,
+  Navigation, Briefcase, UserCheck, Building, Bus, Package,
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
@@ -20,6 +20,8 @@ import InstanceParticipantsTab from "@/components/instance/InstanceParticipantsT
 import InstanceStaffTab from "@/components/instance/InstanceStaffTab";
 import InstanceAccommodationTab from "@/components/instance/InstanceAccommodationTab";
 import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
+import InstanceTransportTab from "@/components/instance/InstanceTransportTab";
+import InstanceEquipmentTab from "@/components/instance/InstanceEquipmentTab";
 import StageTemplateManager from "@/components/instance/StageTemplateManager";
 import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
 import StageDetailsModal from "@/components/instance/StageDetailsModal";
@@ -133,6 +135,8 @@ const InstanceDetailPage = () => {
     { value: "accommodation", label: "Accommodation", icon: Building },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
+    { value: "transport", label: "Transport", icon: Bus },
+    { value: "equipment", label: "Equipment", icon: Package },
     { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -263,6 +267,16 @@ const InstanceDetailPage = () => {
                 {/* Cases */}
                 <TabsContent value="cases" className="mt-0">
                   <InstanceCasesTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Transport */}
+                <TabsContent value="transport" className="mt-0">
+                  <InstanceTransportTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Equipment */}
+                <TabsContent value="equipment" className="mt-0">
+                  <InstanceEquipmentTab instanceId={instanceId!} />
                 </TabsContent>
 
                 {/* Tracking */}

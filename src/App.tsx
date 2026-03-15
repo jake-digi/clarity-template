@@ -29,6 +29,8 @@ import SiteDetailPage from "./pages/SiteDetailPage.tsx";
 import ReportsPage from "./pages/ReportsPage.tsx";
 import ReportDetailPage from "./pages/ReportDetailPage.tsx";
 import CustomReportBuilderPage from "./pages/CustomReportBuilderPage.tsx";
+import TransportPage from "./pages/TransportPage.tsx";
+import EquipmentPage from "./pages/EquipmentPage.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -62,6 +64,8 @@ const App = () => (
               <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
               <Route path="/reports/builder" element={<ProtectedRoute><CustomReportBuilderPage /></ProtectedRoute>} />
               <Route path="/reports/:reportId" element={<ProtectedRoute><ReportDetailPage /></ProtectedRoute>} />
+              <Route path="/transport" element={<ProtectedRoute><TransportPage /></ProtectedRoute>} />
+              <Route path="/equipment" element={<ProtectedRoute><EquipmentPage /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

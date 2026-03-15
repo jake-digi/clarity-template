@@ -1,4 +1,4 @@
-import { Home, Users, Building2, CheckSquare, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart } from "lucide-react";
+import { Home, Users, Building2, CheckSquare, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, Bus, Package } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +13,8 @@ const coreItems = [
 const opsItems = [
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: FileWarning, label: "Cases", path: "/cases" },
+  { icon: Bus, label: "Transport", path: "/transport" },
+  { icon: Package, label: "Equipment", path: "/equipment" },
   { icon: Tent, label: "Sites", path: "/sites" },
   { icon: FileBarChart, label: "Reports", path: "/reports" },
 ];
