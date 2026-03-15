@@ -16,20 +16,38 @@ interface SearchItem {
   initials?: string;
 }
 
-const searchIndex: SearchItem[] = [
+interface SearchAction extends SearchItem {
+  action?: string;
+}
+
+const searchIndex: SearchAction[] = [
+  // Navigation
   { label: "Dashboard", category: "Navigation", path: "/", icon: Building2 },
-  { label: "Users", category: "Tenant Overview", path: "/people", icon: Users },
-  { label: "Participants", category: "Tenant Overview", path: "/participants", icon: UserCheck },
-  { label: "Groups", category: "Tenant Overview", path: "/", icon: UsersRound },
-  { label: "Accommodation", category: "Tenant Overview", path: "/", icon: BedDouble },
-  { label: "Case Management", category: "Case Management", path: "/cases", icon: Briefcase },
-  { label: "Strikes Report", category: "Reporting", path: "/", icon: FileWarning },
-  { label: "Participant Reports", category: "Reporting", path: "/", icon: BarChart3 },
-  { label: "Cross-Instance Reports", category: "Reporting", path: "/", icon: GitCompareArrows },
-  { label: "Instances", category: "System", path: "/instances", icon: Building2 },
-  { label: "Roles & Permissions", category: "System", path: "/roles", icon: ShieldCheck },
-  { label: "Audit & History", category: "System", path: "/", icon: History },
-  { label: "Attendance", category: "System", path: "/", icon: ClipboardCheck },
+  { label: "Users", category: "Navigation", path: "/people", icon: Users },
+  { label: "Participants", category: "Navigation", path: "/participants", icon: UserCheck },
+  { label: "Groups", category: "Navigation", path: "/", icon: UsersRound },
+  { label: "Accommodation", category: "Navigation", path: "/", icon: BedDouble },
+  { label: "Case Management", category: "Navigation", path: "/cases", icon: Briefcase },
+  { label: "Reports", category: "Navigation", path: "/reports", icon: BarChart3 },
+  { label: "Instances", category: "Navigation", path: "/instances", icon: Building2 },
+  { label: "Roles & Permissions", category: "Navigation", path: "/roles", icon: ShieldCheck },
+  { label: "Sites", category: "Navigation", path: "/sites", icon: MapPin },
+  { label: "Administration", category: "Navigation", path: "/admin", icon: Settings },
+  { label: "Audit & History", category: "Navigation", path: "/", icon: History },
+  { label: "Attendance", category: "Navigation", path: "/", icon: ClipboardCheck },
+
+  // Quick Actions
+  { label: "Invite User", category: "Actions", path: "/admin", icon: UserPlus, action: "invite-user" },
+  { label: "Add New Instance", category: "Actions", path: "/instances/new", icon: Plus },
+  { label: "Create New Report", category: "Actions", path: "/reports/builder", icon: FilePlus },
+  { label: "Add New Case", category: "Actions", path: "/cases", icon: FolderPlus, action: "new-case" },
+  { label: "Add New Site", category: "Actions", path: "/sites", icon: MapPin, action: "new-site" },
+  { label: "Create New Role", category: "Actions", path: "/roles", icon: ShieldCheck, action: "new-role" },
+  { label: "Export Participants", category: "Actions", path: "/participants", icon: Download, action: "export-participants" },
+  { label: "Bulk Upload Participants", category: "Actions", path: "/participants", icon: Upload, action: "bulk-upload" },
+  { label: "Send Announcement", category: "Actions", path: "/", icon: Send, action: "announcement" },
+  { label: "Generate Cross-Instance Report", category: "Actions", path: "/reports/builder", icon: GitCompareArrows },
+  { label: "View Strikes Report", category: "Actions", path: "/reports", icon: FileWarning },
 ];
 
 function getInitials(name: string): string {
