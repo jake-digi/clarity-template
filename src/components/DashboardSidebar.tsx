@@ -20,6 +20,8 @@ const opsItems = [
   { icon: Bus, label: "Transport", path: "/transport" },
   { icon: Package, label: "Equipment", path: "/equipment" },
   { icon: Heart, label: "Medical", path: "/medical" },
+  { icon: Megaphone, label: "Announcements", path: "/announcements" },
+  { icon: FileText, label: "Documents", path: "/documents" },
   { icon: Tent, label: "Sites", path: "/sites" },
 ];
 

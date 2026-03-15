@@ -297,6 +297,16 @@ const InstanceDetailPage = () => {
                   <InstanceEquipmentTab instanceId={instanceId!} />
                 </TabsContent>
 
+                {/* Announcements */}
+                <TabsContent value="announcements" className="mt-0">
+                  <InstanceAnnouncementsTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Documents */}
+                <TabsContent value="documents" className="mt-0">
+                  <InstanceDocumentsTab instanceId={instanceId!} tenantId={instance.tenant_id} />
+                </TabsContent>
+
                 {/* Tracking */}
                 <TabsContent value="tracking" className="mt-0">
                   <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} settings={settings} />
