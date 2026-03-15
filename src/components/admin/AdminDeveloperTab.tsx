@@ -76,6 +76,13 @@ const statusColor = (code: number) => {
 // ── Endpoint data ──
 const endpointGroups = [
   {
+    title: "Health",
+    description: "Public health check endpoint. No authentication required.",
+    endpoints: [
+      { method: "GET", path: "/health", description: "Health check — returns API status and timestamp", exampleResponse: `{"success":true,"status":"healthy","timestamp":"2025-07-01T12:00:00.000Z"}`, },
+    ],
+  },
+  {
     title: "Instances",
     description: "Supports ?type=dofe or ?type=standard filtering.",
     endpoints: [
