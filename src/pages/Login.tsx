@@ -77,18 +77,15 @@ const Login = () => {
           <div className="absolute top-6 left-6 flex items-center gap-2">
             <img src={checkpointLogo} alt="Checkpoint" className="h-14 brightness-0 invert" />
           </div>
-          {/* testimonial */}
+          {/* branding */}
           <div className="absolute bottom-8 left-6 right-6 text-white">
-            <p className="text-lg font-semibold leading-snug mb-3">
-              "Simply all the tools that my team and I need."
-            </p>
-            <p className="text-sm font-medium">Sarah Cohen</p>
-            <p className="text-xs text-white/70">Director of Operations</p>
+            <p className="text-sm font-medium">Checkpoint</p>
+            <p className="text-xs text-white/70">Operations Management Platform</p>
           </div>
         </div>
 
         {/* Right panel – form */}
-        <div className="flex-1 flex flex-col justify-center px-8 sm:px-14 py-12">
+        <div className="flex-1 flex flex-col justify-center px-12 sm:px-20 lg:px-28 py-12">
           {/* Mobile logo */}
           <div className="md:hidden mb-8">
             <img src={checkpointLogo} alt="Checkpoint" className="h-10" />
