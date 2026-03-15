@@ -12,9 +12,10 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation
+  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation, Briefcase
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
+import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
@@ -149,6 +150,7 @@ const InstanceDetailPage = () => {
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
     { value: "stages", label: "Stages", icon: ClipboardList },
+    { value: "cases", label: "Cases", icon: Briefcase },
     { value: "groups", label: "Groups", icon: FolderTree },
     { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
@@ -313,6 +315,11 @@ const InstanceDetailPage = () => {
                       })}
                     </div>
                   )}
+                </TabsContent>
+
+                {/* Cases */}
+                <TabsContent value="cases" className="mt-0">
+                  <InstanceCasesTab instanceId={instanceId!} />
                 </TabsContent>
 
                 {/* Tracking */}
