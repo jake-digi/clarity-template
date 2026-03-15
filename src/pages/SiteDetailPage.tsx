@@ -432,6 +432,7 @@ const SiteDetailPage = () => {
               onBoundsChange={handleBoundsChange}
               onBlockPolygonChange={handleBlockPolygonChange}
               onBlockPolygonDrawn={handleBlockPolygonDrawn}
+              onRoomPinPlaced={handleRoomPinPlaced}
               onBlockClick={handleBlockClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}
