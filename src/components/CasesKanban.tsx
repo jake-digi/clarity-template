@@ -30,7 +30,7 @@ interface Props {
 const CasesKanban = ({ cases }: Props) => {
   const navigate = useNavigate();
   const updateStatus = useUpdateCaseStatus();
-  const { data: user } = useUser();
+  const { user } = useAuth();
 
   const grouped = columns.map((col) => ({
     ...col,
