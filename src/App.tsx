@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound.tsx";
 import CasesPage from "./pages/CasesPage.tsx";
 import CaseDetailPage from "./pages/CaseDetailPage.tsx";
 import RolesPage from "./pages/RolesPage.tsx";
+import AdministrationPage from "./pages/AdministrationPage.tsx";
 import SitesPage from "./pages/SitesPage.tsx";
 import SiteDetailPage from "./pages/SiteDetailPage.tsx";
 const queryClient = new QueryClient();
