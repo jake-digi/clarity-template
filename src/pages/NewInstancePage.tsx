@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsers } from "@/hooks/useUsers";
 import { useParticipants } from "@/hooks/useParticipants";
+import { useSites } from "@/hooks/useSites";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import {
   ChevronRight, Loader2, CheckCircle2, AlertCircle, Search,
-  Building2, Award, Users, UserPlus,
+  Building2, Award, Users, UserPlus, MapPin, Calendar,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -39,6 +40,7 @@ interface InstanceDetails {
   capacity: string;
   startDate: string;
   endDate: string;
+  siteId: string;
 }
 
 const generateCode = () => {
@@ -53,6 +55,7 @@ const NewInstancePage = () => {
   const { user } = useAuth();
   const { data: users = [], isLoading: usersLoading } = useUsers();
   const { data: participants = [], isLoading: participantsLoading } = useParticipants();
+  const { data: sites = [] } = useSites();
 
   const [tab, setTab] = useState("details");
   const [creationStatus, setCreationStatus] = useState<CreationStatus>("idle");
@@ -69,6 +72,7 @@ const NewInstancePage = () => {
     capacity: "",
     startDate: "",
     endDate: "",
+    siteId: "",
   });
 
   const [selectedStaffIds, setSelectedStaffIds] = useState<Set<string>>(new Set());
@@ -122,7 +126,6 @@ const NewInstancePage = () => {
       return;
     }
 
-    // Get tenant_id from the current user's record
     const { data: currentUser } = await supabase
       .from("users")
       .select("tenant_id")
@@ -139,7 +142,6 @@ const NewInstancePage = () => {
     setErrorMessage("");
 
     try {
-      // 1. Create the instance
       const { data: newInstance, error: instErr } = await supabase
         .from("instances")
         .insert({
@@ -151,6 +153,7 @@ const NewInstancePage = () => {
           location: details.location || null,
           start_date: details.startDate || null,
           end_date: details.endDate || null,
+          site_id: details.siteId || null,
           settings: {
             type: details.type,
             level: details.type === "dofe" ? details.level : undefined,
@@ -164,7 +167,6 @@ const NewInstancePage = () => {
 
       if (instErr) throw instErr;
 
-      // 2. Assign staff
       const staffIds = [...selectedStaffIds];
       if (staffIds.length > 0) {
         const staffRows = staffIds.map((userId) => ({
@@ -178,7 +180,6 @@ const NewInstancePage = () => {
         if (staffErr) throw staffErr;
       }
 
-      // 3. Assign participants
       const partIds = [...selectedParticipantIds];
       if (partIds.length > 0) {
         const partRows = partIds.map((pid) => ({
@@ -191,9 +192,7 @@ const NewInstancePage = () => {
         if (partErr) throw partErr;
       }
 
-      // 4. Invalidate cache
       queryClient.invalidateQueries({ queryKey: ["instances"] });
-
       setCreationStatus("success");
       setTimeout(() => navigate(`/instances/${newInstance.id}`), 1200);
     } catch (err: any) {
@@ -202,10 +201,11 @@ const NewInstancePage = () => {
     }
   }, [details, code, selectedStaffIds, selectedParticipantIds, user, queryClient, navigate]);
 
-  const isDirty =
-    details.name.trim() !== "" ||
-    selectedStaffIds.size > 0 ||
-    selectedParticipantIds.size > 0;
+  const tabs = [
+    { value: "details", label: "Details", icon: Building2 },
+    { value: "staffing", label: "Staffing", icon: UserPlus, count: selectedStaffIds.size },
+    { value: "participants", label: "Participants", icon: Users, count: selectedParticipantIds.size },
+  ];
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
@@ -213,77 +213,81 @@ const NewInstancePage = () => {
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
         <main className="flex-1 overflow-auto">
-          {/* Breadcrumb + Header */}
-          <div className="border-b border-border bg-card px-6 py-5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-              <ChevronRight className="w-3 h-3" />
-              <button onClick={() => navigate("/instances")} className="hover:text-foreground transition-colors">Instances</button>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-foreground font-medium">New Instance</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Create New Instance</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Code: <span className="font-mono text-foreground">{code}</span>
-                </p>
+          {/* Header */}
+          <div className="bg-card border-b border-border">
+            <div className="px-6 py-5">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+                <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
+                <ChevronRight className="w-3 h-3" />
+                <button onClick={() => navigate("/instances")} className="hover:text-foreground transition-colors">Instances</button>
+                <ChevronRight className="w-3 h-3" />
+                <span className="text-foreground font-medium">New Instance</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => navigate("/instances")}>Cancel</Button>
-                <Button
-                  onClick={handleCreate}
-                  disabled={creationStatus === "creating" || creationStatus === "success"}
-                  className="gap-2"
-                >
-                  {creationStatus === "creating" && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {creationStatus === "success" && <CheckCircle2 className="w-4 h-4" />}
-                  {creationStatus === "creating" ? "Creating..." : creationStatus === "success" ? "Created!" : "Create Instance"}
-                </Button>
+
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-semibold text-foreground tracking-tight">Create New Instance</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Code: <span className="font-mono text-foreground">{code}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={() => navigate("/instances")}>Cancel</Button>
+                  <Button
+                    onClick={handleCreate}
+                    disabled={creationStatus === "creating" || creationStatus === "success"}
+                    className="gap-2"
+                  >
+                    {creationStatus === "creating" && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {creationStatus === "success" && <CheckCircle2 className="w-4 h-4" />}
+                    {creationStatus === "creating" ? "Creating..." : creationStatus === "success" ? "Created!" : "Create Instance"}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Error banner */}
-          {creationStatus === "error" && (
-            <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setCreationStatus("idle")}>
-                Go Back & Fix
-              </Button>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="px-6 py-5">
+            {/* Tabs bar — matches InstanceDetailPage style */}
             <Tabs value={tab} onValueChange={setTab}>
-              <TabsList>
-                <TabsTrigger value="details" className="gap-1.5">
-                  <Building2 className="w-4 h-4" />Details
-                </TabsTrigger>
-                <TabsTrigger value="staffing" className="gap-1.5">
-                  <UserPlus className="w-4 h-4" />
-                  Staffing
-                  {selectedStaffIds.size > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">{selectedStaffIds.size}</Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="participants" className="gap-1.5">
-                  <Users className="w-4 h-4" />
-                  Participants
-                  {selectedParticipantIds.size > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">{selectedParticipantIds.size}</Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
+              <div className="border-t border-border bg-muted/50">
+                <TabsList className="bg-transparent h-11 w-full justify-start p-0 rounded-none gap-0">
+                  {tabs.map((t) => (
+                    <TabsTrigger
+                      key={t.value}
+                      value={t.value}
+                      className="rounded-none h-full px-5 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors shrink-0"
+                    >
+                      <t.icon className="w-3.5 h-3.5" />
+                      {t.label}
+                      {t.count ? (
+                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 h-4">{t.count}</Badge>
+                      ) : null}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
 
-              {/* ─── Details Tab ─── */}
-              <TabsContent value="details">
-                <div className="max-w-2xl space-y-6 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2">
-                      <Label>Instance Name *</Label>
+              {/* Error banner */}
+              {creationStatus === "error" && (
+                <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                  <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setCreationStatus("idle")}>
+                    Go Back & Fix
+                  </Button>
+                </div>
+              )}
+
+              <div className="px-6 py-6">
+                {/* ─── Details Tab ─── */}
+                <TabsContent value="details" className="mt-0">
+                  <div className="max-w-2xl space-y-5">
+                    <div>
+                      <Label className="text-sm font-medium">Instance Name *</Label>
                       <Input
                         value={details.name}
                         onChange={(e) => updateDetail("name", e.target.value)}
@@ -292,39 +296,41 @@ const NewInstancePage = () => {
                       />
                     </div>
 
-                    <div>
-                      <Label>Type</Label>
-                      <Select value={details.type} onValueChange={(v) => updateDetail("type", v as any)}>
-                        <SelectTrigger className="mt-1.5">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">
-                            <span className="flex items-center gap-2"><Building2 className="w-4 h-4" />Standard</span>
-                          </SelectItem>
-                          <SelectItem value="dofe">
-                            <span className="flex items-center gap-2"><Award className="w-4 h-4" />DofE</span>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Type</Label>
+                        <Select value={details.type} onValueChange={(v) => updateDetail("type", v as any)}>
+                          <SelectTrigger className="mt-1.5">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">
+                              <span className="flex items-center gap-2"><Building2 className="w-4 h-4" />Standard</span>
+                            </SelectItem>
+                            <SelectItem value="dofe">
+                              <span className="flex items-center gap-2"><Award className="w-4 h-4" />DofE</span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                    <div>
-                      <Label>Status</Label>
-                      <Select value={details.status} onValueChange={(v) => updateDetail("status", v as any)}>
-                        <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="upcoming">Upcoming</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <Label className="text-sm font-medium">Status</Label>
+                        <Select value={details.status} onValueChange={(v) => updateDetail("status", v as any)}>
+                          <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     {details.type === "dofe" && (
-                      <>
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Level</Label>
+                          <Label className="text-sm font-medium">Level</Label>
                           <Select value={details.level} onValueChange={(v) => updateDetail("level", v)}>
                             <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -335,7 +341,7 @@ const NewInstancePage = () => {
                           </Select>
                         </div>
                         <div>
-                          <Label>Expedition Type</Label>
+                          <Label className="text-sm font-medium">Expedition Type</Label>
                           <Select value={details.expeditionType} onValueChange={(v) => updateDetail("expeditionType", v)}>
                             <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -344,52 +350,69 @@ const NewInstancePage = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                      </>
+                      </div>
                     )}
 
-                    <div>
-                      <Label>Location</Label>
-                      <Input
-                        value={details.location}
-                        onChange={(e) => updateDetail("location", e.target.value)}
-                        placeholder="e.g. Peak District"
-                        className="mt-1.5"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Location</Label>
+                        <Input
+                          value={details.location}
+                          onChange={(e) => updateDetail("location", e.target.value)}
+                          placeholder="e.g. Peak District"
+                          className="mt-1.5"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Site</Label>
+                        <Select value={details.siteId} onValueChange={(v) => updateDetail("siteId", v)}>
+                          <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select a site (optional)" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            {sites.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={details.startDate}
+                          onChange={(e) => updateDetail("startDate", e.target.value)}
+                          className="mt-1.5"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">End Date</Label>
+                        <Input
+                          type="date"
+                          value={details.endDate}
+                          onChange={(e) => updateDetail("endDate", e.target.value)}
+                          className="mt-1.5"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-sm font-medium">Capacity</Label>
+                        <Input
+                          type="number"
+                          value={details.capacity}
+                          onChange={(e) => updateDetail("capacity", e.target.value)}
+                          placeholder="e.g. 60"
+                          className="mt-1.5"
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <Label>Capacity</Label>
-                      <Input
-                        type="number"
-                        value={details.capacity}
-                        onChange={(e) => updateDetail("capacity", e.target.value)}
-                        placeholder="e.g. 60"
-                        className="mt-1.5"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Start Date</Label>
-                      <Input
-                        type="date"
-                        value={details.startDate}
-                        onChange={(e) => updateDetail("startDate", e.target.value)}
-                        className="mt-1.5"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>End Date</Label>
-                      <Input
-                        type="date"
-                        value={details.endDate}
-                        onChange={(e) => updateDetail("endDate", e.target.value)}
-                        className="mt-1.5"
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <Label>Description</Label>
+                      <Label className="text-sm font-medium">Description</Label>
                       <Textarea
                         value={details.description}
                         onChange={(e) => updateDetail("description", e.target.value)}
@@ -399,132 +422,122 @@ const NewInstancePage = () => {
                       />
                     </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              {/* ─── Staffing Tab ─── */}
-              <TabsContent value="staffing">
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      Select staff members to assign to this instance.
-                      <span className="ml-2 font-medium text-foreground">{selectedStaffIds.size} selected</span>
-                    </p>
-                  </div>
-                  <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search staff..."
-                      value={staffSearch}
-                      onChange={(e) => setStaffSearch(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                  <div className="bg-card rounded-lg border border-border overflow-hidden max-h-[400px] overflow-y-auto">
-                    {usersLoading ? (
-                      <div className="p-8 text-center text-muted-foreground">Loading staff...</div>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[40px]" />
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Roles</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredStaff.length === 0 ? (
+                {/* ─── Staffing Tab ─── */}
+                <TabsContent value="staffing" className="mt-0">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Select staff members to assign.
+                        <span className="ml-2 font-medium text-foreground">{selectedStaffIds.size} selected</span>
+                      </p>
+                    </div>
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input placeholder="Search staff..." value={staffSearch} onChange={(e) => setStaffSearch(e.target.value)} className="pl-9 h-9" />
+                    </div>
+                    <div className="bg-card rounded-lg border border-border overflow-hidden max-h-[400px] overflow-y-auto">
+                      {usersLoading ? (
+                        <div className="p-8 text-center text-muted-foreground">Loading staff...</div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">No staff found.</TableCell>
+                              <TableHead className="w-[40px]" />
+                              <TableHead>Name</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Roles</TableHead>
                             </TableRow>
-                          ) : filteredStaff.map((u) => (
-                            <TableRow
-                              key={u.id}
-                              className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => toggleStaff(u.id)}
-                            >
-                              <TableCell>
-                                <Checkbox checked={selectedStaffIds.has(u.id)} />
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                {u.first_name} {u.surname ?? u.last_name ?? ""}
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                              <TableCell>
-                                {u.role_names.map((r) => (
-                                  <Badge key={r} variant="outline" className="mr-1 text-xs">{r}</Badge>
-                                ))}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
+                          </TableHeader>
+                          <TableBody>
+                            {filteredStaff.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">No staff found.</TableCell>
+                              </TableRow>
+                            ) : filteredStaff.map((u) => (
+                              <TableRow
+                                key={u.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => toggleStaff(u.id)}
+                              >
+                                <TableCell>
+                                  <Checkbox checked={selectedStaffIds.has(u.id)} />
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  {u.first_name} {u.surname ?? u.last_name ?? ""}
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                                <TableCell>
+                                  {u.role_names.map((r) => (
+                                    <Badge key={r} variant="outline" className="mr-1 text-xs">{r}</Badge>
+                                  ))}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
 
-              {/* ─── Participants Tab ─── */}
-              <TabsContent value="participants">
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      Select participants to assign.
-                      <span className="ml-2 font-medium text-foreground">{selectedParticipantIds.size} selected</span>
-                    </p>
-                  </div>
-                  <div className="relative max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search participants..."
-                      value={participantSearch}
-                      onChange={(e) => setParticipantSearch(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                  <div className="bg-card rounded-lg border border-border overflow-hidden max-h-[400px] overflow-y-auto">
-                    {participantsLoading ? (
-                      <div className="p-8 text-center text-muted-foreground">Loading participants...</div>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[40px]" />
-                            <TableHead>Name</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Current Instance</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredParticipants.length === 0 ? (
+                {/* ─── Participants Tab ─── */}
+                <TabsContent value="participants" className="mt-0">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Select participants to assign.
+                        <span className="ml-2 font-medium text-foreground">{selectedParticipantIds.size} selected</span>
+                      </p>
+                    </div>
+                    <div className="relative max-w-md">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input placeholder="Search participants..." value={participantSearch} onChange={(e) => setParticipantSearch(e.target.value)} className="pl-9 h-9" />
+                    </div>
+                    <div className="bg-card rounded-lg border border-border overflow-hidden max-h-[400px] overflow-y-auto">
+                      {participantsLoading ? (
+                        <div className="p-8 text-center text-muted-foreground">Loading participants...</div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">No participants found.</TableCell>
+                              <TableHead className="w-[40px]" />
+                              <TableHead>Name</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Current Instance</TableHead>
                             </TableRow>
-                          ) : filteredParticipants.map((p) => (
-                            <TableRow
-                              key={p.id}
-                              className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => toggleParticipant(p.id)}
-                            >
-                              <TableCell>
-                                <Checkbox checked={selectedParticipantIds.has(p.id)} />
-                              </TableCell>
-                              <TableCell className="font-medium">{p.full_name}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="capitalize text-xs">{p.status}</Badge>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {p.instance_name ?? "—"}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
+                          </TableHeader>
+                          <TableBody>
+                            {filteredParticipants.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">No participants found.</TableCell>
+                              </TableRow>
+                            ) : filteredParticipants.map((p) => (
+                              <TableRow
+                                key={p.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => toggleParticipant(p.id)}
+                              >
+                                <TableCell>
+                                  <Checkbox checked={selectedParticipantIds.has(p.id)} />
+                                </TableCell>
+                                <TableCell className="font-medium">{p.full_name}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="capitalize text-xs">{p.status}</Badge>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">
+                                  {p.instance_name ?? "—"}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </TabsContent>
+                </TabsContent>
+              </div>
             </Tabs>
           </div>
         </main>
