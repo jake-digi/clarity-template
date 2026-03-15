@@ -45,51 +45,127 @@ type TimelineEntry = {
   author: string;
 };
 
-// Happiness gauge component (credit-score style)
+// Happiness gauge component (credit-score style matching reference image)
 const HappinessGauge = ({ score }: { score: number }) => {
-  // score 1-5, map to 0-180 degrees
+  // score 1-5
   const clampedScore = Math.max(1, Math.min(5, score));
-  const angle = ((clampedScore - 1) / 4) * 180;
-  const needleAngle = angle - 90; // -90 to 90
+  // Map 1-5 to angle: 1=left (180°), 5=right (0°) in standard math coords
+  // In SVG rotation: needle from -90 (left) to +90 (right)
+  const needleAngle = -90 + ((clampedScore - 1) / 4) * 180;
 
   const getLabel = (s: number) => {
-    if (s <= 1.5) return "Poor";
-    if (s <= 2.5) return "Fair";
-    if (s <= 3.5) return "Good";
+    if (s <= 1.8) return "Poor";
+    if (s <= 2.6) return "Fair";
+    if (s <= 3.4) return "Good";
     if (s <= 4.2) return "Very Good";
     return "Excellent";
   };
 
-  const getColor = (s: number) => {
-    if (s <= 1.5) return "hsl(var(--destructive))";
-    if (s <= 2.5) return "hsl(30, 90%, 50%)";
-    if (s <= 3.5) return "hsl(45, 90%, 50%)";
-    if (s <= 4.2) return "hsl(90, 60%, 45%)";
-    return "hsl(var(--success))";
+  // Arc helper: create arc path from startAngle to endAngle (degrees, 0=right, counter-clockwise)
+  const cx = 150, cy = 130, r = 110;
+  const arcPath = (startDeg: number, endDeg: number) => {
+    const startRad = (startDeg * Math.PI) / 180;
+    const endRad = (endDeg * Math.PI) / 180;
+    const x1 = cx + r * Math.cos(Math.PI + startRad);
+    const y1 = cy - r * Math.sin(Math.PI + startRad);
+    const x2 = cx + r * Math.cos(Math.PI + endRad);
+    const y2 = cy - r * Math.sin(Math.PI + endRad);
+    const largeArc = endDeg - startDeg > 90 ? 1 : 0;
+    return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+  };
+
+  // 5 segments spanning 0-180 degrees
+  const segments = [
+    { start: 0, end: 36, color: "#22c55e", label: "POOR", range: "1.0-1.8" },
+    { start: 36, end: 72, color: "#86c541", label: "FAIR", range: "1.8-2.6" },
+    { start: 72, end: 108, color: "#c9b51e", label: "GOOD", range: "2.6-3.4" },
+    { start: 108, end: 144, color: "#e88c2a", label: "VERY GOOD", range: "3.4-4.2" },
+    { start: 144, end: 180, color: "#ef4444", label: "EXCELLENT", range: "4.2-5.0" },
+  ];
+
+  // Label positions
+  const labelPos = (midDeg: number, offset: number) => {
+    const rad = ((midDeg) * Math.PI) / 180;
+    return {
+      x: cx + (r + offset) * Math.cos(Math.PI + rad),
+      y: cy - (r + offset) * Math.sin(Math.PI + rad),
+    };
   };
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 120" className="w-full max-w-[180px]">
-        {/* Background arcs */}
-        <path d="M 20 100 A 80 80 0 0 1 56 36" fill="none" stroke="hsl(var(--destructive))" strokeWidth="14" strokeLinecap="round" />
-        <path d="M 60 33 A 80 80 0 0 1 100 20" fill="none" stroke="hsl(30, 90%, 50%)" strokeWidth="14" strokeLinecap="round" />
-        <path d="M 104 20 A 80 80 0 0 1 140 33" fill="none" stroke="hsl(45, 90%, 50%)" strokeWidth="14" strokeLinecap="round" />
-        <path d="M 144 36 A 80 80 0 0 1 168 60" fill="none" stroke="hsl(90, 60%, 45%)" strokeWidth="14" strokeLinecap="round" />
-        <path d="M 170 64 A 80 80 0 0 1 180 100" fill="none" stroke="hsl(var(--success))" strokeWidth="14" strokeLinecap="round" />
+      <svg viewBox="0 0 300 180" className="w-full max-w-[260px]">
+        {/* Colored arc segments */}
+        {segments.map((seg, i) => (
+          <path
+            key={i}
+            d={arcPath(seg.start, seg.end)}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth="28"
+            strokeLinecap="butt"
+          />
+        ))}
+
+        {/* Labels and ranges */}
+        {segments.map((seg, i) => {
+          const mid = (seg.start + seg.end) / 2;
+          const lbl = labelPos(mid, 28);
+          const rng = labelPos(mid, 16);
+          return (
+            <g key={`lbl-${i}`}>
+              <text
+                x={lbl.x}
+                y={lbl.y}
+                textAnchor="middle"
+                className="fill-muted-foreground"
+                fontSize="7"
+                fontWeight="700"
+              >
+                {seg.label}
+              </text>
+              <text
+                x={rng.x}
+                y={rng.y + 8}
+                textAnchor="middle"
+                className="fill-muted-foreground"
+                fontSize="6"
+                fontWeight="500"
+              >
+                {seg.range}
+              </text>
+            </g>
+          );
+        })}
 
         {/* Needle */}
-        <g transform={`rotate(${needleAngle}, 100, 100)`}>
-          <line x1="100" y1="100" x2="100" y2="30" stroke="hsl(var(--foreground))" strokeWidth="3" strokeLinecap="round" />
+        <g transform={`rotate(${needleAngle}, ${cx}, ${cy})`}>
+          <polygon
+            points={`${cx},${cy - 85} ${cx - 4},${cy} ${cx + 4},${cy}`}
+            fill="hsl(var(--foreground))"
+          />
         </g>
-        {/* Center dot */}
-        <circle cx="100" cy="100" r="6" fill="hsl(var(--foreground))" />
-        <circle cx="100" cy="100" r="3" fill="hsl(var(--background))" />
+
+        {/* Center circle */}
+        <circle cx={cx} cy={cy} r="10" fill="hsl(210, 10%, 40%)" />
+        <circle cx={cx} cy={cy} r="5" fill="hsl(var(--background))" />
+
+        {/* Score text */}
+        <text
+          x={cx}
+          y={cy + 25}
+          textAnchor="middle"
+          className="fill-foreground"
+          fontSize="14"
+          fontWeight="700"
+        >
+          HAPPINESS SCORE
+        </text>
       </svg>
-      <div className="text-center -mt-2">
-        <p className="text-lg font-bold text-foreground">{clampedScore.toFixed(1)}/5</p>
-        <p className="text-xs font-medium" style={{ color: getColor(clampedScore) }}>{getLabel(clampedScore)}</p>
-      </div>
+      <p className="text-xl font-bold text-foreground -mt-1">{clampedScore.toFixed(1)}<span className="text-sm text-muted-foreground font-normal"> / 5</span></p>
+      <p className="text-xs font-semibold" style={{ color: segments[Math.min(4, Math.floor(((clampedScore - 1) / 4) * 5))].color }}>
+        {getLabel(clampedScore)}
+      </p>
     </div>
   );
 };
