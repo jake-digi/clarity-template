@@ -28,6 +28,8 @@ import InstanceMedicalTab from "@/components/instance/InstanceMedicalTab";
 import StageTemplateManager from "@/components/instance/StageTemplateManager";
 import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
 import StageDetailsModal from "@/components/instance/StageDetailsModal";
+import InstanceAnnouncementsTab from "@/components/instance/InstanceAnnouncementsTab";
+import InstanceDocumentsTab from "@/components/instance/InstanceDocumentsTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
