@@ -33,6 +33,7 @@ const DashboardHeader = () => {
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [participantResults, setParticipantResults] = useState<SearchItem[]>([]);
+  const [caseResults, setCaseResults] = useState<SearchItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
