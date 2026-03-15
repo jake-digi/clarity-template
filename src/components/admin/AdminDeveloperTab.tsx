@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
 const API_INTERNAL_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
