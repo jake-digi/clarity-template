@@ -441,6 +441,12 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ParticipantDrawer
+        participantId={drawerParticipantId}
+        open={!!drawerParticipantId}
+        onOpenChange={(open) => { if (!open) setDrawerParticipantId(null); }}
+      />
     </div>
   );
 };
