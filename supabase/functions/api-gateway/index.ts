@@ -227,6 +227,26 @@ Deno.serve(async (req) => {
       return json({ success: true });
     }
 
+    if (req.method === "PATCH" && action === "update") {
+      const body = await req.json();
+      if (!body.id) return err("Missing key id");
+
+      const updates: Record<string, unknown> = {};
+      if (body.allowed_ips !== undefined) updates.allowed_ips = body.allowed_ips;
+      if (body.name !== undefined) updates.name = body.name;
+
+      if (Object.keys(updates).length === 0) return err("No valid fields to update");
+
+      const { error: updateErr } = await sb
+        .from("api_keys")
+        .update(updates)
+        .eq("id", body.id)
+        .eq("tenant_id", tenant_id);
+
+      if (updateErr) return err(updateErr.message, 500);
+      return json({ success: true });
+    }
+
     return err("Not found", 404);
   }
 
