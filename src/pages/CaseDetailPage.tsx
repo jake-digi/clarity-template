@@ -244,6 +244,19 @@ const CaseDetailPage = () => {
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
+  const handleAssignCase = async (userId: string | null, userName: string | null) => {
+    if (!caseId) return;
+    const { error } = await supabase.from("behavior_cases").update({
+      assigned_to_id: userId,
+      assigned_to_name: userName,
+      updated_at: new Date().toISOString(),
+    } as any).eq("id", caseId);
+    if (error) { toast.error("Failed to assign case"); return; }
+    toast.success(userName ? `Assigned to ${userName}` : "Unassigned");
+    qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
+    qc.invalidateQueries({ queryKey: ["behavior-cases"] });
+  };
+
   const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
   const isWelfareCase = welfareCategoriesList.includes(c?.category ?? "");
 
