@@ -504,11 +504,6 @@ const CaseDetailPage = () => {
                 </div>
               </div>
 
-              {/* Overview */}
-              <div className="bg-card rounded-lg border border-border p-5">
-                <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
-              </div>
 
               {/* Activity Timeline */}
               <div className="bg-card rounded-lg border border-border p-5">
