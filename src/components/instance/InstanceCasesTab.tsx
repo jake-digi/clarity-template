@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle, Search, Filter, Plus } from "lucide-react";
+import NewCaseDialog from "@/components/NewCaseDialog";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
