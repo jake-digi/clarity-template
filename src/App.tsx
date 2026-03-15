@@ -21,7 +21,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import CasesPage from "./pages/CasesPage.tsx";
 import CaseDetailPage from "./pages/CaseDetailPage.tsx";
-
+import RolesPage from "./pages/RolesPage.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -47,6 +47,7 @@ const App = () => (
               <Route path="/tracking" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
               <Route path="/cases" element={<ProtectedRoute><CasesPage /></ProtectedRoute>} />
               <Route path="/cases/:caseId" element={<ProtectedRoute><CaseDetailPage /></ProtectedRoute>} />
+              <Route path="/roles" element={<ProtectedRoute><RolesPage /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
