@@ -486,6 +486,7 @@ const SiteDetailPage = () => {
               onBlockPolygonChange={handleBlockPolygonChange}
               onBlockPolygonDrawn={handleBlockPolygonDrawn}
               onRoomPinPlaced={handleRoomPinPlaced}
+              onRoomClick={handleRoomClick}
               onBlockClick={handleBlockClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}
