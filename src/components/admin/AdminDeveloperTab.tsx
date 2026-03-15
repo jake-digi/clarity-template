@@ -296,7 +296,7 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/list`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/list`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const data = await res.json();
