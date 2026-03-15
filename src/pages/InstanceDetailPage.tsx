@@ -241,53 +241,26 @@ const InstanceDetailPage = () => {
                 </TabsContent>
 
                 {/* Stages */}
-                <TabsContent value="stages" className="mt-0">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-xs text-muted-foreground">{stages.length} stage{stages.length !== 1 ? "s" : ""} configured</p>
-                    <Button size="sm" className="gap-1.5 h-8"><Plus className="w-3.5 h-3.5" />Add Stage</Button>
-                  </div>
-                  {stages.length === 0 ? (
-                    <SectionCard title="Stages" icon={ClipboardList}>
-                      <EmptyState icon={ClipboardList} message="No stages configured for this instance. Add a stage to define checkpoints and procedures." />
-                    </SectionCard>
-                  ) : (
-                    <div className="space-y-3">
-                      {stages.map((stage, idx) => {
-                        const tasks = tasksByStage.get(stage.id) ?? [];
-                        return (
-                          <div key={stage.id} className="bg-card rounded-lg border border-border overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border">
-                              <GripVertical className="w-4 h-4 text-muted-foreground/40" />
-                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                {stage.stage_number ?? idx + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold text-foreground">{stage.title}</h3>
-                                {stage.description && <p className="text-xs text-muted-foreground mt-0.5">{stage.description}</p>}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-[10px]">{tasks.length} task{tasks.length !== 1 ? "s" : ""}</Badge>
-                                {stage.requires_previous_stage && <span title="Requires previous stage"><Lock className="w-3.5 h-3.5 text-muted-foreground" /></span>}
-                                <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3 h-3" /></Button>
-                              </div>
-                            </div>
-                            {tasks.length > 0 && (
-                              <div className="divide-y divide-border">
-                                {tasks.map((task) => (
-                                  <div key={task.id} className="flex items-center gap-3 px-5 py-2.5 pl-16">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                                    <span className="text-sm text-foreground flex-1">{task.description}</span>
-                                    <Badge variant="secondary" className="text-[10px] font-normal">{fieldTypeLabel[task.field_type] ?? task.field_type}</Badge>
-                                    {task.required && <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">Required</Badge>}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                <TabsContent value="stages" className="mt-0 space-y-6">
+                  <Tabs defaultValue="manage">
+                    <TabsList className="h-8">
+                      <TabsTrigger value="manage" className="text-xs h-7">Manage Stages</TabsTrigger>
+                      <TabsTrigger value="progress" className="text-xs h-7">Progress Matrix</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="manage" className="mt-4">
+                      <StageTemplateManager instanceId={instanceId!} tenantId={instance.tenant_id} />
+                    </TabsContent>
+                    <TabsContent value="progress" className="mt-4">
+                      <StagesProgressMatrix
+                        instanceId={instanceId!}
+                        stages={stages}
+                        subgroups={subgroups}
+                        onCellClick={(subgroupId, stageId, progressId) =>
+                          setStageModal({ subgroupId, stageId, progressId })
+                        }
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </TabsContent>
 
                 {/* Groups */}
@@ -307,7 +280,7 @@ const InstanceDetailPage = () => {
 
                 {/* Tracking */}
                 <TabsContent value="tracking" className="mt-0">
-                  <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} />
+                  <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} settings={settings} />
                 </TabsContent>
 
                 {/* Settings */}
