@@ -20,6 +20,7 @@ import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
 import InstanceParticipantsTab from "@/components/instance/InstanceParticipantsTab";
 import InstanceStaffTab from "@/components/instance/InstanceStaffTab";
 import InstanceAccommodationTab from "@/components/instance/InstanceAccommodationTab";
+import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
