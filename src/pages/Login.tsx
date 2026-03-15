@@ -171,7 +171,7 @@ const Login = () => {
 
               <Button
                 variant="outline"
-                className="w-full h-11 text-sm font-medium gap-3"
+                className="w-full h-11 text-sm font-medium gap-3 rounded-none"
                 onClick={handleMicrosoft365}
                 disabled={m365Loading}
               >
