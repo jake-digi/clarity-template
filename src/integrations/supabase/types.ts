@@ -126,6 +126,7 @@ export type Database = {
           associated_strike_id: string | null
           category: string
           created_at: string
+          event_time: string | null
           id: string
           instance_id: string
           involved_staff: string[] | null
@@ -153,6 +154,7 @@ export type Database = {
           associated_strike_id?: string | null
           category?: string
           created_at?: string
+          event_time?: string | null
           id?: string
           instance_id: string
           involved_staff?: string[] | null
@@ -180,6 +182,7 @@ export type Database = {
           associated_strike_id?: string | null
           category?: string
           created_at?: string
+          event_time?: string | null
           id?: string
           instance_id?: string
           involved_staff?: string[] | null
