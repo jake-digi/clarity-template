@@ -36,6 +36,7 @@ const AdminUsersTab = () => {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(0);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const pageSize = 25;
 
   const toggleSort = (field: SortField) => {
