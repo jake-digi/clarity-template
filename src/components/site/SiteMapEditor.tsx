@@ -596,7 +596,7 @@ const SiteMapEditor = ({
         .leaflet-draw-toolbar a {
           background-color: hsl(0, 0%, 100%);
         }
-        .room-pin-icon {
+        .room-pin-icon, .feature-pin-icon, .block-label-icon {
           background: none !important;
           border: none !important;
         }
