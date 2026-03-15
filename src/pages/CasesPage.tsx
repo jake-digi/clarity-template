@@ -4,6 +4,7 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import FormalWarningsSheet from "@/components/FormalWarningsSheet";
 import CasesKanban from "@/components/CasesKanban";
+import NewCaseDialog from "@/components/NewCaseDialog";
 import { useCases } from "@/hooks/useCases";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
