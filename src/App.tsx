@@ -14,6 +14,7 @@ import ParticipantInstancePage from "./pages/ParticipantInstancePage.tsx";
 import InstancesPage from "./pages/InstancesPage.tsx";
 import InstanceDetailPage from "./pages/InstanceDetailPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 import Login from "./pages/Login.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
