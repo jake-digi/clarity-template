@@ -237,7 +237,11 @@ const SiteDetailPage = () => {
   const [pendingRoomPin, setPendingRoomPin] = useState<{ blockId: string; position: { lat: number; lng: number } } | null>(null);
   const [roomPinMode, setRoomPinMode] = useState<"new" | "existing">("new");
   const [selectedExistingRoomId, setSelectedExistingRoomId] = useState<string>("");
-  const [roomPinForm, setRoomPinForm] = useState({ room_number: "", name: "", capacity: "" });
+  const [roomPinForm, setRoomPinForm] = useState({ room_number: "", name: "", capacity: "", room_type: "room" as string });
+  // Edit room state
+  const [showEditRoomDialog, setShowEditRoomDialog] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<SiteRoom | null>(null);
+  const [editRoomForm, setEditRoomForm] = useState({ room_number: "", name: "", capacity: "", room_type: "room" as string });
 
   const site = data?.site;
   const blocks = data?.blocks ?? [];
