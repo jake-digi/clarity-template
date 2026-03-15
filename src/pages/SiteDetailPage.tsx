@@ -8,7 +8,7 @@ import {
   useCreateBlock, useUpdateBlock, useDeleteBlock,
   useCreateRoom, useUpdateRoom, useDeleteRoom,
   useUpdateBlockPolygon,
-  SiteBlock, SiteRoom,
+  SiteBlock, SiteRoom, ROOM_TYPES, RoomType,
 } from "@/hooks/useSites";
 import SiteMapEditor, { GeoBounds, GeoPolygon, MapMode } from "@/components/site/SiteMapEditor";
 import { Button } from "@/components/ui/button";
