@@ -79,8 +79,8 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right panel – form */}
-        <div className="flex-1 flex flex-col justify-center px-6 sm:px-8 py-12 max-w-md mx-auto w-full">
+        <div className="flex-1 flex flex-col py-12 max-w-md mx-auto w-full">
+          <div className="flex-1 flex flex-col justify-center px-6 sm:px-8">
           {/* Mobile logo */}
           <div className="md:hidden mb-8">
             <img src={checkpointLogo} alt="Checkpoint" className="h-10" />
@@ -196,8 +196,10 @@ const Login = () => {
             </div>
           )}
 
+          </div>
+
           {/* Footer */}
-          <div className="mt-auto pt-8 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="pt-8 flex items-center justify-between text-xs text-muted-foreground px-6 sm:px-8">
             <span>© {new Date().getFullYear()} Checkpoint. All rights reserved.</span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
