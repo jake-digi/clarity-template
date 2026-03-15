@@ -27,6 +27,7 @@ import AdministrationPage from "./pages/AdministrationPage.tsx";
 import SitesPage from "./pages/SitesPage.tsx";
 import SiteDetailPage from "./pages/SiteDetailPage.tsx";
 import ReportsPage from "./pages/ReportsPage.tsx";
+import ReportDetailPage from "./pages/ReportDetailPage.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
