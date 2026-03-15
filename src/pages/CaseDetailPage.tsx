@@ -459,6 +459,25 @@ const CaseDetailPage = () => {
           <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Overview + Timeline */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Case Actions */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Gavel className="w-4 h-4" /> Case Actions
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {caseActionTypes.map((action) => (
+                    <button
+                      key={action.type}
+                      onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${action.color}`}
+                    >
+                      <action.icon className="w-3.5 h-3.5" />
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Overview */}
               <div className="bg-card rounded-lg border border-border p-5">
                 <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
