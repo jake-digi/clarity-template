@@ -1,0 +1,7 @@
+INSERT INTO public.behavior_cases (tenant_id, instance_id, participant_id, category, severity_level, status, overview, location, privacy_level)
+VALUES
+  ('KettleOrganisation', '435NDwI1vIXcCIOSnFuQ', '25652', 'Homesickness', 'medium', 'open', 'Participant has been expressing strong feelings of homesickness since day 2. Tearful during evening activities and requesting to call parents frequently.', 'Accommodation Block', 'normal'),
+  ('KettleOrganisation', '435NDwI1vIXcCIOSnFuQ', '22617', 'Safeguarding', 'high', 'open', 'Concern raised by group leader regarding unexplained bruising on participant''s arm. Participant was reluctant to discuss. Requires sensitive follow-up.', 'Welfare Tent', 'sensitive'),
+  ('KettleOrganisation', '435NDwI1vIXcCIOSnFuQ', '24919', 'Homesickness', 'low', 'pending', 'Participant mentioned feeling a bit homesick during check-in but seems to be coping well with peer support. Monitoring situation.', 'Main Hall', 'normal'),
+  ('KettleOrganisation', '435NDwI1vIXcCIOSnFuQ', '28186', 'Other', 'medium', 'in-progress', 'Participant reported feeling excluded by peers during group activities. Staff intervened and facilitated a group discussion. Ongoing monitoring required.', 'Sports Field', 'normal'),
+  ('KettleOrganisation', '435NDwI1vIXcCIOSnFuQ', '24600', 'Safeguarding', 'critical', 'open', 'Participant disclosed concerning information about home environment to a staff member. Immediate safeguarding protocols initiated. DSL notified.', 'Briefing Room', 'sensitive');
