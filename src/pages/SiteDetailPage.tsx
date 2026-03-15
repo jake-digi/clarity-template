@@ -391,6 +391,7 @@ const SiteDetailPage = () => {
               blocks={blocks}
               onBoundsChange={handleBoundsChange}
               onBlockPolygonChange={handleBlockPolygonChange}
+              onBlockPolygonDrawn={handleBlockPolygonDrawn}
               onBlockClick={handleBlockClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}
