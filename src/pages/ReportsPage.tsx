@@ -164,8 +164,10 @@ const ReportCard = ({ report, onRun }: { report: Report; onRun: (id: string) => 
 };
 
 const ReportsPage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const handleRun = (id: string) => navigate(`/reports/${id}`);
 
   const filtered = useMemo(() => {
     let list = reports;
