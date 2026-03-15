@@ -50,14 +50,25 @@ const BLOCK_COLORS = [
   "hsl(180, 60%, 40%)",
 ];
 
-const makeRoomIcon = (color: string) =>
+const makeRoomIcon = (color: string, label: string) =>
   L.divIcon({
     className: "room-pin-icon",
-    html: `<div style="width:20px;height:20px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </div>
+      <span style="font-size:10px;font-weight:600;color:${color};text-shadow:0 0 3px white,0 0 3px white,0 0 3px white;white-space:nowrap;pointer-events:none;">${label}</span>
     </div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [60, 36],
+    iconAnchor: [30, 11],
+  });
+
+const makeBlockLabel = (name: string, color: string) =>
+  L.divIcon({
+    className: "block-label-icon",
+    html: `<div style="font-size:12px;font-weight:700;color:${color};text-shadow:0 0 4px white,0 0 4px white,0 0 4px white,0 0 4px white;white-space:nowrap;pointer-events:none;text-align:center;">${name}</div>`,
+    iconSize: [100, 20],
+    iconAnchor: [50, 10],
   });
 
 const SiteMapEditor = ({
