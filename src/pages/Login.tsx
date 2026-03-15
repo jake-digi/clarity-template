@@ -114,7 +114,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="h-11"
+                className="h-11 rounded-none"
               />
             </div>
 
@@ -130,7 +130,7 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="h-11"
+                    className="h-11 rounded-none"
                   />
                 </div>
 
@@ -152,7 +152,7 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-11 text-sm font-semibold"
+              className="w-full h-11 text-sm font-semibold rounded-none"
               disabled={loading}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
@@ -171,7 +171,7 @@ const Login = () => {
 
               <Button
                 variant="outline"
-                className="w-full h-11 text-sm font-medium gap-3"
+                className="w-full h-11 text-sm font-medium gap-3 rounded-none"
                 onClick={handleMicrosoft365}
                 disabled={m365Loading}
               >
