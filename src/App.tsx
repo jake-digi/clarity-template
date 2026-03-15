@@ -14,6 +14,7 @@ import ParticipantInstancePage from "./pages/ParticipantInstancePage.tsx";
 import InstancesPage from "./pages/InstancesPage.tsx";
 import InstanceDetailPage from "./pages/InstanceDetailPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
+import UserProfile from "./pages/UserProfile.tsx";
 import Login from "./pages/Login.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
+              <Route path="/people/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/participants" element={<ProtectedRoute><Participants /></ProtectedRoute>} />
               <Route path="/participants/:id" element={<ProtectedRoute><ParticipantProfile /></ProtectedRoute>} />
               <Route path="/participants/:id/instances/:instanceId" element={<ProtectedRoute><ParticipantInstancePage /></ProtectedRoute>} />
