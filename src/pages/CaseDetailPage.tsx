@@ -169,6 +169,20 @@ const CaseDetailPage = () => {
   const [strikeConfirmed, setStrikeConfirmed] = useState<Record<string, boolean>>({});
   const [checkInDialogOpen, setCheckInDialogOpen] = useState(false);
 
+  // Fetch staff users for assignment dropdown
+  const { data: staffUsers } = useQuery({
+    queryKey: ["users-for-assignment"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, first_name, surname, email")
+        .is("deleted_at", null)
+        .order("first_name", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // Fetch formal warning (strike) count for this participant
   const { data: strikeActions } = useQuery({
     queryKey: ["participant-strikes", c?.participant_id],
