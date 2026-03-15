@@ -109,7 +109,7 @@ const ReportTypeBadge = ({ type }: { type: Report["type"] }) => (
   </Badge>
 );
 
-const ReportCard = ({ report }: { report: Report }) => {
+const ReportCard = ({ report, onRun }: { report: Report; onRun: (id: string) => void }) => {
   const CatIcon = categoryIcons[report.category] ?? Tag;
   return (
     <Card className="group overflow-hidden border-border/60 hover:border-primary/40 transition-all hover:shadow-lg">
