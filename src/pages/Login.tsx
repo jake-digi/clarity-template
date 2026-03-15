@@ -85,7 +85,7 @@ const Login = () => {
         </div>
 
         {/* Right panel – form */}
-        <div className="flex-1 flex flex-col justify-center px-12 sm:px-20 lg:px-28 py-12">
+        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12">
           {/* Mobile logo */}
           <div className="md:hidden mb-8">
             <img src={checkpointLogo} alt="Checkpoint" className="h-10" />
