@@ -150,6 +150,7 @@ const InstanceDetailPage = () => {
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
     { value: "stages", label: "Stages", icon: ClipboardList },
+    { value: "cases", label: "Cases", icon: Briefcase },
     { value: "groups", label: "Groups", icon: FolderTree },
     { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
