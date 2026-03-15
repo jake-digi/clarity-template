@@ -15,6 +15,7 @@ import {
 import { statusVariant, InfoRow, SectionCard, EmptyState, EditButton } from "@/components/participant/ProfileShared";
 import { InstancesTab } from "@/components/participant/InstancesTab";
 import { TimelineTab } from "@/components/participant/TimelineTab";
+import { CasesTab } from "@/components/participant/CasesTab";
 
 const ParticipantProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +74,7 @@ const ParticipantProfile = () => {
   const tabs = [
     { value: "personal", label: "Personal", icon: User },
     { value: "instances", label: "Instances", icon: Building2, count: p.assignments?.length },
+    { value: "cases", label: "Cases", icon: AlertTriangle },
     { value: "timeline", label: "Timeline", icon: Clock },
     { value: "medical", label: "Medical", icon: Heart },
     { value: "dietary", label: "Dietary", icon: UtensilsCrossed },
@@ -196,6 +198,11 @@ const ParticipantProfile = () => {
                     participantId={id ?? ""}
                     assignments={p.assignments ?? []}
                   />
+                </TabsContent>
+
+                {/* Cases */}
+                <TabsContent value="cases" className="mt-0">
+                  <CasesTab participantId={id ?? ""} />
                 </TabsContent>
 
                 {/* Timeline */}
