@@ -10,7 +10,7 @@ import {
   useUpdateBlockPolygon,
   SiteBlock, SiteRoom,
 } from "@/hooks/useSites";
-import SiteMapEditor, { GeoBounds, GeoPolygon } from "@/components/site/SiteMapEditor";
+import SiteMapEditor, { GeoBounds, GeoPolygon, MapMode } from "@/components/site/SiteMapEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
