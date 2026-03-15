@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import jlgbLogo from "@/assets/jlgb-logo.png";
 
 interface SearchItem {
@@ -9,6 +10,8 @@ interface SearchItem {
   category: string;
   path: string;
   icon: React.ElementType;
+  photoUrl?: string | null;
+  initials?: string;
 }
 
 const searchIndex: SearchItem[] = [
@@ -17,15 +20,19 @@ const searchIndex: SearchItem[] = [
   { label: "Participants", category: "Tenant Overview", path: "/participants", icon: UserCheck },
   { label: "Groups", category: "Tenant Overview", path: "/", icon: UsersRound },
   { label: "Accommodation", category: "Tenant Overview", path: "/", icon: BedDouble },
-  { label: "Case Management", category: "Case Management", path: "/", icon: Briefcase },
+  { label: "Case Management", category: "Case Management", path: "/cases", icon: Briefcase },
   { label: "Strikes Report", category: "Reporting", path: "/", icon: FileWarning },
   { label: "Participant Reports", category: "Reporting", path: "/", icon: BarChart3 },
   { label: "Cross-Instance Reports", category: "Reporting", path: "/", icon: GitCompareArrows },
-  { label: "Instances", category: "System", path: "/", icon: Building2 },
-  { label: "Roles & Permissions", category: "System", path: "/", icon: ShieldCheck },
+  { label: "Instances", category: "System", path: "/instances", icon: Building2 },
+  { label: "Roles & Permissions", category: "System", path: "/roles", icon: ShieldCheck },
   { label: "Audit & History", category: "System", path: "/", icon: History },
   { label: "Attendance", category: "System", path: "/", icon: ClipboardCheck },
 ];
+
+function getInitials(name: string): string {
+  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+}
 
 const DashboardHeader = () => {
   const navigate = useNavigate();
@@ -33,6 +40,7 @@ const DashboardHeader = () => {
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [participantResults, setParticipantResults] = useState<SearchItem[]>([]);
+  const [userResults, setUserResults] = useState<SearchItem[]>([]);
   const [caseResults, setCaseResults] = useState<SearchItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,23 +55,29 @@ const DashboardHeader = () => {
     );
   }, [query]);
 
-  // Search participants from Supabase with debounce
+  // Search participants, users, and cases from Supabase with debounce
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!query.trim() || query.trim().length < 2) {
       setParticipantResults([]);
+      setUserResults([]);
       setCaseResults([]);
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
-      const [participantsRes, casesRes] = await Promise.all([
+      const [participantsRes, usersRes, casesRes] = await Promise.all([
         supabase
           .from("participants")
-          .select("id, full_name")
+          .select("id, full_name, photo_link")
           .ilike("full_name", `%${query.trim()}%`)
           .limit(8),
+        supabase
+          .from("users")
+          .select("id, first_name, surname, email, profile_photo_url")
+          .or(`first_name.ilike.%${query.trim()}%,surname.ilike.%${query.trim()}%,email.ilike.%${query.trim()}%`)
+          .limit(6),
         supabase
           .from("behavior_cases")
           .select("id, category, severity_level, overview, participant_id")
@@ -77,8 +91,26 @@ const DashboardHeader = () => {
             label: p.full_name,
             category: "Participants",
             path: `/participants/${p.id}`,
-            icon: User,
+            icon: UserCheck,
+            photoUrl: p.photo_link,
+            initials: getInitials(p.full_name),
           }))
+        );
+      }
+
+      if (usersRes.data) {
+        setUserResults(
+          usersRes.data.map((u) => {
+            const name = [u.first_name, u.surname].filter(Boolean).join(" ") || u.email;
+            return {
+              label: name,
+              category: "Users",
+              path: `/people/${u.id}`,
+              icon: User,
+              photoUrl: u.profile_photo_url,
+              initials: getInitials(name),
+            };
+          })
         );
       }
 
@@ -99,7 +131,10 @@ const DashboardHeader = () => {
     };
   }, [query]);
 
-  const results = useMemo(() => [...pageResults, ...participantResults, ...caseResults], [pageResults, participantResults, caseResults]);
+  const results = useMemo(
+    () => [...pageResults, ...participantResults, ...userResults, ...caseResults],
+    [pageResults, participantResults, userResults, caseResults]
+  );
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -176,12 +211,12 @@ const DashboardHeader = () => {
               onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search pages, participants, cases..."
+              placeholder="Search pages, participants, users, cases..."
               className="w-80 pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query ? (
               <button
-                onClick={() => { setQuery(""); setParticipantResults([]); setCaseResults([]); inputRef.current?.focus(); }}
+                onClick={() => { setQuery(""); setParticipantResults([]); setUserResults([]); setCaseResults([]); inputRef.current?.focus(); }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
               >
                 ✕
@@ -211,7 +246,7 @@ const DashboardHeader = () => {
                   </div>
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-1">Search by</div>
                   <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2"><User className="w-3.5 h-3.5" /><span>Participant name — e.g. "Aaron"</span></div>
+                    <div className="flex items-center gap-2"><User className="w-3.5 h-3.5" /><span>Participant or user name — e.g. "Aaron"</span></div>
                     <div className="flex items-center gap-2"><Building2 className="w-3.5 h-3.5" /><span>Page or module name</span></div>
                   </div>
                   <div className="border-t border-border pt-2 flex items-center gap-4 text-[10px] text-muted-foreground">
@@ -235,6 +270,7 @@ const DashboardHeader = () => {
                         flatIndex++;
                         const idx = flatIndex;
                         const Icon = item.icon;
+                        const hasAvatar = item.category === "Participants" || item.category === "Users";
                         return (
                           <button
                             key={`${item.path}-${item.label}`}
@@ -245,8 +281,17 @@ const DashboardHeader = () => {
                                 : "text-foreground hover:bg-muted"
                             }`}
                           >
-                            <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <span className="font-medium">{item.label}</span>
+                            {hasAvatar ? (
+                              <Avatar className="h-6 w-6 shrink-0">
+                                <AvatarImage src={item.photoUrl ?? undefined} alt={item.label} />
+                                <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                                  {item.initials ?? <Icon className="w-3 h-3" />}
+                                </AvatarFallback>
+                              </Avatar>
+                            ) : (
+                              <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                            )}
+                            <span className="font-medium truncate">{item.label}</span>
                           </button>
                         );
                       })}
