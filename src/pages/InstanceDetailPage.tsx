@@ -334,6 +334,11 @@ const InstanceDetailPage = () => {
                   )}
                 </TabsContent>
 
+                {/* Accommodation */}
+                <TabsContent value="accommodation" className="mt-0">
+                  <InstanceAccommodationTab instanceId={instanceId!} />
+                </TabsContent>
+
                 {/* Cases */}
                 <TabsContent value="cases" className="mt-0">
                   <InstanceCasesTab instanceId={instanceId!} />
