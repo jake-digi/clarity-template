@@ -474,7 +474,7 @@ const AdminDeveloperTab = () => {
         </div>
 
         {/* ===== KEYS TAB ===== */}
-        <TabsContent value="keys" className="space-y-4 mt-4">
+        <TabsContent value="keys" className="space-y-4 p-6">
           {/* Connection info bar */}
           <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
             <Database className="w-4 h-4 text-muted-foreground shrink-0" />
