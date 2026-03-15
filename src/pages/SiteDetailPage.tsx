@@ -10,6 +10,7 @@ import {
   useUpdateBlockPolygon,
   SiteBlock, SiteRoom, ROOM_TYPES, RoomType,
 } from "@/hooks/useSites";
+import { useSiteFeatures, useCreateSiteFeature, useUpdateSiteFeature, useDeleteSiteFeature, FEATURE_TYPES, SiteFeature } from "@/hooks/useSiteFeatures";
 import SiteMapEditor, { GeoBounds, GeoPolygon, MapMode } from "@/components/site/SiteMapEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -222,6 +223,10 @@ const SiteDetailPage = () => {
   const updateBlockPolygon = useUpdateBlockPolygon();
   const createRoom = useCreateRoom();
   const updateRoom = useUpdateRoom();
+  const { data: features } = useSiteFeatures(siteId ?? "");
+  const createFeature = useCreateSiteFeature();
+  const updateFeature = useUpdateSiteFeature();
+  const deleteFeature = useDeleteSiteFeature();
 
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showEditSite, setShowEditSite] = useState(false);
@@ -242,6 +247,13 @@ const SiteDetailPage = () => {
   const [showEditRoomDialog, setShowEditRoomDialog] = useState(false);
   const [editingRoom, setEditingRoom] = useState<SiteRoom | null>(null);
   const [editRoomForm, setEditRoomForm] = useState({ room_number: "", name: "", capacity: "", room_type: "room" as string });
+  // Feature state
+  const [showFeatureDialog, setShowFeatureDialog] = useState(false);
+  const [pendingFeaturePos, setPendingFeaturePos] = useState<{ lat: number; lng: number } | null>(null);
+  const [featureForm, setFeatureForm] = useState({ name: "", feature_type: "other", description: "" });
+  const [showEditFeatureDialog, setShowEditFeatureDialog] = useState(false);
+  const [editingFeature, setEditingFeature] = useState<SiteFeature | null>(null);
+  const [editFeatureForm, setEditFeatureForm] = useState({ name: "", feature_type: "other", description: "" });
 
   const site = data?.site;
   const blocks = data?.blocks ?? [];
@@ -367,6 +379,72 @@ const SiteDetailPage = () => {
     }
   };
 
+  // Feature handlers
+  const handleFeaturePinPlaced = useCallback((position: { lat: number; lng: number }) => {
+    setPendingFeaturePos(position);
+    setFeatureForm({ name: "", feature_type: "other", description: "" });
+    setTimeout(() => setShowFeatureDialog(true), 0);
+  }, []);
+
+  const handleFeatureClick = useCallback((feature: SiteFeature) => {
+    setEditingFeature(feature);
+    setEditFeatureForm({
+      name: feature.name,
+      feature_type: feature.feature_type,
+      description: feature.description ?? "",
+    });
+    setShowEditFeatureDialog(true);
+  }, []);
+
+  const handleCreateFeature = () => {
+    if (!pendingFeaturePos || !featureForm.name.trim() || !siteId || !tenantId) return;
+    const typeDef = FEATURE_TYPES.find((t) => t.value === featureForm.feature_type);
+    createFeature.mutate({
+      site_id: siteId,
+      tenant_id: tenantId,
+      name: featureForm.name.trim(),
+      feature_type: featureForm.feature_type,
+      description: featureForm.description || undefined,
+      icon: typeDef?.icon,
+      color: typeDef?.color,
+      geo_position: pendingFeaturePos,
+    }, {
+      onSuccess: () => {
+        setShowFeatureDialog(false);
+        setPendingFeaturePos(null);
+      },
+    });
+  };
+
+  const handleSaveEditFeature = () => {
+    if (!editingFeature || !editFeatureForm.name.trim() || !siteId) return;
+    const typeDef = FEATURE_TYPES.find((t) => t.value === editFeatureForm.feature_type);
+    updateFeature.mutate({
+      id: editingFeature.id,
+      site_id: siteId,
+      name: editFeatureForm.name.trim(),
+      feature_type: editFeatureForm.feature_type,
+      description: editFeatureForm.description || undefined,
+      icon: typeDef?.icon,
+      color: typeDef?.color,
+    }, {
+      onSuccess: () => {
+        setShowEditFeatureDialog(false);
+        setEditingFeature(null);
+      },
+    });
+  };
+
+  const handleDeleteFeature = () => {
+    if (!editingFeature || !siteId) return;
+    deleteFeature.mutate({ id: editingFeature.id, site_id: siteId }, {
+      onSuccess: () => {
+        setShowEditFeatureDialog(false);
+        setEditingFeature(null);
+      },
+    });
+  };
+
   const handleAddBlock = () => {
     if (!blockForm.name.trim() || !tenantId || !siteId) return;
     createBlock.mutate({
@@ -482,12 +560,15 @@ const SiteDetailPage = () => {
             <SiteMapEditor
               bounds={geoBounds}
               blocks={blocks}
+              features={features ?? []}
               onBoundsChange={handleBoundsChange}
               onBlockPolygonChange={handleBlockPolygonChange}
               onBlockPolygonDrawn={handleBlockPolygonDrawn}
               onRoomPinPlaced={handleRoomPinPlaced}
               onRoomClick={handleRoomClick}
               onBlockClick={handleBlockClick}
+              onFeaturePinPlaced={handleFeaturePinPlaced}
+              onFeatureClick={handleFeatureClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}
               onModeChange={setMapMode}
@@ -699,6 +780,87 @@ const SiteDetailPage = () => {
             <Button onClick={handleSaveEditRoom} disabled={!editRoomForm.room_number.trim() || updateRoom.isPending}>
               {updateRoom.isPending ? "Saving..." : "Save Changes"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Feature Dialog */}
+      <Dialog open={showFeatureDialog} onOpenChange={setShowFeatureDialog}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Add Feature</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Name *</Label>
+              <Input placeholder="e.g. Swimming Pool" value={featureForm.name} onChange={(e) => setFeatureForm({ ...featureForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={featureForm.feature_type} onValueChange={(v) => setFeatureForm({ ...featureForm, feature_type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FEATURE_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input placeholder="Optional description" value={featureForm.description} onChange={(e) => setFeatureForm({ ...featureForm, description: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowFeatureDialog(false); setPendingFeaturePos(null); }}>Cancel</Button>
+            <Button onClick={handleCreateFeature} disabled={!featureForm.name.trim() || createFeature.isPending}>
+              {createFeature.isPending ? "Creating..." : "Add Feature"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Feature Dialog */}
+      <Dialog open={showEditFeatureDialog} onOpenChange={setShowEditFeatureDialog}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Edit Feature</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Name *</Label>
+              <Input value={editFeatureForm.name} onChange={(e) => setEditFeatureForm({ ...editFeatureForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={editFeatureForm.feature_type} onValueChange={(v) => setEditFeatureForm({ ...editFeatureForm, feature_type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FEATURE_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input value={editFeatureForm.description} onChange={(e) => setEditFeatureForm({ ...editFeatureForm, description: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button variant="destructive" size="sm" onClick={handleDeleteFeature} disabled={deleteFeature.isPending}>
+              {deleteFeature.isPending ? "Deleting..." : "Delete"}
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => { setShowEditFeatureDialog(false); setEditingFeature(null); }}>Cancel</Button>
+              <Button onClick={handleSaveEditFeature} disabled={!editFeatureForm.name.trim() || updateFeature.isPending}>
+                {updateFeature.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
