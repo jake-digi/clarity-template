@@ -16,9 +16,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
   ChevronRight, ArrowLeft, User, Calendar as CalendarIcon, MapPin, AlertTriangle,
   Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown,
-  Heart, Smile, FileWarning, Users, Pencil
+  Heart, Smile, FileWarning, Users, Pencil, Phone, Mail, CalendarPlus,
+  ShieldAlert, Siren, BookOpen, Gavel
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,6 +146,8 @@ const CaseDetailPage = () => {
   const addComment = useAddCaseComment();
   const updateStatus = useUpdateCaseStatus();
   const [newComment, setNewComment] = useState("");
+  const [actionDialog, setActionDialog] = useState<{ open: boolean; type: string; label: string }>({ open: false, type: "", label: "" });
+  const [actionNotes, setActionNotes] = useState("");
 
   // Fetch all cases for this participant (for summary + related)
   const { data: allParticipantCases } = useQuery({
@@ -189,7 +195,34 @@ const CaseDetailPage = () => {
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const caseActionTypes = [
+    { type: "formal_warning", label: "Add Formal Warning", icon: Gavel, color: "text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100" },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone, color: "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100" },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, color: "text-purple-600 bg-purple-50 border-purple-200 hover:bg-purple-100" },
+    { type: "email_parent", label: "Email Parent", icon: Mail, color: "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
+    { type: "escalate", label: "Escalate", icon: Siren, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen, color: "text-muted-foreground bg-muted border-border hover:bg-accent" },
+  ];
+
+  const handleCaseAction = async () => {
+    if (!caseId || !user || !c) return;
+    const { error } = await supabase.from("case_actions").insert({
+      case_id: caseId,
+      instance_id: c.instance_id,
+      participant_id: c.participant_id,
+      action_type: actionDialog.type,
+      description: `${actionDialog.label}${actionNotes.trim() ? `: ${actionNotes.trim()}` : ""}`,
+      performed_by: user.id,
+      performed_by_name: user.email ?? "Unknown",
+    });
+    if (error) { toast.error("Failed to log action"); return; }
+    toast.success(`${actionDialog.label} logged`);
+    setActionDialog({ open: false, type: "", label: "" });
+    setActionNotes("");
+    qc.invalidateQueries({ queryKey: ["case-actions", caseId] });
+  };
+
     if (!c || !caseId || !user || newStatus === c.status) return;
     updateStatus.mutate(
       { caseId, newStatus, oldStatus: c.status, performedBy: user.id, performedByName: user.email ?? "Unknown" },
@@ -426,6 +459,25 @@ const CaseDetailPage = () => {
           <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Overview + Timeline */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Case Actions */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Gavel className="w-4 h-4" /> Case Actions
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {caseActionTypes.map((action) => (
+                    <button
+                      key={action.type}
+                      onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${action.color}`}
+                    >
+                      <action.icon className="w-3.5 h-3.5" />
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Overview */}
               <div className="bg-card rounded-lg border border-border p-5">
                 <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
@@ -589,6 +641,26 @@ const CaseDetailPage = () => {
           </div>
         </main>
       </div>
+      {/* Case Action Dialog */}
+      <Dialog open={actionDialog.open} onOpenChange={(open) => setActionDialog((prev) => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{actionDialog.label}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Textarea
+              placeholder="Add notes or details about this action..."
+              value={actionNotes}
+              onChange={(e) => setActionNotes(e.target.value)}
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActionDialog({ open: false, type: "", label: "" })}>Cancel</Button>
+            <Button onClick={handleCaseAction}>Log Action</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
