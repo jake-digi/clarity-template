@@ -96,7 +96,7 @@ const CheckpointSections = () => {
       {sections.map((section) => (
         <section key={section.title}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{section.title}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {section.items.map((item) => (
               <ItemCard key={item.title} {...item} />
             ))}

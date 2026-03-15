@@ -80,7 +80,7 @@ const DashboardOverview = () => {
           </div>
 
           {/* Tenant details */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-5">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Organisation</p>
               <p className="text-sm font-semibold text-foreground">{tenant?.name ?? "—"}</p>
@@ -104,7 +104,7 @@ const DashboardOverview = () => {
           </div>
 
           {/* Quick stats */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
             {quickStats.map((s) =>
             <div key={s.label} className="bg-muted/50 rounded-md px-3 py-2.5">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
