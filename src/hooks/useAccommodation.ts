@@ -79,7 +79,7 @@ export function useAccommodation(instanceId: string) {
         ? await supabase.from("participants").select("id, full_name, first_name, surname, photo_link").in("id", pIds)
         : { data: [] };
 
-      const pMap = new Map((participants ?? []).map((p) => [p.id, p]));
+      const pMap = Object.fromEntries((participants ?? []).map((p) => [p.id, p]));
 
       const result: RoomOccupant[] = (pAssignments ?? []).map((a) => {
         const p = pMap.get(a.participant_id);
