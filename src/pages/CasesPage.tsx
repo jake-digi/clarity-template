@@ -30,8 +30,11 @@ const CasesPage = () => {
   const navigate = useNavigate();
   const { data: cases, isLoading } = useCases();
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+
+  const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
 
   const filtered = (cases ?? []).filter((c) => {
     const matchesSearch =
@@ -39,9 +42,14 @@ const CasesPage = () => {
       c.participant_name?.toLowerCase().includes(search.toLowerCase()) ||
       c.overview?.toLowerCase().includes(search.toLowerCase()) ||
       c.category.toLowerCase().includes(search.toLowerCase());
+    const isWelfare = welfareCategoriesList.includes(c.category);
+    const matchesCategory =
+      categoryFilter === "all" ||
+      (categoryFilter === "welfare" && isWelfare) ||
+      (categoryFilter === "behaviour" && !isWelfare);
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
     const matchesSeverity = severityFilter === "all" || c.severity_level === severityFilter;
-    return matchesSearch && matchesStatus && matchesSeverity;
+    return matchesSearch && matchesCategory && matchesStatus && matchesSeverity;
   });
 
   return (
@@ -75,6 +83,17 @@ const CasesPage = () => {
                   className="pl-9"
                 />
               </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="behaviour">Behaviour</SelectItem>
+                  <SelectItem value="welfare">Welfare</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
                   <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
