@@ -783,6 +783,87 @@ const SiteDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Feature Dialog */}
+      <Dialog open={showFeatureDialog} onOpenChange={setShowFeatureDialog}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Add Feature</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Name *</Label>
+              <Input placeholder="e.g. Swimming Pool" value={featureForm.name} onChange={(e) => setFeatureForm({ ...featureForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={featureForm.feature_type} onValueChange={(v) => setFeatureForm({ ...featureForm, feature_type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FEATURE_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input placeholder="Optional description" value={featureForm.description} onChange={(e) => setFeatureForm({ ...featureForm, description: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowFeatureDialog(false); setPendingFeaturePos(null); }}>Cancel</Button>
+            <Button onClick={handleCreateFeature} disabled={!featureForm.name.trim() || createFeature.isPending}>
+              {createFeature.isPending ? "Creating..." : "Add Feature"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Feature Dialog */}
+      <Dialog open={showEditFeatureDialog} onOpenChange={setShowEditFeatureDialog}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Edit Feature</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Name *</Label>
+              <Input value={editFeatureForm.name} onChange={(e) => setEditFeatureForm({ ...editFeatureForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={editFeatureForm.feature_type} onValueChange={(v) => setEditFeatureForm({ ...editFeatureForm, feature_type: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FEATURE_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Input value={editFeatureForm.description} onChange={(e) => setEditFeatureForm({ ...editFeatureForm, description: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button variant="destructive" size="sm" onClick={handleDeleteFeature} disabled={deleteFeature.isPending}>
+              {deleteFeature.isPending ? "Deleting..." : "Delete"}
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => { setShowEditFeatureDialog(false); setEditingFeature(null); }}>Cancel</Button>
+              <Button onClick={handleSaveEditFeature} disabled={!editFeatureForm.name.trim() || updateFeature.isPending}>
+                {updateFeature.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
