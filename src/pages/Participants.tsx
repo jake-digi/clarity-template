@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import ParticipantDrawer from "@/components/ParticipantDrawer";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Input } from "@/components/ui/input";
