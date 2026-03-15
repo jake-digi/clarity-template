@@ -24,7 +24,7 @@ const InstanceAnnouncementsTab = ({ instanceId }: { instanceId: string }) => {
   const createMutation = useCreateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
   const { toast } = useToast();
-  const tenantId = useTenantId();
+  const { data: tenantId } = useTenantId();
 
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");

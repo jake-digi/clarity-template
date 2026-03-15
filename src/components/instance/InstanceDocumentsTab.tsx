@@ -33,8 +33,8 @@ const formatSize = (bytes: number | null) => {
 };
 
 const InstanceDocumentsTab = ({ instanceId, tenantId: propTenantId }: { instanceId: string; tenantId?: string }) => {
-  const hookTenantId = useTenantId();
-  const tenantId = propTenantId || hookTenantId;
+  const { data: hookTenantId } = useTenantId();
+  const tenantId = propTenantId || hookTenantId || "";
   const { data: documents = [], isLoading } = useDocuments(instanceId);
   const uploadMutation = useUploadDocument();
   const deleteMutation = useDeleteDocument();
