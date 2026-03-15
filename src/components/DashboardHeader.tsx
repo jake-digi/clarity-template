@@ -99,7 +99,7 @@ const DashboardHeader = () => {
     };
   }, [query]);
 
-  const results = useMemo(() => [...pageResults, ...participantResults], [pageResults, participantResults]);
+  const results = useMemo(() => [...pageResults, ...participantResults, ...caseResults], [pageResults, participantResults, caseResults]);
 
   useEffect(() => {
     setSelectedIndex(0);
