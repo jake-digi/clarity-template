@@ -743,6 +743,11 @@ const AdminDeveloperTab = () => {
                       <Label>Expiry (optional)</Label>
                       <Input type="datetime-local" value={newKeyExpiry} onChange={(e) => setNewKeyExpiry(e.target.value)} />
                     </div>
+                    <div className="space-y-1.5">
+                      <Label>Allowed IPs (optional)</Label>
+                      <Input placeholder="e.g. 203.0.113.1, 10.0.0.0" value={newKeyAllowedIps} onChange={(e) => setNewKeyAllowedIps(e.target.value)} />
+                      <p className="text-[10px] text-muted-foreground">Comma-separated. Leave empty to allow all IPs.</p>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create Key"}</Button>
