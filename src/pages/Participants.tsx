@@ -365,6 +365,12 @@ const Participants = () => {
               </div>
             </div>
           )}
+
+          <ParticipantDrawer
+            participantId={drawerParticipantId}
+            open={!!drawerParticipantId}
+            onOpenChange={(open) => { if (!open) setDrawerParticipantId(null); }}
+          />
         </main>
       </div>
     </div>
