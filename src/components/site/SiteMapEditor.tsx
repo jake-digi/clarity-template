@@ -275,7 +275,7 @@ const SiteMapEditor = ({
             <Square className="w-3.5 h-3.5" />
             {bounds?.length ? "Redraw Bounds" : "Set Bounds"}
           </Button>
-          {bounds && (
+          {bounds?.length ? (
             <Button
               variant={mode === "draw-block" ? "default" : "ghost"}
               size="sm"
