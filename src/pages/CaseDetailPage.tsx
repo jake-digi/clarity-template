@@ -166,7 +166,22 @@ const CaseDetailPage = () => {
   const [actionDialog, setActionDialog] = useState<{ open: boolean; type: string; label: string }>({ open: false, type: "", label: "" });
   const [actionNotes, setActionNotes] = useState("");
 
-  // Fetch all cases for this participant (for summary + related)
+  // Fetch formal warning (strike) count for this participant
+  const { data: strikeActions } = useQuery({
+    queryKey: ["participant-strikes", c?.participant_id],
+    enabled: !!c?.participant_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("case_actions")
+        .select("id")
+        .eq("participant_id", c!.participant_id)
+        .eq("action_type", "formal_warning");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const strikeCount = strikeActions?.length ?? 0;
+
   const { data: allParticipantCases } = useQuery({
     queryKey: ["participant-cases", c?.participant_id],
     enabled: !!c?.participant_id,
