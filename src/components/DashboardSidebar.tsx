@@ -1,4 +1,4 @@
-import { Home, Users, Building2, CheckSquare, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench } from "lucide-react";
+import { Home, Users, Building2, CheckSquare, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
