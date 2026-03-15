@@ -345,29 +345,6 @@ const AdminDeveloperTab = () => {
               <CopyButton value={API_BASE_URL} field="base_url" />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground flex items-center gap-1.5"><Globe className="w-3 h-3" />Supabase URL</Label>
-            <div className="flex items-center gap-2">
-              <Input value={SUPABASE_URL} readOnly className="font-mono text-xs h-9 bg-muted/50" />
-              <CopyButton value={SUPABASE_URL} field="url" />
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
-                <a href={`https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground flex items-center gap-1.5"><Key className="w-3 h-3" />Anon / Publishable Key</Label>
-            <div className="flex items-center gap-2">
-              <Input value={showAnonKey ? SUPABASE_ANON_KEY : "•".repeat(40)} readOnly className="font-mono text-xs h-9 bg-muted/50" />
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setShowAnonKey(!showAnonKey)}>
-                {showAnonKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </Button>
-              <CopyButton value={SUPABASE_ANON_KEY} field="anon_key" />
-            </div>
-            <p className="text-[10px] text-muted-foreground">Public anon key — safe in client-side code. Only grants access permitted by RLS policies.</p>
-          </div>
         </CardContent>
       </Card>
 
