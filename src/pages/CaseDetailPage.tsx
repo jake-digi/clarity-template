@@ -69,11 +69,11 @@ function scoreToAngle(score: number) {
 }
 
 function getScoreColor(score: number) {
-  if (score < 1.8) return "#4CAF50";
-  if (score < 2.6) return "#8BC34A";
+  if (score < 1.8) return "#F44336";
+  if (score < 2.6) return "#FF9800";
   if (score < 3.4) return "#CDDC39";
-  if (score < 4.2) return "#FF9800";
-  return "#F44336";
+  if (score < 4.2) return "#8BC34A";
+  return "#4CAF50";
 }
 
 function getScoreLabel(score: number) {
