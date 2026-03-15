@@ -17,6 +17,7 @@ const opsItems = [
   { icon: MapPin, label: "Tracking", path: "/tracking" },
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: Activity, label: "Activity Log", path: "/activity" },
+  { icon: FileWarning, label: "Cases", path: "/cases" },
 ];
 
 const adminItems = [
