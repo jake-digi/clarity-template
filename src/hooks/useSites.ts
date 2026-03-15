@@ -23,6 +23,7 @@ export interface SiteBlock {
   site_id: string;
   tenant_id: string;
   created_at: string;
+  geo_polygon: [number, number][] | null;
   rooms: SiteRoom[];
 }
 
