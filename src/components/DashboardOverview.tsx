@@ -1,4 +1,4 @@
-import { Users, Briefcase, Building2, Send, Smartphone } from "lucide-react";
+import { Users, Briefcase, Building2, Send, Smartphone, Loader2 } from "lucide-react";
 import qrCode from "@/assets/qr-checkpoint.png";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,14 @@ import {
 "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const DashboardOverview = () => {
+  const { toast } = useToast();
   const [sendMode, setSendMode] = useState<"single" | "bulk">("single");
   const [recipient, setRecipient] = useState("");
   const [bulkRecipients, setBulkRecipients] = useState("");
+  const [sending, setSending] = useState(false);
 
   // Fetch tenant info
   const { data: tenant } = useQuery({
@@ -52,8 +55,58 @@ const DashboardOverview = () => {
     }
   });
 
-  const handleSend = () => {
-    alert("Sending functionality requires backend setup. Coming soon!");
+  const handleSend = async () => {
+    const emails = sendMode === "single"
+      ? [recipient.trim()]
+      : bulkRecipients.split(/\n/).map((e) => e.trim()).filter(Boolean);
+    const validEmails = emails.filter((e) => e.includes("@"));
+
+    if (validEmails.length === 0) {
+      toast({ title: "Invalid input", description: "Enter at least one valid email address.", variant: "destructive" });
+      return;
+    }
+
+    setSending(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Failed", description: "Please sign in again.", variant: "destructive" });
+        setSending(false);
+        return;
+      }
+
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL ?? "";
+      const res = await fetch(`${baseUrl}/functions/v1/send-download-link`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ emails: validEmails }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`);
+
+      if (data.failed > 0) {
+        toast({
+          title: "Partially sent",
+          description: `Sent to ${data.sent} of ${data.total}. Some failed.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Download links sent",
+          description: `Email sent to ${data.sent} recipient${data.sent !== 1 ? "s" : ""}.`,
+        });
+        setRecipient("");
+        setBulkRecipients("");
+      }
+    } catch (err: any) {
+      toast({ title: "Failed to send", description: err.message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
   };
 
   const quickStats = [
@@ -124,7 +177,7 @@ const DashboardOverview = () => {
           <Dialog>
             <DialogTrigger asChild>
               <button className="w-full aspect-square max-w-[180px] rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity border border-border">
-                <img alt="QR Code" className="w-full h-full object-cover" src="https://docs.lightburnsoftware.com/legacy/img/QRCode/ExampleCode.png" />
+                <img src={qrCode} alt="QR Code" className="w-full h-full object-cover" />
               </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-xs flex flex-col items-center gap-4 p-8">
@@ -184,9 +237,9 @@ const DashboardOverview = () => {
                   
                   </div>
                 }
-                <Button onClick={handleSend} className="w-full gap-2">
-                  <Send className="w-4 h-4" />
-                  {sendMode === "single" ? "Send Link" : "Send to All"}
+                <Button onClick={handleSend} className="w-full gap-2" disabled={sending}>
+                  {sending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {sending ? "Sending…" : sendMode === "single" ? "Send Link" : "Send to All"}
                 </Button>
               </div>
             </DialogContent>

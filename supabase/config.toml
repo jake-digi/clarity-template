@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.invite-user]
 verify_jwt = false
+
+[functions.send-download-link]
+verify_jwt = false

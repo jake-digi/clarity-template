@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Resend: from address must use a verified domain (e.g. checkpoint.jlgb.org in Resend dashboard)
-const INVITE_FROM_EMAIL = "Checkpoint <noreply@checkpoint.jlgb.org>";
+const INVITE_FROM_EMAIL = "JLGB Checkpoint <noreply@checkpoint.jlgb.org>";
 const DEFAULT_ORIGIN = "https://checkpoint.jlgb.org";
 const CHECKPOINT_LOGO_URL = "https://checkpoint.jlgb.org/checkpoint-logo.png";
 const JLGB_LOGO_URL = "https://www.jlgb.org/components/com_jlgb/assets/JLGB_logo_BYBS_navy_notagline_315x215.png";
