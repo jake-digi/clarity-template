@@ -438,6 +438,12 @@ const SiteMapEditor = ({
               <DoorOpen className="w-3.5 h-3.5" />Add Room Pin
             </Button>
           ) : null}
+          {bounds?.length ? (
+            <Button variant={mode === "add-feature" ? "default" : "ghost"} size="sm" className="h-7 text-xs gap-1"
+              onClick={() => onModeChange(mode === "add-feature" ? "view" : "add-feature")}>
+              <MapPin className="w-3.5 h-3.5" />Add Feature
+            </Button>
+          ) : null}
           {mode !== "view" && (
             <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive" onClick={() => onModeChange("view")}>Cancel</Button>
           )}
