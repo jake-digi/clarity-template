@@ -537,6 +537,31 @@ const SiteMapEditor = ({
                   </>
                 )}
 
+                {/* Features */}
+                {features.length > 0 && (
+                  <>
+                    <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 pt-3 pb-1">
+                      Features ({features.length})
+                    </div>
+                    {features.map((f) => {
+                      const typeDef = FEATURE_TYPES.find((t) => t.value === f.feature_type);
+                      const color = f.color || typeDef?.color || "#6b7280";
+                      return (
+                        <div key={f.id} className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-muted/40 group">
+                          <button className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors text-left min-w-0"
+                            onClick={() => onFeatureClick?.(f)}>
+                            <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                            <div className="min-w-0">
+                              <span className="block truncate">{f.name}</span>
+                              <span className="block text-[10px] text-muted-foreground">{typeDef?.label ?? f.feature_type}</span>
+                            </div>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
                 {/* Debug coords */}
                 {bounds?.length ? (
                   <>
