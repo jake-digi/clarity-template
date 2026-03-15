@@ -34,6 +34,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/people" element={<ProtectedRoute><PeopleManagement /></ProtectedRoute>} />
+              <Route path="/people/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
               <Route path="/participants" element={<ProtectedRoute><Participants /></ProtectedRoute>} />
               <Route path="/participants/:id" element={<ProtectedRoute><ParticipantProfile /></ProtectedRoute>} />
               <Route path="/participants/:id/instances/:instanceId" element={<ProtectedRoute><ParticipantInstancePage /></ProtectedRoute>} />

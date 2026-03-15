@@ -259,7 +259,7 @@ const PeopleManagement = () => {
                         </TableRow>
                       ) : (
                         paged.map((u) => (
-                          <TableRow key={u.id} className="hover:bg-muted/50 cursor-pointer">
+                          <TableRow key={u.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/people/${u.id}`)}>
                             <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[90px]">
                               <span title={u.id}>{u.id.slice(0, 8)}…</span>
                             </TableCell>
