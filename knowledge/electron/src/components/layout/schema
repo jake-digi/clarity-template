@@ -1,0 +1,501 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+-- Last synced: 2026-03-04 via: supabase gen types typescript --linked
+
+CREATE TABLE public.activity_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  group_id character varying,
+  log_type character varying NOT NULL,
+  title character varying,
+  notes text,
+  location_lat numeric,
+  location_lon numeric,
+  location_source character varying,
+  reported_by character varying,
+  time_observed timestamp without time zone NOT NULL,
+  time_submitted timestamp without time zone NOT NULL DEFAULT now(),
+  created_by character varying,
+  acknowledged boolean DEFAULT false,
+  acknowledged_by character varying,
+  acknowledged_at timestamp without time zone,
+  flagged_as_incident boolean DEFAULT false,
+  participant_notes jsonb,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT activity_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT activity_logs_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT activity_logs_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id),
+  CONSTRAINT activity_logs_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.subgroups(id),
+  CONSTRAINT activity_logs_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id),
+  CONSTRAINT activity_logs_acknowledged_by_fkey FOREIGN KEY (acknowledged_by) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.blocks (
+  id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT blocks_pkey PRIMARY KEY (id),
+  CONSTRAINT blocks_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT blocks_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.checkin_sessions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  instance_id character varying NOT NULL,
+  group_id character varying,
+  session_name character varying NOT NULL,
+  session_type character varying,
+  started_by character varying,
+  started_at timestamp without time zone NOT NULL DEFAULT now(),
+  completed_at timestamp without time zone,
+  attendees jsonb,
+  notes text,
+  CONSTRAINT checkin_sessions_pkey PRIMARY KEY (id),
+  CONSTRAINT checkin_sessions_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT checkin_sessions_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.subgroups(id),
+  CONSTRAINT checkin_sessions_started_by_fkey FOREIGN KEY (started_by) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.global_stage_templates (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name character varying NOT NULL,
+  description text,
+  template_data jsonb NOT NULL,
+  tenant_id character varying NOT NULL,
+  created_by character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT global_stage_templates_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.group_stage_participant_status (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  group_stage_progress_id character varying,
+  participant_id character varying,
+  is_present boolean,
+  comment text,
+  updated_at timestamp without time zone,
+  CONSTRAINT group_stage_participant_status_pkey PRIMARY KEY (id),
+  CONSTRAINT group_stage_participant_status_group_stage_progress_id_fkey FOREIGN KEY (group_stage_progress_id) REFERENCES public.group_stage_progress(id),
+  CONSTRAINT group_stage_participant_status_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.participants(id)
+);
+
+CREATE TABLE public.group_stage_progress (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  subgroup_id character varying,
+  stage_template_id character varying,
+  status character varying NOT NULL DEFAULT 'not_started'::character varying,
+  notes text,
+  incident_flag boolean,
+  completed_by character varying,
+  completed_at timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT group_stage_progress_pkey PRIMARY KEY (id),
+  CONSTRAINT group_stage_progress_stage_template_id_fkey FOREIGN KEY (stage_template_id) REFERENCES public.stage_templates(id),
+  CONSTRAINT group_stage_progress_subgroup_id_fkey FOREIGN KEY (subgroup_id) REFERENCES public.subgroups(id)
+);
+
+CREATE TABLE public.group_stage_task_completions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  group_stage_progress_id character varying,
+  stage_task_id character varying,
+  completed boolean,
+  completed_by character varying,
+  completed_at timestamp without time zone,
+  response_value character varying,
+  response_data jsonb,
+  created_at timestamp without time zone,
+  CONSTRAINT group_stage_task_completions_pkey PRIMARY KEY (id),
+  CONSTRAINT group_stage_task_completions_group_stage_progress_id_fkey FOREIGN KEY (group_stage_progress_id) REFERENCES public.group_stage_progress(id),
+  CONSTRAINT group_stage_task_completions_stage_task_id_fkey FOREIGN KEY (stage_task_id) REFERENCES public.stage_tasks(id)
+);
+
+CREATE TABLE public.instances (
+  id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  status character varying NOT NULL DEFAULT 'upcoming'::character varying,
+  start_date date,
+  end_date date,
+  location character varying,
+  owner_id character varying,
+  settings jsonb,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT instances_pkey PRIMARY KEY (id),
+  CONSTRAINT instances_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.participant_dietary_needs (
+  participant_id character varying NOT NULL,
+  restrictions text[],
+  notes text,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT participant_dietary_needs_pkey PRIMARY KEY (participant_id),
+  CONSTRAINT participant_dietary_needs_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.participants(id)
+);
+
+CREATE TABLE public.participant_instance_assignments (
+  id text NOT NULL DEFAULT (gen_random_uuid())::text,
+  participant_id text NOT NULL,
+  instance_id text NOT NULL,
+  super_group_id text,
+  sub_group_id text,
+  block_id text,
+  room_id text,
+  room_number text,
+  is_off_site boolean DEFAULT false,
+  off_site_comment text,
+  arrival_date timestamp with time zone,
+  departure_date timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT participant_instance_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT participant_instance_assignments_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.participants(id),
+  CONSTRAINT participant_instance_assignments_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT participant_instance_assignments_super_group_id_fkey FOREIGN KEY (super_group_id) REFERENCES public.supergroups(id),
+  CONSTRAINT participant_instance_assignments_sub_group_id_fkey FOREIGN KEY (sub_group_id) REFERENCES public.subgroups(id),
+  CONSTRAINT participant_instance_assignments_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.blocks(id),
+  CONSTRAINT participant_instance_assignments_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id)
+);
+
+CREATE TABLE public.participant_medical_info (
+  participant_id character varying NOT NULL,
+  allergies text[],
+  conditions text[],
+  notes text,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT participant_medical_info_pkey PRIMARY KEY (participant_id),
+  CONSTRAINT participant_medical_info_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.participants(id)
+);
+
+CREATE TABLE public.participants (
+  id character varying NOT NULL,
+  user_id character varying NOT NULL,
+  first_name character varying NOT NULL,
+  surname character varying NOT NULL,
+  full_name character varying NOT NULL,
+  date_of_birth date,
+  gender character varying,
+  pronouns character varying,
+  rank character varying,
+  status character varying NOT NULL DEFAULT 'active'::character varying,
+  school_year character varying,
+  school_institute character varying,
+  unit_name character varying,
+  tenant_id character varying NOT NULL,
+  instance_id character varying NOT NULL,
+  arrival_date timestamp without time zone,
+  departure_date timestamp without time zone,
+  is_off_site boolean DEFAULT false,
+  off_site_comment text,
+  super_group_id character varying,
+  sub_group_id character varying,
+  block_id character varying,
+  room_id character varying,
+  room_number character varying,
+  photo_link character varying,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  light_load boolean DEFAULT false,
+  CONSTRAINT participants_pkey PRIMARY KEY (id),
+  CONSTRAINT participants_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.blocks(id),
+  CONSTRAINT participants_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT participants_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
+  CONSTRAINT participants_sub_group_id_fkey FOREIGN KEY (sub_group_id) REFERENCES public.subgroups(id),
+  CONSTRAINT participants_super_group_id_fkey FOREIGN KEY (super_group_id) REFERENCES public.supergroups(id),
+  CONSTRAINT participants_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.permissions (
+  id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  category character varying,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT permissions_pkey PRIMARY KEY (id),
+  CONSTRAINT permissions_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.role_permission_mappings (
+  role_id character varying NOT NULL,
+  permission_id character varying NOT NULL,
+  granted_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT role_permission_mappings_pkey PRIMARY KEY (role_id, permission_id),
+  CONSTRAINT role_permission_mappings_permission_id_fkey FOREIGN KEY (permission_id) REFERENCES public.permissions(id),
+  CONSTRAINT role_permission_mappings_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id)
+);
+
+CREATE TABLE public.roles (
+  id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  is_system_role boolean NOT NULL DEFAULT false,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT roles_pkey PRIMARY KEY (id),
+  CONSTRAINT roles_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.rooms (
+  id character varying NOT NULL,
+  room_number character varying NOT NULL,
+  name character varying,
+  block_id character varying NOT NULL,
+  capacity integer,
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT rooms_pkey PRIMARY KEY (id),
+  CONSTRAINT rooms_block_id_fkey FOREIGN KEY (block_id) REFERENCES public.blocks(id),
+  CONSTRAINT rooms_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT rooms_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.routes (
+  id character varying NOT NULL,
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  name character varying NOT NULL,
+  color character varying NOT NULL,
+  gpx_geometry jsonb,
+  is_visible boolean DEFAULT true,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT routes_pkey PRIMARY KEY (id),
+  CONSTRAINT routes_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT routes_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.stage_completions (
+  id character varying NOT NULL,
+  group_id character varying NOT NULL,
+  stage_template_id character varying NOT NULL,
+  stage_number integer NOT NULL,
+  checklist_data jsonb,
+  general_notes text,
+  participant_notes jsonb,
+  flagged_as_incident boolean DEFAULT false,
+  completed boolean DEFAULT false,
+  completed_by character varying,
+  completed_at timestamp without time zone,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT stage_completions_pkey PRIMARY KEY (id),
+  CONSTRAINT stage_completions_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.subgroups(id),
+  CONSTRAINT stage_completions_stage_template_id_fkey FOREIGN KEY (stage_template_id) REFERENCES public.stage_templates(id),
+  CONSTRAINT stage_completions_completed_by_fkey FOREIGN KEY (completed_by) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.stage_tasks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  stage_template_id character varying,
+  description character varying NOT NULL,
+  field_type character varying NOT NULL DEFAULT 'checkbox'::character varying,
+  field_config jsonb,
+  order_number integer NOT NULL,
+  placeholder character varying,
+  required boolean,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT stage_tasks_pkey PRIMARY KEY (id),
+  CONSTRAINT stage_tasks_stage_template_id_fkey FOREIGN KEY (stage_template_id) REFERENCES public.stage_templates(id)
+);
+
+CREATE TABLE public.stage_templates (
+  id character varying NOT NULL DEFAULT (gen_random_uuid())::character varying,
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  stage_number integer NOT NULL,
+  order_number integer NOT NULL DEFAULT 0,
+  title character varying NOT NULL,
+  description text,
+  checklist_items jsonb,
+  requires_previous_stage boolean DEFAULT true,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT stage_templates_pkey PRIMARY KEY (id),
+  CONSTRAINT stage_templates_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT stage_templates_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.subgroups (
+  id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  type character varying DEFAULT 'subgroup'::character varying,
+  purpose character varying,
+  notifications boolean DEFAULT true,
+  parent_supergroup_id character varying NOT NULL,
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  tracker_name character varying,
+  hardware_id character varying,
+  route_id character varying,
+  last_activity_at timestamp without time zone,
+  is_vehicle boolean DEFAULT false,
+  CONSTRAINT subgroups_pkey PRIMARY KEY (id),
+  CONSTRAINT subgroups_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT subgroups_parent_supergroup_id_fkey FOREIGN KEY (parent_supergroup_id) REFERENCES public.supergroups(id),
+  CONSTRAINT subgroups_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id),
+  CONSTRAINT subgroups_route_id_fkey FOREIGN KEY (route_id) REFERENCES public.routes(id)
+);
+
+CREATE TABLE public.supergroups (
+  id character varying NOT NULL,
+  name character varying NOT NULL,
+  description text,
+  type character varying DEFAULT 'supergroup'::character varying,
+  purpose character varying,
+  notifications boolean DEFAULT true,
+  instance_id character varying NOT NULL,
+  tenant_id character varying NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT supergroups_pkey PRIMARY KEY (id),
+  CONSTRAINT supergroups_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT supergroups_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);
+
+CREATE TABLE public.tenants (
+  id character varying NOT NULL,
+  name character varying NOT NULL,
+  reference_number character varying NOT NULL,
+  database_id character varying,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  CONSTRAINT tenants_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.tracker_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  group_id character varying NOT NULL,
+  latitude numeric,
+  longitude numeric,
+  accuracy numeric,
+  altitude numeric,
+  battery_level numeric,
+  battery_volts numeric,
+  satellite_count numeric,
+  device_desc character varying,
+  timestamp timestamp without time zone NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT tracker_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT tracker_logs_group_id_fkey FOREIGN KEY (group_id) REFERENCES public.subgroups(id)
+);
+
+CREATE TABLE public.user_group_assignments (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id character varying NOT NULL,
+  group_id character varying NOT NULL,
+  group_type character varying NOT NULL,
+  added_at timestamp without time zone NOT NULL DEFAULT now(),
+  removed_at timestamp without time zone,
+  CONSTRAINT user_group_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT user_group_assignments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.user_instance_assignments (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id character varying NOT NULL,
+  instance_id character varying NOT NULL,
+  instance_name character varying,
+  role character varying,
+  added_at timestamp without time zone NOT NULL DEFAULT now(),
+  removed_at timestamp without time zone,
+  CONSTRAINT user_instance_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT user_instance_assignments_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id),
+  CONSTRAINT user_instance_assignments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.user_locations (
+  id character varying NOT NULL,
+  instance_id character varying NOT NULL,
+  name character varying,
+  latitude numeric,
+  longitude numeric,
+  is_vehicle boolean DEFAULT false,
+  timestamp timestamp without time zone,
+  CONSTRAINT user_locations_pkey PRIMARY KEY (id),
+  CONSTRAINT user_locations_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id)
+);
+
+CREATE TABLE public.user_participant_links (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id character varying NOT NULL,
+  participant_id character varying NOT NULL,
+  relationship_type character varying,
+  metadata jsonb,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT user_participant_links_pkey PRIMARY KEY (id),
+  CONSTRAINT user_participant_links_participant_id_fkey FOREIGN KEY (participant_id) REFERENCES public.participants(id),
+  CONSTRAINT user_participant_links_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.user_profile_photo_history (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id character varying NOT NULL,
+  photo_url text NOT NULL,
+  changed_at timestamp without time zone NOT NULL,
+  changed_by character varying NOT NULL,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  CONSTRAINT user_profile_photo_history_pkey PRIMARY KEY (id),
+  CONSTRAINT user_profile_photo_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.user_role_assignments (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id character varying NOT NULL,
+  role_id character varying NOT NULL,
+  assigned_at timestamp without time zone NOT NULL DEFAULT now(),
+  removed_at timestamp without time zone,
+  CONSTRAINT user_role_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT user_role_assignments_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id),
+  CONSTRAINT user_role_assignments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+CREATE TABLE public.users (
+  id character varying NOT NULL,
+  auth_id character varying NOT NULL UNIQUE,
+  email character varying NOT NULL,
+  first_name character varying NOT NULL,
+  surname character varying,
+  last_name character varying,
+  tenant_id character varying NOT NULL,
+  status character varying NOT NULL DEFAULT 'inactive'::character varying,
+  archive_status character varying NOT NULL DEFAULT 'active'::character varying,
+  profile_photo_url text,
+  created_at timestamp without time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp without time zone,
+  api_key character varying UNIQUE,
+  api_key_created_at timestamp without time zone,
+  api_key_last_used_at timestamp without time zone,
+  CONSTRAINT users_pkey PRIMARY KEY (id),
+  CONSTRAINT users_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES public.tenants(id)
+);

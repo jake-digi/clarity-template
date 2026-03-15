@@ -1,0 +1,56 @@
+import { useState, useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import TopNavBar from '@/components/layout/TopNavBar';
+import LeftSidebar from '@/components/layout/LeftSidebar';
+import InstancesSidebar from '@/components/layout/InstancesSidebar';
+import ReportsSidebar from '@/components/layout/ReportsSidebar';
+import TasksSidebar from '@/components/layout/TasksSidebar';
+import OrdersSidebar from '@/components/layout/OrdersSidebar';
+import QualitySidebar from '@/components/layout/QualitySidebar';
+import HSSidebar from '@/components/layout/HSSidebar';
+import RisksSidebar from '@/components/layout/RisksSidebar';
+import TeamSidebar from '@/components/layout/TeamSidebar';
+import AdminSidebar from '@/components/layout/AdminSidebar';
+import SidebarRail from '@/components/layout/SidebarRail';
+import TabBar from '@/components/layout/TabBar';
+import MainContent from '@/components/dashboard/MainContent';
+import BottomBar from '@/components/layout/BottomBar';
+import RightSidebar from '@/components/layout/RightSidebar';
+import { BugReporter } from '@/components/shared/BugReporter';
+import { GlobalContextMenu } from '@/components/layout/GlobalContextMenu';
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { type ImperativePanelHandle } from "react-resizable-panels";
+import { projects, activeProjectItems, completedProjectItems } from '@/data/mockData';
+import ContextSidebar from '@/components/layout/ContextSidebar';
+import {
+  LayoutDashboard,
+  CheckSquare,
+  Book,
+  ClipboardCheck,
+  Users,
+  HardHat,
+  Wrench,
+  AlertTriangle,
+  Award,
+  Map,
+  MapPin,
+  Folder,
+  Boxes,
+  UserSquare2,
+  Smartphone,
+  PackageSearch,
+  ShieldAlert,
+  Zap,
+  Activity,
+  Stethoscope,
+  Calendar,
+  Settings2,
+  History,
+  FileText,
+  Home,
+  Siren
+} from 'lucide-react';
