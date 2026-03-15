@@ -196,8 +196,10 @@ const Login = () => {
             </div>
           )}
 
+          </div>
+
           {/* Footer */}
-          <div className="mt-auto pt-8 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="pt-8 flex items-center justify-between text-xs text-muted-foreground px-6 sm:px-8">
             <span>© {new Date().getFullYear()} Checkpoint. All rights reserved.</span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
