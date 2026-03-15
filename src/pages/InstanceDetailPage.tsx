@@ -12,8 +12,7 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation, Briefcase,
-  UserCheck, Building, Bed
+  Navigation, Briefcase, UserCheck, Building,
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
@@ -21,12 +20,15 @@ import InstanceParticipantsTab from "@/components/instance/InstanceParticipantsT
 import InstanceStaffTab from "@/components/instance/InstanceStaffTab";
 import InstanceAccommodationTab from "@/components/instance/InstanceAccommodationTab";
 import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
+import StageTemplateManager from "@/components/instance/StageTemplateManager";
+import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
+import StageDetailsModal from "@/components/instance/StageDetailsModal";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
-
+  const [stageModal, setStageModal] = useState<{ subgroupId: string; stageId: string; progressId?: string } | null>(null);
   const { data: instance, isLoading } = useQuery({
     queryKey: ["instance", instanceId],
     enabled: !!instanceId,
@@ -56,20 +58,7 @@ const InstanceDetailPage = () => {
     },
   });
 
-  const { data: stageTasks = [] } = useQuery({
-    queryKey: ["stage-tasks", instanceId],
-    enabled: !!instanceId && stages.length > 0,
-    queryFn: async () => {
-      const stageIds = stages.map((s) => s.id);
-      const { data, error } = await supabase
-        .from("stage_tasks")
-        .select("*")
-        .in("stage_template_id", stageIds)
-        .order("order_number", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
 
   const { data: subgroups = [] } = useQuery({
     queryKey: ["instance-subgroups", instanceId],
@@ -135,22 +124,6 @@ const InstanceDetailPage = () => {
 
   const settings = instance.settings as Record<string, any> | null;
   const isDofe = settings?.type === "dofe" || settings?.is_dofe === true;
-  const tasksByStage = new Map<string, typeof stageTasks>();
-  stageTasks.forEach((t) => {
-    if (!t.stage_template_id) return;
-    const list = tasksByStage.get(t.stage_template_id) ?? [];
-    list.push(t);
-    tasksByStage.set(t.stage_template_id, list);
-  });
-
-  const fieldTypeLabel: Record<string, string> = {
-    checkbox: "Checkbox",
-    text: "Text",
-    textarea: "Text Area",
-    multiple_choice: "Multiple Choice",
-    rating: "Rating",
-    number: "Number",
-  };
 
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
@@ -255,53 +228,26 @@ const InstanceDetailPage = () => {
                 </TabsContent>
 
                 {/* Stages */}
-                <TabsContent value="stages" className="mt-0">
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-xs text-muted-foreground">{stages.length} stage{stages.length !== 1 ? "s" : ""} configured</p>
-                    <Button size="sm" className="gap-1.5 h-8"><Plus className="w-3.5 h-3.5" />Add Stage</Button>
-                  </div>
-                  {stages.length === 0 ? (
-                    <SectionCard title="Stages" icon={ClipboardList}>
-                      <EmptyState icon={ClipboardList} message="No stages configured for this instance. Add a stage to define checkpoints and procedures." />
-                    </SectionCard>
-                  ) : (
-                    <div className="space-y-3">
-                      {stages.map((stage, idx) => {
-                        const tasks = tasksByStage.get(stage.id) ?? [];
-                        return (
-                          <div key={stage.id} className="bg-card rounded-lg border border-border overflow-hidden">
-                            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border">
-                              <GripVertical className="w-4 h-4 text-muted-foreground/40" />
-                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                {stage.stage_number ?? idx + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold text-foreground">{stage.title}</h3>
-                                {stage.description && <p className="text-xs text-muted-foreground mt-0.5">{stage.description}</p>}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-[10px]">{tasks.length} task{tasks.length !== 1 ? "s" : ""}</Badge>
-                                {stage.requires_previous_stage && <span title="Requires previous stage"><Lock className="w-3.5 h-3.5 text-muted-foreground" /></span>}
-                                <Button variant="ghost" size="icon" className="h-7 w-7"><Pencil className="w-3 h-3" /></Button>
-                              </div>
-                            </div>
-                            {tasks.length > 0 && (
-                              <div className="divide-y divide-border">
-                                {tasks.map((task) => (
-                                  <div key={task.id} className="flex items-center gap-3 px-5 py-2.5 pl-16">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                                    <span className="text-sm text-foreground flex-1">{task.description}</span>
-                                    <Badge variant="secondary" className="text-[10px] font-normal">{fieldTypeLabel[task.field_type] ?? task.field_type}</Badge>
-                                    {task.required && <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30">Required</Badge>}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                <TabsContent value="stages" className="mt-0 space-y-6">
+                  <Tabs defaultValue="manage">
+                    <TabsList className="h-8">
+                      <TabsTrigger value="manage" className="text-xs h-7">Manage Stages</TabsTrigger>
+                      <TabsTrigger value="progress" className="text-xs h-7">Progress Matrix</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="manage" className="mt-4">
+                      <StageTemplateManager instanceId={instanceId!} tenantId={instance.tenant_id} />
+                    </TabsContent>
+                    <TabsContent value="progress" className="mt-4">
+                      <StagesProgressMatrix
+                        instanceId={instanceId!}
+                        stages={stages}
+                        subgroups={subgroups}
+                        onCellClick={(subgroupId, stageId, progressId) =>
+                          setStageModal({ subgroupId, stageId, progressId })
+                        }
+                      />
+                    </TabsContent>
+                  </Tabs>
                 </TabsContent>
 
                 {/* Groups */}
@@ -321,7 +267,7 @@ const InstanceDetailPage = () => {
 
                 {/* Tracking */}
                 <TabsContent value="tracking" className="mt-0">
-                  <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} />
+                  <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} settings={settings} />
                 </TabsContent>
 
                 {/* Settings */}
@@ -337,6 +283,20 @@ const InstanceDetailPage = () => {
           </div>
         </main>
       </div>
+
+      {/* Stage Details Modal */}
+      {stageModal && (
+        <StageDetailsModal
+          open
+          onOpenChange={() => setStageModal(null)}
+          subgroupId={stageModal.subgroupId}
+          stageId={stageModal.stageId}
+          progressId={stageModal.progressId}
+          subgroupName={subgroups.find((s) => s.id === stageModal.subgroupId)?.name ?? ""}
+          stageName={stages.find((s: any) => s.id === stageModal.stageId)?.title ?? ""}
+          instanceId={instanceId!}
+        />
+      )}
     </div>
   );
 };
