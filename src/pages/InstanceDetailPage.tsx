@@ -166,18 +166,18 @@ const InstanceDetailPage = () => {
                 <span className="text-foreground font-medium">{instance.name}</span>
               </div>
 
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 md:w-11 md:h-11 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     {isDofe ? <Award className="w-5 h-5 text-amber-500" /> : <Building2 className="w-5 h-5 text-primary" />}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <h1 className="text-xl font-semibold text-foreground tracking-tight">{instance.name}</h1>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-lg md:text-xl font-semibold text-foreground tracking-tight truncate">{instance.name}</h1>
                       <Badge variant={instance.status === "active" ? "default" : "secondary"} className="capitalize">{instance.status}</Badge>
                       {isDofe && <Badge variant="outline" className="border-amber-500/30 text-amber-600 text-xs">DofE</Badge>}
                     </div>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 md:gap-4 mt-1 text-xs md:text-sm text-muted-foreground flex-wrap">
                       {instance.location && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{instance.location}</span>}
                       {instance.start_date && (
                         <span className="flex items-center gap-1">
@@ -189,9 +189,9 @@ const InstanceDetailPage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" className="gap-2" onClick={() => navigate("/instances")}><ArrowLeft className="w-4 h-4" />Back</Button>
-                  <Button className="gap-2"><Pencil className="w-4 h-4" />Edit</Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => navigate("/instances")}><ArrowLeft className="w-4 h-4" />Back</Button>
+                  <Button size="sm" className="gap-1.5"><Pencil className="w-4 h-4" />Edit</Button>
                 </div>
               </div>
             </div>
