@@ -318,6 +318,7 @@ const DashboardHeader = () => {
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2"><User className="w-3.5 h-3.5" /><span>Participant or user name — e.g. "Aaron"</span></div>
                     <div className="flex items-center gap-2"><Building2 className="w-3.5 h-3.5" /><span>Page or module name</span></div>
+                    <div className="flex items-center gap-2"><Zap className="w-3.5 h-3.5" /><span>Actions — e.g. "Invite", "New Report"</span></div>
                   </div>
                   <div className="border-t border-border pt-2 flex items-center gap-4 text-[10px] text-muted-foreground">
                     <span><kbd className="px-1 py-0.5 bg-muted border border-border rounded text-[9px]">↑↓</kbd> Navigate</span>
