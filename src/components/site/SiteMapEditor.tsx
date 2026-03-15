@@ -168,14 +168,15 @@ const SiteMapEditor = ({
       const drawControl = new (L.Control as any).Draw({
         position: "topright",
         draw: {
-          rectangle: {
+          polygon: {
+            allowIntersection: false,
             shapeOptions: {
               color: "hsl(204, 100%, 40%)",
               weight: 2,
               fillOpacity: 0.1,
             },
           },
-          polygon: false,
+          rectangle: false,
           polyline: false,
           circle: false,
           marker: false,
@@ -187,13 +188,10 @@ const SiteMapEditor = ({
       drawControlRef.current = drawControl;
 
       const onCreated = (e: any) => {
-        const layer = e.layer as L.Rectangle;
-        const b = layer.getBounds();
-        onBoundsChange({
-          northEast: { lat: b.getNorthEast().lat, lng: b.getNorthEast().lng },
-          southWest: { lat: b.getSouthWest().lat, lng: b.getSouthWest().lng },
-        });
+        const layer = e.layer as L.Polygon;
+        const latlngs = (layer.getLatLngs()[0] as L.LatLng[]).map((ll) => [ll.lat, ll.lng] as [number, number]);
         map.removeLayer(layer);
+        onBoundsChange(latlngs);
         onModeChange("view");
       };
 
