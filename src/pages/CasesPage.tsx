@@ -66,10 +66,16 @@ const CasesPage = () => {
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">Case Management</h1>
                 <p className="text-sm text-muted-foreground mt-1">Track and manage behaviour cases across instances</p>
               </div>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                New Case
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="gap-2" onClick={() => setWarningsOpen(true)}>
+                  <Shield className="w-4 h-4" />
+                  Formal Warnings
+                </Button>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  New Case
+                </Button>
+              </div>
             </div>
           </div>
 
