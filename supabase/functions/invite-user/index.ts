@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Resend: from address must use a verified domain (e.g. checkpoint.jlgb.org in Resend dashboard)
 const INVITE_FROM_EMAIL = "Checkpoint <noreply@checkpoint.jlgb.org>";
 const DEFAULT_ORIGIN = "https://checkpoint.jlgb.org";
+const LOGO_URL = "https://checkpoint.jlgb.org/checkpoint-logo.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,71 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function buildInviteEmailHtml(firstName: string, resetLink: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Checkpoint</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;">
+          <!-- Header with logo -->
+          <tr>
+            <td style="padding: 36px 40px 28px 40px; background-color: #ffffff; text-align: center; border-bottom: 3px solid #0a2422;">
+              <img src="${LOGO_URL}" alt="Checkpoint" width="180" height="54" style="display: inline-block; max-width: 180px; height: auto; vertical-align: middle;" />
+            </td>
+          </tr>
+          <!-- Main content -->
+          <tr>
+            <td style="padding: 36px 40px 32px 40px;">
+              <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 600; color: #0a2422; letter-spacing: -0.02em;">
+                Welcome to Checkpoint
+              </h1>
+              <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #64748b;">
+                Hi ${firstName},
+              </p>
+              <p style="margin: 0 0 32px 0; font-size: 15px; line-height: 1.6; color: #475569;">
+                You've been invited to join Checkpoint — the operations management platform for your team. Click the button below to set your password and get started.
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <a href="${resetLink}" style="display: inline-block; padding: 14px 32px; background-color: #0a2422; color: #ffffff !important; text-decoration: none; font-size: 15px; font-weight: 600; border-radius: 8px;">
+                      Set your password
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 28px 0 0 0; font-size: 13px; line-height: 1.5; color: #94a3b8;">
+                If you didn't expect this invitation, you can safely ignore this email.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px 32px 40px; border-top: 1px solid #e2e8f0; background-color: #f8fafc;">
+              <p style="margin: 0; font-size: 12px; color: #94a3b8; text-align: center;">
+                © ${new Date().getFullYear()} Checkpoint · Operations Dashboard
+              </p>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8; text-align: center;">
+                <a href="https://checkpoint.jlgb.org" style="color: #1a5340; text-decoration: none;">checkpoint.jlgb.org</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 Deno.serve(async (req) => {
@@ -35,7 +101,10 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user: caller }, error: authErr } = await userClient.auth.getUser();
-    if (authErr || !caller) return json({ error: "Unauthorized" }, 401);
+    if (authErr || !caller) {
+      const msg = authErr?.message ?? "Invalid or expired session. Please sign in again.";
+      return json({ error: msg }, 401);
+    }
 
     // Get caller's tenant
     const adminClient = createClient(supabaseUrl, serviceKey);
@@ -108,19 +177,7 @@ Deno.serve(async (req) => {
         from: INVITE_FROM_EMAIL,
         to: [email],
         subject: "You've been invited to Checkpoint",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 40px 20px;">
-            <h1 style="font-size: 22px; color: #1a1a1a; margin-bottom: 8px;">Welcome to Checkpoint</h1>
-            <p style="color: #555; font-size: 14px; line-height: 1.6;">
-              Hi ${first_name},<br/><br/>
-              You've been invited to join Checkpoint. Click the button below to set your password and get started.
-            </p>
-            <a href="${resetLink}" style="display: inline-block; margin: 24px 0; padding: 12px 32px; background-color: #0070f3; color: #fff; text-decoration: none; font-weight: 600; font-size: 14px;">
-              Set your password
-            </a>
-            <p style="color: #888; font-size: 12px;">If you didn't expect this invitation, you can safely ignore this email.</p>
-          </div>
-        `,
+        html: buildInviteEmailHtml(first_name, resetLink),
       }),
     });
 

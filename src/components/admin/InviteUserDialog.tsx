@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,29 +44,33 @@ const InviteUserDialog = ({ open, onOpenChange }: InviteUserDialogProps) => {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("invite-user", {
-        body: {
-          email,
-          first_name: firstName,
-          last_name: lastName || undefined,
-          role_id: roleId || undefined,
-        },
-      });
-
-      if (error) {
-        if (error instanceof FunctionsHttpError && error.context) {
-          try {
-            const res = error.context as Response;
-            if (typeof res?.json === "function") {
-              const body = await res.json();
-              if (body?.error) throw new Error(body.error);
-            }
-          } catch (e) {
-            if (e instanceof Error && e.message !== error.message) throw e;
-          }
-        }
-        throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Failed to invite user", description: "Please sign in again and try again.", variant: "destructive" });
+        setLoading(false);
+        return;
       }
+
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL ?? "";
+      const res = await fetch(
+        `${baseUrl}/functions/v1/invite-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email,
+            first_name: firstName,
+            last_name: lastName || undefined,
+            role_id: roleId || undefined,
+          }),
+        }
+      );
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? `Request failed (${res.status})`);
       if (data?.error) throw new Error(data.error);
 
       toast({
