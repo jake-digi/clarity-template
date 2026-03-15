@@ -341,6 +341,7 @@ const DashboardHeader = () => {
                         const idx = flatIndex;
                         const Icon = item.icon;
                         const hasAvatar = item.category === "Participants" || item.category === "Users";
+                        const isAction = item.category === "Actions";
                         return (
                           <button
                             key={`${item.path}-${item.label}`}
@@ -358,10 +359,17 @@ const DashboardHeader = () => {
                                   {item.initials ?? <Icon className="w-3 h-3" />}
                                 </AvatarFallback>
                               </Avatar>
+                            ) : isAction ? (
+                              <span className="flex items-center justify-center w-5 h-5 rounded bg-primary/10 shrink-0">
+                                <Icon className="w-3.5 h-3.5 text-primary" />
+                              </span>
                             ) : (
                               <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                             )}
                             <span className="font-medium truncate">{item.label}</span>
+                            {isAction && (
+                              <span className="ml-auto text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">Action</span>
+                            )}
                           </button>
                         );
                       })}
