@@ -152,7 +152,7 @@ const Login = () => {
 
             <Button
               type="submit"
-              className="w-full h-11 text-sm font-semibold"
+              className="w-full h-11 text-sm font-semibold rounded-none"
               disabled={loading}
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
