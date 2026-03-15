@@ -288,6 +288,32 @@ const SiteDetailPage = () => {
     setSelectedBlockId((prev) => prev === block.id ? null : block.id);
   }, []);
 
+  const handleRoomPinPlaced = useCallback((blockId: string, position: { lat: number; lng: number }) => {
+    setPendingRoomPin({ blockId, position });
+    setRoomPinForm({ room_number: "", name: "", capacity: "" });
+    setTimeout(() => setShowRoomPinDialog(true), 0);
+  }, []);
+
+  const handleCreateRoomAtPin = () => {
+    if (!pendingRoomPin || !roomPinForm.room_number.trim() || !siteId || !tenantId) return;
+    createRoom.mutate({
+      id: crypto.randomUUID(),
+      block_id: pendingRoomPin.blockId,
+      room_number: roomPinForm.room_number.trim(),
+      name: roomPinForm.name || undefined,
+      capacity: roomPinForm.capacity ? Number(roomPinForm.capacity) : undefined,
+      site_id: siteId,
+      tenant_id: tenantId,
+      geo_position: pendingRoomPin.position,
+    } as any, {
+      onSuccess: () => {
+        setShowRoomPinDialog(false);
+        setPendingRoomPin(null);
+        setRoomPinForm({ room_number: "", name: "", capacity: "" });
+      },
+    });
+  };
+
   const handleAddBlock = () => {
     if (!blockForm.name.trim() || !tenantId || !siteId) return;
     createBlock.mutate({
