@@ -165,6 +165,7 @@ const CaseDetailPage = () => {
   const [newComment, setNewComment] = useState("");
   const [actionDialog, setActionDialog] = useState<{ open: boolean; type: string; label: string }>({ open: false, type: "", label: "" });
   const [actionNotes, setActionNotes] = useState("");
+  const [strikeConfirmed, setStrikeConfirmed] = useState<Record<string, boolean>>({});
 
   // Fetch formal warning (strike) count for this participant
   const { data: strikeActions } = useQuery({
@@ -712,22 +713,125 @@ const CaseDetailPage = () => {
         </main>
       </div>
       {/* Case Action Dialog */}
-      <Dialog open={actionDialog.open} onOpenChange={(open) => setActionDialog((prev) => ({ ...prev, open }))}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={actionDialog.open} onOpenChange={(open) => { setActionDialog((prev) => ({ ...prev, open })); if (!open) setStrikeConfirmed({}); }}>
+        <DialogContent className={actionDialog.type === "formal_warning" ? "sm:max-w-lg" : "sm:max-w-md"}>
           <DialogHeader>
             <DialogTitle>{actionDialog.label}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Textarea
-              placeholder="Add notes or details about this action..."
-              value={actionNotes}
-              onChange={(e) => setActionNotes(e.target.value)}
-              rows={4}
-            />
-          </div>
+
+          {actionDialog.type === "formal_warning" ? (() => {
+            const nextStrike = strikeCount + 1;
+            const matrix = nextStrike === 1
+              ? { title: "Warning", severity: "Orange", cooldown: "24 hours", mandatory: ["Warning letter to parents"], optional: ["Phone call to parents", "Behavior reflection sheet", "Extra duties"] }
+              : nextStrike === 2
+              ? { title: "Escalation", severity: "Deep Orange", cooldown: "48 hours", mandatory: ["Parent notification (email & phone)", "Temporary privilege suspension"], optional: ["Parent meeting", "Behavior contract", "Community service", "Loss of free time"] }
+              : nextStrike === 3
+              ? { title: "Critical", severity: "Red", cooldown: "72 hours", mandatory: ["Mandatory parent meeting", "Extended privilege suspension", "Behavior improvement plan"], optional: ["Early departure consideration", "Professional counseling referral", "Daily check-ins"] }
+              : { title: "Severe", severity: "Dark Red", cooldown: "72 hours", mandatory: ["Immediate parent meeting", "Program review meeting", "Possible early departure"], optional: ["Alternative program placement", "External support services"] };
+
+            const allMandatoryConfirmed = matrix.mandatory.every((_, i) => strikeConfirmed[`m-${i}`]);
+
+            return (
+              <div className="space-y-4 py-2">
+                {/* Current status banner */}
+                <div className={cn(
+                  "rounded-lg p-3 border",
+                  nextStrike <= 2 ? "bg-orange-50 border-orange-200" : "bg-destructive/10 border-destructive/30",
+                )}>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={cn("text-sm font-semibold", nextStrike <= 2 ? "text-orange-700" : "text-destructive")}>
+                      {c?.participant_name} currently has {strikeCount} formal warning{strikeCount !== 1 ? "s" : ""}
+                    </p>
+                    <span className={cn("text-2xl font-extrabold", nextStrike <= 2 ? "text-orange-600" : "text-destructive")}>
+                      {strikeCount}
+                    </span>
+                  </div>
+                  <p className={cn("text-xs", nextStrike <= 2 ? "text-orange-600" : "text-destructive")}>
+                    Issuing this will be <span className="font-bold">Formal Warning #{nextStrike} — {matrix.title}</span> ({matrix.severity})
+                  </p>
+                </div>
+
+                {/* Cooldown */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Cooldown period: <span className="font-semibold text-foreground">{matrix.cooldown}</span></span>
+                </div>
+
+                {/* Mandatory actions */}
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">Mandatory Actions</p>
+                  <div className="space-y-2">
+                    {matrix.mandatory.map((action, i) => (
+                      <label key={i} className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!!strikeConfirmed[`m-${i}`]}
+                          onChange={(e) => setStrikeConfirmed((prev) => ({ ...prev, [`m-${i}`]: e.target.checked }))}
+                          className="mt-0.5 rounded border-border"
+                        />
+                        <span className="text-sm text-foreground">{action}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Optional actions */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Optional Actions</p>
+                  <div className="space-y-2">
+                    {matrix.optional.map((action, i) => (
+                      <label key={i} className="flex items-start gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!!strikeConfirmed[`o-${i}`]}
+                          onChange={(e) => setStrikeConfirmed((prev) => ({ ...prev, [`o-${i}`]: e.target.checked }))}
+                          className="mt-0.5 rounded border-border"
+                        />
+                        <span className="text-sm text-muted-foreground">{action}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <Textarea
+                  placeholder="Additional notes..."
+                  value={actionNotes}
+                  onChange={(e) => setActionNotes(e.target.value)}
+                  rows={3}
+                />
+
+                {!allMandatoryConfirmed && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> All mandatory actions must be confirmed before issuing
+                  </p>
+                )}
+              </div>
+            );
+          })() : (
+            <div className="space-y-3 py-2">
+              <Textarea
+                placeholder="Add notes or details about this action..."
+                value={actionNotes}
+                onChange={(e) => setActionNotes(e.target.value)}
+                rows={4}
+              />
+            </div>
+          )}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActionDialog({ open: false, type: "", label: "" })}>Cancel</Button>
-            <Button onClick={handleCaseAction}>Log Action</Button>
+            <Button variant="outline" onClick={() => { setActionDialog({ open: false, type: "", label: "" }); setStrikeConfirmed({}); }}>Cancel</Button>
+            <Button
+              onClick={handleCaseAction}
+              disabled={actionDialog.type === "formal_warning" && !((() => {
+                const nextStrike = strikeCount + 1;
+                const mandatoryCount = nextStrike === 1 ? 1 : nextStrike === 2 ? 2 : nextStrike === 3 ? 3 : 3;
+                return Array.from({ length: mandatoryCount }).every((_, i) => strikeConfirmed[`m-${i}`]);
+              })())}
+              variant={actionDialog.type === "formal_warning" ? "destructive" : "default"}
+            >
+              {actionDialog.type === "formal_warning" ? `Issue Formal Warning #${strikeCount + 1}` : "Log Action"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
