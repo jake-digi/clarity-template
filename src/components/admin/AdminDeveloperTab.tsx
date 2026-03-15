@@ -749,48 +749,86 @@ const AdminDeveloperTab = () => {
                     <h4 className="text-sm font-semibold">{group.title}</h4>
                     {group.description && <p className="text-xs text-muted-foreground">{group.description}</p>}
                   </div>
-                  <div className="space-y-1">
-                    {group.endpoints.map((ep, i) => (
-                      <div key={i} className="flex items-center gap-3 py-1.5 px-3 rounded-md hover:bg-muted/30 transition-colors">
-                        <Badge variant="outline" className={`text-[10px] font-mono w-16 justify-center ${methodColor[ep.method] ?? ""}`}>
-                          {ep.method}
-                        </Badge>
-                        <code className="text-xs font-mono text-foreground flex-1">{ep.path}</code>
-                        <span className="text-xs text-muted-foreground hidden sm:block">{ep.description}</span>
-                      </div>
-                    ))}
+                  <div className="space-y-0.5">
+                    {group.endpoints.map((ep, i) => {
+                      const epKey = `${group.title}-${i}`;
+                      const isExpanded = expandedEndpoint === epKey;
+                      return (
+                        <div key={i} className="rounded-md border border-transparent hover:border-border transition-colors">
+                          <div
+                            className="flex items-center gap-3 py-1.5 px-3 cursor-pointer hover:bg-muted/30 rounded-md transition-colors"
+                            onClick={() => setExpandedEndpoint(isExpanded ? null : epKey)}
+                          >
+                            {isExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
+                            <Badge variant="outline" className={`text-[10px] font-mono w-16 justify-center shrink-0 ${methodColor[ep.method] ?? ""}`}>
+                              {ep.method}
+                            </Badge>
+                            <code className="text-xs font-mono text-foreground flex-1 truncate">{ep.path}</code>
+                            <span className="text-xs text-muted-foreground hidden sm:block shrink-0">{ep.description}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-[10px] shrink-0 ml-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                tryEndpoint(ep.method, ep.path, ep.exampleBody);
+                              }}
+                            >
+                              <Play className="w-3 h-3 mr-1" />Try it
+                            </Button>
+                          </div>
+                          {isExpanded && (
+                            <div className="px-3 pb-3 pt-1 space-y-3 ml-6 border-t border-border/50">
+                              <p className="text-xs text-muted-foreground">{ep.description}</p>
+
+                              {/* cURL example */}
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">cURL</Label>
+                                <div className="relative mt-1">
+                                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-muted-foreground">
+{`curl '${API_BASE_URL}${ep.path}' \\
+  -X ${ep.method} \\
+  -H "X-API-Key: chk_your_key_here"${ep.exampleBody ? ` \\
+  -H "Content-Type: application/json" \\
+  -d '${ep.exampleBody.replace(/\n/g, "")}'` : ""}`}
+                                  </pre>
+                                  <Button
+                                    variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6"
+                                    onClick={() => copyToClipboard(
+                                      `curl '${API_BASE_URL}${ep.path}' \\\n  -X ${ep.method} \\\n  -H "X-API-Key: chk_your_key_here"${ep.exampleBody ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${ep.exampleBody}'` : ""}`,
+                                      `curl-${epKey}`
+                                    )}
+                                  >
+                                    {copiedField === `curl-${epKey}` ? <Check className="w-2.5 h-2.5 text-emerald-500" /> : <Copy className="w-2.5 h-2.5" />}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Request body example */}
+                              {ep.exampleBody && (
+                                <div>
+                                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Request Body</Label>
+                                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-foreground/80 mt-1">
+                                    {ep.exampleBody}
+                                  </pre>
+                                </div>
+                              )}
+
+                              {/* Response example */}
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Example Response</Label>
+                                <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-foreground/80 mt-1">
+                                  {ep.exampleResponse}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Example cURL request</Label>
-                <div className="relative">
-                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-muted-foreground">
-{`curl '${API_BASE_URL}/api/v1/instances?type=dofe' \\
-  -H "X-API-Key: chk_your_api_key_here"`}
-                  </pre>
-                  <Button
-                    variant="ghost" size="icon" className="absolute top-1.5 right-1.5 h-7 w-7"
-                    onClick={() => copyToClipboard(`curl '${API_BASE_URL}/api/v1/instances?type=dofe' \\\n  -H "X-API-Key: chk_your_api_key_here"`, "curl")}
-                  >
-                    {copiedField === "curl" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Response format</Label>
-                <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-muted-foreground">
-{`{
-  "success": true,
-  "data": [ ... ],
-  "meta": { "total": 42, "limit": 50, "offset": 0 }
-}`}
-                </pre>
-              </div>
             </CardContent>
           </Card>
 
