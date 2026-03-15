@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { useSites, useCreateSite, useDeleteSite } from "@/hooks/useSites";
-import { useAuth } from "@/contexts/AuthContext";
+import { useTenantId } from "@/hooks/useTenantId";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
