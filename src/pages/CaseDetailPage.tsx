@@ -370,6 +370,9 @@ const CaseDetailPage = () => {
                   </DropdownMenu>
                 </div>
                 <p className="text-sm text-muted-foreground">{c.participant_name} · {c.instance_name}</p>
+                {c.overview && (
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-2xl">{c.overview}</p>
+                )}
 
                 {/* Case details row */}
                 <div className="flex items-center gap-5 mt-3 flex-wrap">
@@ -501,11 +504,6 @@ const CaseDetailPage = () => {
                 </div>
               </div>
 
-              {/* Overview */}
-              <div className="bg-card rounded-lg border border-border p-5">
-                <h2 className="text-sm font-semibold text-foreground mb-3">Overview</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
-              </div>
 
               {/* Activity Timeline */}
               <div className="bg-card rounded-lg border border-border p-5">
