@@ -82,7 +82,7 @@ async function authenticateApiKey(
 
   const { data, error } = await sb
     .from("api_keys")
-    .select("id, tenant_id, scopes, expires_at, revoked_at, key_prefix")
+    .select("id, tenant_id, scopes, expires_at, revoked_at, key_prefix, allowed_ips")
     .eq("key_hash", keyHash)
     .is("revoked_at", null)
     .maybeSingle();
@@ -90,6 +90,17 @@ async function authenticateApiKey(
   if (error || !data) return err("Invalid API key", 401);
   if (data.expires_at && new Date(data.expires_at) < new Date())
     return err("API key expired", 401);
+
+  // IP allowlist enforcement
+  const allowedIps: string[] = data.allowed_ips || [];
+  if (allowedIps.length > 0) {
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || "";
+    if (!allowedIps.includes(clientIp)) {
+      return err(`IP address ${clientIp} is not allowed for this API key`, 403);
+    }
+  }
 
   // Fire-and-forget update last_used_at
   sb.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("key_hash", keyHash).then();
