@@ -95,7 +95,13 @@ const AdminUsersTab = () => {
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground ml-auto">{filtered.length} user{filtered.length !== 1 ? "s" : ""}</p>
+        <Button size="sm" className="h-9 gap-1.5" onClick={() => setInviteOpen(true)}>
+          <UserPlus className="w-4 h-4" />
+          Invite User
+        </Button>
       </div>
+
+      <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
       <div className="rounded-lg border border-border overflow-hidden">
         <Table>
