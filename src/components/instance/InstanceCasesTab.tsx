@@ -38,6 +38,7 @@ export default function InstanceCasesTab({ instanceId }: InstanceCasesTabProps) 
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+  const [newCaseOpen, setNewCaseOpen] = useState(false);
 
   const filtered = (cases ?? []).filter((c) => {
     const matchesSearch =
