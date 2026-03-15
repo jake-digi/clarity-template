@@ -28,7 +28,7 @@ const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
-
+  const [stageModal, setStageModal] = useState<{ subgroupId: string; stageId: string; progressId?: string } | null>(null);
   const { data: instance, isLoading } = useQuery({
     queryKey: ["instance", instanceId],
     enabled: !!instanceId,
