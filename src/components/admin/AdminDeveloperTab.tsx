@@ -1176,6 +1176,55 @@ const AdminDeveloperTab = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* IP Restrictions Dialog */}
+      <Dialog open={!!ipDialogKey} onOpenChange={() => setIpDialogKey(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              IP Restrictions — {ipDialogKey?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Restrict this API key to specific IP addresses. Leave empty to allow all IPs.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Allowed IP Addresses</Label>
+              <Textarea
+                placeholder="Enter comma-separated IPs, e.g. 203.0.113.1, 10.0.0.5"
+                value={editingIps}
+                onChange={(e) => setEditingIps(e.target.value)}
+                rows={3}
+                className="font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Comma-separated IPv4/IPv6 addresses. Requests from unlisted IPs will be rejected with 403.
+              </p>
+            </div>
+            {editingIps.trim() && (
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Preview</Label>
+                <div className="flex flex-wrap gap-1">
+                  {editingIps.split(",").map((ip) => ip.trim()).filter(Boolean).map((ip, i) => (
+                    <Badge key={i} variant="secondary" className="text-[10px] font-mono gap-1">
+                      {ip}
+                      <button onClick={() => setEditingIps((prev) => prev.split(",").map((s) => s.trim()).filter((s) => s !== ip).join(", "))} className="hover:text-destructive">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIpDialogKey(null)}>Cancel</Button>
+            <Button onClick={handleUpdateIps}>Save Restrictions</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
