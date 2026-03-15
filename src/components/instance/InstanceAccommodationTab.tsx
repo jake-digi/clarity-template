@@ -46,11 +46,12 @@ const InstanceAccommodationTab = ({ instanceId }: Props) => {
 
   // Occupants grouped by room
   const occupantsByRoom = useMemo(() => {
-    const map: Map<string, RoomOccupant[]> = new Map();
+    const map = new window.Map() as globalThis.Map<string, RoomOccupant[]>;
     occupants.forEach((o) => {
       const key = o.roomId ?? "__unassigned";
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(o);
+      const arr = map.get(key) ?? [];
+      arr.push(o);
+      map.set(key, arr);
     });
     return map;
   }, [occupants]);
