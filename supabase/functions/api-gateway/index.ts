@@ -37,10 +37,42 @@ function serviceClient() {
   );
 }
 
-// Authenticate via X-API-Key header, returns tenant_id and scopes
+// Log an API request (fire-and-forget)
+function logRequest(opts: {
+  tenant_id: string;
+  api_key_id?: string;
+  key_prefix?: string;
+  method: string;
+  path: string;
+  status_code: number;
+  request_body?: unknown;
+  response_body?: unknown;
+  response_time_ms: number;
+  ip_address?: string;
+  user_agent?: string;
+  error_message?: string;
+}) {
+  const sb = serviceClient();
+  sb.from("api_request_logs").insert({
+    tenant_id: opts.tenant_id,
+    api_key_id: opts.api_key_id || null,
+    key_prefix: opts.key_prefix || null,
+    method: opts.method,
+    path: opts.path,
+    status_code: opts.status_code,
+    request_body: opts.request_body ? JSON.parse(JSON.stringify(opts.request_body)) : null,
+    response_body: opts.response_body ? JSON.parse(JSON.stringify(opts.response_body)) : null,
+    response_time_ms: opts.response_time_ms,
+    ip_address: opts.ip_address || null,
+    user_agent: opts.user_agent || null,
+    error_message: opts.error_message || null,
+  }).then();
+}
+
+// Authenticate via X-API-Key header
 async function authenticateApiKey(
   req: Request
-): Promise<{ tenant_id: string; scopes: string[] } | Response> {
+): Promise<{ tenant_id: string; scopes: string[]; api_key_id: string; key_prefix: string } | Response> {
   const apiKey = req.headers.get("x-api-key");
   if (!apiKey) return err("Missing X-API-Key header", 401);
 
@@ -49,7 +81,7 @@ async function authenticateApiKey(
 
   const { data, error } = await sb
     .from("api_keys")
-    .select("tenant_id, scopes, expires_at, revoked_at")
+    .select("id, tenant_id, scopes, expires_at, revoked_at, key_prefix")
     .eq("key_hash", keyHash)
     .is("revoked_at", null)
     .maybeSingle();
@@ -61,7 +93,7 @@ async function authenticateApiKey(
   // Fire-and-forget update last_used_at
   sb.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("key_hash", keyHash).then();
 
-  return { tenant_id: data.tenant_id, scopes: data.scopes };
+  return { tenant_id: data.tenant_id, scopes: data.scopes, api_key_id: data.id, key_prefix: data.key_prefix };
 }
 
 // Authenticate via Authorization Bearer (for key management from the UI)
@@ -78,7 +110,6 @@ async function authenticateBearer(
   const { data, error } = await sb.auth.getUser();
   if (error || !data.user) return err("Invalid token", 401);
 
-  // Get tenant_id from users table
   const svc = serviceClient();
   const { data: userData, error: userErr } = await svc
     .from("users")
@@ -118,15 +149,18 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
   const url = new URL(req.url);
   const { segments, params } = parseRoute(url);
+  const ip = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "";
+  const ua = req.headers.get("user-agent") || "";
 
   // Health check
   if (segments[0] === "health") {
     return json({ success: true, status: "healthy", timestamp: new Date().toISOString() });
   }
 
-  // --- Key management routes (Bearer auth) ---
+  // --- Key management + logs routes (Bearer auth) ---
   if (segments[0] === "api" && segments[1] === "v1" && segments[2] === "api-keys") {
     const action = segments[3];
     const authResult = await authenticateBearer(req);
@@ -183,46 +217,96 @@ Deno.serve(async (req) => {
     return err("Not found", 404);
   }
 
+  // --- Logs endpoint (Bearer auth) ---
+  if (segments[0] === "api" && segments[1] === "v1" && segments[2] === "logs") {
+    const authResult = await authenticateBearer(req);
+    if (authResult instanceof Response) return authResult;
+    const { tenant_id } = authResult;
+    const sb = serviceClient();
+
+    if (req.method === "GET") {
+      const limit = parseInt(params.get("limit") || "50");
+      const offset = parseInt(params.get("offset") || "0");
+      const method = params.get("method");
+      const status = params.get("status"); // "success" | "error"
+      const keyId = params.get("key_id");
+
+      let query = sb.from("api_request_logs")
+        .select("*", { count: "exact" })
+        .eq("tenant_id", tenant_id)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (method) query = query.eq("method", method.toUpperCase());
+      if (status === "error") query = query.gte("status_code", 400);
+      if (status === "success") query = query.lt("status_code", 400);
+      if (keyId) query = query.eq("api_key_id", keyId);
+
+      const { data, error: qErr, count } = await query;
+      if (qErr) return err(qErr.message, 500);
+      return json({ success: true, data, meta: { total: count, limit, offset } });
+    }
+
+    return err("Not found", 404);
+  }
+
   // --- Data routes (API key auth) ---
   if (segments[0] !== "api" || segments[1] !== "v1") return err("Not found", 404);
 
   const authResult = await authenticateApiKey(req);
   if (authResult instanceof Response) return authResult;
-  const { tenant_id, scopes } = authResult;
+  const { tenant_id, scopes, api_key_id, key_prefix } = authResult;
 
   const resource = segments[2];
   const resourceId = segments[3];
-  const subResource = segments[3]; // for groups/supergroups, groups/subgroups
+  const subResource = segments[3];
   const sb = serviceClient();
 
-  // Scope checks
   const isWrite = ["POST", "PATCH", "PUT", "DELETE"].includes(req.method);
   if (isWrite && !scopes.includes("write") && !scopes.includes("admin"))
     return err("Insufficient scope — write required", 403);
 
-  // Helper for paginated response
   const limit = parseInt(params.get("limit") || "50");
   const offset = parseInt(params.get("offset") || "0");
+  const pathname = url.pathname.replace(/^\/api-gateway/, "");
+
+  // Helper to log + return
+  const respond = (body: unknown, statusCode: number, reqBody?: unknown, errMsg?: string) => {
+    logRequest({
+      tenant_id,
+      api_key_id,
+      key_prefix,
+      method: req.method,
+      path: pathname,
+      status_code: statusCode,
+      request_body: reqBody,
+      response_body: body,
+      response_time_ms: Date.now() - startTime,
+      ip_address: ip,
+      user_agent: ua,
+      error_message: errMsg,
+    });
+    return json(body, statusCode);
+  };
 
   // ---- INSTANCES ----
   if (resource === "instances") {
     if (req.method === "GET" && !resourceId) {
-      let query = sb.from("instances").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
+      const query = sb.from("instances").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
       const typeFilter = params.get("type");
-      // We'll filter type in JS since it's in settings JSONB
       const { data, error: qErr, count } = await query;
-      if (qErr) return err(qErr.message, 500);
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
 
       let results = (data || []).map(enrichInstance);
       if (typeFilter) results = results.filter((r) => r.type === typeFilter);
-
-      return json({ success: true, data: results, meta: { total: typeFilter ? results.length : count, limit, offset } });
+      const resBody = { success: true, data: results, meta: { total: typeFilter ? results.length : count, limit, offset } };
+      return respond(resBody, 200);
     }
     if (req.method === "GET" && resourceId) {
       const { data, error: qErr } = await sb.from("instances").select("*").eq("id", resourceId).eq("tenant_id", tenant_id).maybeSingle();
-      if (qErr) return err(qErr.message, 500);
-      if (!data) return err("Not found", 404);
-      return json({ success: true, data: enrichInstance(data) });
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+      return respond({ success: true, data: enrichInstance(data) }, 200);
     }
     if (req.method === "POST") {
       const body = await req.json();
@@ -230,15 +314,9 @@ Deno.serve(async (req) => {
       if (body.type) settings.instanceType = body.type;
       if (body.dofe_level) settings.dofeLevel = body.dofe_level;
       if (body.expedition_type) settings.expeditionType = body.expedition_type;
-
-      const { data, error: iErr } = await sb.from("instances").insert({
-        ...body,
-        tenant_id,
-        settings,
-        id: body.id || crypto.randomUUID(),
-      }).select().single();
-      if (iErr) return err(iErr.message, 500);
-      return json({ success: true, data: enrichInstance(data) }, 201);
+      const { data, error: iErr } = await sb.from("instances").insert({ ...body, tenant_id, settings, id: body.id || crypto.randomUUID() }).select().single();
+      if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+      return respond({ success: true, data: enrichInstance(data) }, 201, body);
     }
     if (req.method === "PATCH" && resourceId) {
       const body = await req.json();
@@ -249,18 +327,16 @@ Deno.serve(async (req) => {
         if (body.dofe_level) settings.dofeLevel = body.dofe_level;
         if (body.expedition_type) settings.expeditionType = body.expedition_type;
         body.settings = settings;
-        delete body.type;
-        delete body.dofe_level;
-        delete body.expedition_type;
+        delete body.type; delete body.dofe_level; delete body.expedition_type;
       }
       const { data, error: uErr } = await sb.from("instances").update(body).eq("id", resourceId).eq("tenant_id", tenant_id).select().single();
-      if (uErr) return err(uErr.message, 500);
-      return json({ success: true, data: enrichInstance(data) });
+      if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+      return respond({ success: true, data: enrichInstance(data) }, 200, body);
     }
     if (req.method === "DELETE" && resourceId) {
       const { error: dErr } = await sb.from("instances").update({ deleted_at: new Date().toISOString() }).eq("id", resourceId).eq("tenant_id", tenant_id);
-      if (dErr) return err(dErr.message, 500);
-      return json({ success: true });
+      if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+      return respond({ success: true }, 200);
     }
   }
 
@@ -271,31 +347,31 @@ Deno.serve(async (req) => {
       const instanceId = params.get("instance_id");
       if (instanceId) query = query.eq("instance_id", instanceId);
       const { data, error: qErr, count } = await query;
-      if (qErr) return err(qErr.message, 500);
-      return json({ success: true, data, meta: { total: count, limit, offset } });
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
     }
     if (req.method === "GET" && resourceId) {
       const { data, error: qErr } = await sb.from("participants").select("*").eq("id", resourceId).eq("tenant_id", tenant_id).maybeSingle();
-      if (qErr) return err(qErr.message, 500);
-      if (!data) return err("Not found", 404);
-      return json({ success: true, data });
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      if (!data) return respond({ success: false, error: "Not found" }, 404, null, "Not found");
+      return respond({ success: true, data }, 200);
     }
     if (req.method === "POST") {
       const body = await req.json();
       const { data, error: iErr } = await sb.from("participants").insert({ ...body, tenant_id, id: body.id || crypto.randomUUID(), full_name: `${body.first_name} ${body.surname}` }).select().single();
-      if (iErr) return err(iErr.message, 500);
-      return json({ success: true, data }, 201);
+      if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+      return respond({ success: true, data }, 201, body);
     }
     if (req.method === "PATCH" && resourceId) {
       const body = await req.json();
       const { data, error: uErr } = await sb.from("participants").update(body).eq("id", resourceId).eq("tenant_id", tenant_id).select().single();
-      if (uErr) return err(uErr.message, 500);
-      return json({ success: true, data });
+      if (uErr) return respond({ success: false, error: uErr.message }, 500, body, uErr.message);
+      return respond({ success: true, data }, 200, body);
     }
     if (req.method === "DELETE" && resourceId) {
       const { error: dErr } = await sb.from("participants").delete().eq("id", resourceId).eq("tenant_id", tenant_id);
-      if (dErr) return err(dErr.message, 500);
-      return json({ success: true });
+      if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
+      return respond({ success: true }, 200);
     }
   }
 
@@ -308,14 +384,14 @@ Deno.serve(async (req) => {
         let query = sb.from(table).select("*", { count: "exact" }).eq("tenant_id", tenant_id).range(offset, offset + limit - 1);
         if (instanceId) query = query.eq("instance_id", instanceId);
         const { data, error: qErr, count } = await query;
-        if (qErr) return err(qErr.message, 500);
-        return json({ success: true, data, meta: { total: count, limit, offset } });
+        if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+        return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
       }
       if (req.method === "POST") {
         const body = await req.json();
         const { data, error: iErr } = await sb.from(table).insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
-        if (iErr) return err(iErr.message, 500);
-        return json({ success: true, data }, 201);
+        if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+        return respond({ success: true, data }, 201, body);
       }
     }
     if (subResource === "subgroups") {
@@ -325,14 +401,14 @@ Deno.serve(async (req) => {
         let query = sb.from(table).select("*", { count: "exact" }).eq("tenant_id", tenant_id).range(offset, offset + limit - 1);
         if (instanceId) query = query.eq("instance_id", instanceId);
         const { data, error: qErr, count } = await query;
-        if (qErr) return err(qErr.message, 500);
-        return json({ success: true, data, meta: { total: count, limit, offset } });
+        if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+        return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
       }
       if (req.method === "POST") {
         const body = await req.json();
         const { data, error: iErr } = await sb.from(table).insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
-        if (iErr) return err(iErr.message, 500);
-        return json({ success: true, data }, 201);
+        if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+        return respond({ success: true, data }, 201, body);
       }
     }
   }
@@ -341,14 +417,14 @@ Deno.serve(async (req) => {
   if (resource === "blocks") {
     if (req.method === "GET") {
       const { data, error: qErr, count } = await sb.from("blocks").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
-      if (qErr) return err(qErr.message, 500);
-      return json({ success: true, data, meta: { total: count, limit, offset } });
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
     }
     if (req.method === "POST") {
       const body = await req.json();
       const { data, error: iErr } = await sb.from("blocks").insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
-      if (iErr) return err(iErr.message, 500);
-      return json({ success: true, data }, 201);
+      if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+      return respond({ success: true, data }, 201, body);
     }
   }
 
@@ -356,16 +432,16 @@ Deno.serve(async (req) => {
   if (resource === "rooms") {
     if (req.method === "GET") {
       const { data, error: qErr, count } = await sb.from("rooms").select("*", { count: "exact" }).eq("tenant_id", tenant_id).is("deleted_at", null).range(offset, offset + limit - 1);
-      if (qErr) return err(qErr.message, 500);
-      return json({ success: true, data, meta: { total: count, limit, offset } });
+      if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
+      return respond({ success: true, data, meta: { total: count, limit, offset } }, 200);
     }
     if (req.method === "POST") {
       const body = await req.json();
       const { data, error: iErr } = await sb.from("rooms").insert({ ...body, tenant_id, id: body.id || crypto.randomUUID() }).select().single();
-      if (iErr) return err(iErr.message, 500);
-      return json({ success: true, data }, 201);
+      if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
+      return respond({ success: true, data }, 201, body);
     }
   }
 
-  return err("Not found", 404);
+  return respond({ success: false, error: "Not found" }, 404, null, "Not found");
 });
