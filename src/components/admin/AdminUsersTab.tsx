@@ -28,6 +28,8 @@ const statusVariant = (status: string) => {
 type SortField = "name" | "email" | "status" | "created_at";
 type SortDir = "asc" | "desc";
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
+
 const AdminUsersTab = () => {
   const navigate = useNavigate();
   const { data: users = [], isLoading } = useUsers();
@@ -36,8 +38,8 @@ const AdminUsersTab = () => {
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const pageSize = 25;
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -65,97 +67,146 @@ const AdminUsersTab = () => {
     return list;
   }, [users, search, statusFilter, sortField, sortDir]);
 
-  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
+  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
   const SortHeader = ({ field, children }: { field: SortField; children: string }) => (
-    <button className="flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort(field)}>
-      {children}<ArrowUpDown className="w-3 h-3" />
+    <button className="flex items-center gap-1 hover:text-foreground transition-colors" onClick={() => toggleSort(field)}>
+      {children}<ArrowUpDown className={`w-3 h-3 ${sortField === field ? "text-primary" : "text-muted-foreground/50"}`} />
     </button>
   );
 
-  if (isLoading) {
-    return <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>;
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search users…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} className="pl-9 h-9" />
-        </div>
-        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
-          <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground ml-auto">{filtered.length} user{filtered.length !== 1 ? "s" : ""}</p>
-        <Button size="sm" className="h-9 gap-1.5" onClick={() => setInviteOpen(true)}>
-          <UserPlus className="w-4 h-4" />
-          Invite User
-        </Button>
+    <div className="flex flex-col h-full">
+      {/* Sticky toolbar */}
+      <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
+        {isLoading ? (
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 flex-1 max-w-sm" />
+            <Skeleton className="h-9 w-[140px]" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 min-w-[280px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Search by name or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} className="pl-9 h-9" />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
+              <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground ml-auto">{filtered.length} user{filtered.length !== 1 ? "s" : ""}</p>
+            <Button size="sm" className="h-9 gap-1.5" onClick={() => setInviteOpen(true)}>
+              <UserPlus className="w-4 h-4" />
+              Invite User
+            </Button>
+          </div>
+        )}
       </div>
 
       <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[280px]"><SortHeader field="name">Name</SortHeader></TableHead>
-              <TableHead><SortHeader field="email">Email</SortHeader></TableHead>
-              <TableHead className="w-[100px]"><SortHeader field="status">Status</SortHeader></TableHead>
-              <TableHead className="w-[140px]">Roles</TableHead>
-              <TableHead className="w-[120px]"><SortHeader field="created_at">Joined</SortHeader></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paged.map((u) => (
-              <TableRow
-                key={u.id}
-                className="cursor-pointer hover:bg-muted/30"
-                onClick={() => navigate(`/people/${u.id}`)}
-              >
-                <TableCell>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <span className="font-medium text-sm">{u.first_name} {u.last_name ?? u.surname ?? ""}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                <TableCell><Badge variant={statusVariant(u.status)} className="capitalize text-xs">{u.status}</Badge></TableCell>
-                <TableCell>
-                  {u.role_names?.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {u.role_names.slice(0, 2).map((r) => <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>)}
-                      {u.role_names.length > 2 && <Badge variant="secondary" className="text-[10px]">+{u.role_names.length - 2}</Badge>}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        <div className="bg-card">
+          {isLoading ? (
+            <div className="p-8 space-y-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
+                <TableRow>
+                  <TableHead className="w-[280px]"><SortHeader field="name">Name</SortHeader></TableHead>
+                  <TableHead><SortHeader field="email">Email</SortHeader></TableHead>
+                  <TableHead className="w-[100px]"><SortHeader field="status">Status</SortHeader></TableHead>
+                  <TableHead className="w-[140px]">Roles</TableHead>
+                  <TableHead className="w-[120px]"><SortHeader field="created_at">Joined</SortHeader></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paged.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      No users found matching your filters.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paged.map((u) => (
+                    <TableRow
+                      key={u.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/people/${u.id}`)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border shrink-0">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                          <span className="font-medium text-sm">{u.first_name} {u.last_name ?? u.surname ?? ""}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                      <TableCell><Badge variant={statusVariant(u.status)} className="capitalize text-xs">{u.status}</Badge></TableCell>
+                      <TableCell>
+                        {u.role_names?.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {u.role_names.slice(0, 2).map((r) => <Badge key={r} variant="outline" className="text-[10px]">{r}</Badge>)}
+                            {u.role_names.length > 2 && <Badge variant="secondary" className="text-[10px]">+{u.role_names.length - 2}</Badge>}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">Page {page + 1} of {totalPages}</p>
-          <div className="flex gap-1">
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}><ChevronLeft className="w-4 h-4" /></Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}><ChevronRight className="w-4 h-4" /></Button>
+      {/* Fixed footer */}
+      {!isLoading && (
+        <div className="shrink-0 bg-card border-t border-border px-6 py-2.5 flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">
+            Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-xs">Rows per page</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                <SelectTrigger className="h-8 w-[70px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((s) => (
+                    <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-xs">
+                {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
+              </span>
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}
