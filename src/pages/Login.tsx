@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import checkpointLogo from "@/assets/checkpoint-logo.png";
-import loginHero from "@/assets/login-hero.jpg";
+import loginHero from "@/assets/login-hero.png";
 
 const Login = () => {
   const navigate = useNavigate();

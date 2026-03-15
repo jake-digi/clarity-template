@@ -205,7 +205,17 @@ Deno.serve(async (req) => {
     });
     if (linkErr) return json({ error: linkErr.message || "Failed to generate invite link" }, 500);
 
-    const resetLink = linkData?.properties?.action_link || "";
+    // Force redirect_to to production; Supabase may otherwise use project Site URL (e.g. localhost)
+    const rawLink = linkData?.properties?.action_link || "";
+    const resetLink = (() => {
+      try {
+        const url = new URL(rawLink);
+        url.searchParams.set("redirect_to", `${DEFAULT_ORIGIN}/reset-password`);
+        return url.toString();
+      } catch {
+        return rawLink;
+      }
+    })();
 
     // Send invite email via Resend
     const emailRes = await fetch("https://api.resend.com/emails", {

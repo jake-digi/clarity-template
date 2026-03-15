@@ -8,7 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import checkpointLogo from "@/assets/checkpoint-logo.png";
 import jlgbLogo from "@/assets/jlgb-logo.png";
-import loginHero from "@/assets/login-hero.jpg";
+import loginHero from "@/assets/login-hero.png";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
