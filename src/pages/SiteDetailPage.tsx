@@ -220,6 +220,7 @@ const SiteDetailPage = () => {
   const updateSite = useUpdateSite();
   const createBlock = useCreateBlock();
   const updateBlockPolygon = useUpdateBlockPolygon();
+  const createRoom = useCreateRoom();
 
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showEditSite, setShowEditSite] = useState(false);
@@ -230,6 +231,10 @@ const SiteDetailPage = () => {
   const [showAssignPolygon, setShowAssignPolygon] = useState(false);
   const [pendingPolygon, setPendingPolygon] = useState<GeoPolygon | null>(null);
   const [assignBlockId, setAssignBlockId] = useState<string>("");
+  // Room pin placement state
+  const [showRoomPinDialog, setShowRoomPinDialog] = useState(false);
+  const [pendingRoomPin, setPendingRoomPin] = useState<{ blockId: string; position: { lat: number; lng: number } } | null>(null);
+  const [roomPinForm, setRoomPinForm] = useState({ room_number: "", name: "", capacity: "" });
 
   const site = data?.site;
   const blocks = data?.blocks ?? [];
