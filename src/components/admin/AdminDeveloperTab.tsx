@@ -450,14 +450,28 @@ const AdminDeveloperTab = () => {
     : endpointGroups;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="h-9 w-auto">
-          <TabsTrigger value="keys" className="gap-1.5 text-xs"><Key className="w-3.5 h-3.5" />API Keys</TabsTrigger>
-          <TabsTrigger value="playground" className="gap-1.5 text-xs"><Play className="w-3.5 h-3.5" />Playground</TabsTrigger>
-          <TabsTrigger value="logs" className="gap-1.5 text-xs" onClick={() => { if (logs.length === 0) fetchLogs(); }}><FileText className="w-3.5 h-3.5" />Logs</TabsTrigger>
-          <TabsTrigger value="reference" className="gap-1.5 text-xs"><Code2 className="w-3.5 h-3.5" />Reference</TabsTrigger>
-        </TabsList>
+        <div className="bg-card border-b border-border px-6">
+          <TabsList className="h-auto p-0 bg-transparent rounded-none border-none gap-0">
+            {[
+              { value: "keys", label: "API Keys", icon: Key },
+              { value: "playground", label: "Playground", icon: Play },
+              { value: "logs", label: "Logs", icon: FileText },
+              { value: "reference", label: "Reference", icon: Code2 },
+            ].map((t) => (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className="relative rounded-none border-none bg-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-none data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent gap-1.5 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-transparent data-[state=active]:after:bg-primary transition-colors hover:text-foreground"
+                onClick={() => { if (t.value === "logs" && logs.length === 0) fetchLogs(); }}
+              >
+                <t.icon className="w-3.5 h-3.5" />
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {/* ===== KEYS TAB ===== */}
         <TabsContent value="keys" className="space-y-4 mt-4">
