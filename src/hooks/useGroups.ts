@@ -96,18 +96,18 @@ export function useSubgroupParticipants(instanceId: string) {
   });
 }
 
-export function useSubgroupStaff(instanceId: string) {
+export function useInstanceStaff(instanceId: string) {
   return useQuery({
-    queryKey: ["subgroup-staff", instanceId],
+    queryKey: ["instance-staff", instanceId],
     enabled: !!instanceId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_instance_assignments")
-        .select("id, user_id, subgroup_id, role")
+        .select("id, user_id, role")
         .eq("instance_id", instanceId)
         .is("removed_at", null);
       if (error) throw error;
-      if (!data?.length) return { assignments: [], userMap: new Map<string, { id: string; first_name: string; last_name: string | null; surname: string | null; email: string | null }>() };
+      if (!data?.length) return [];
 
       const uIds = [...new Set(data.map((a) => a.user_id))];
       const { data: users } = await supabase
@@ -115,11 +115,8 @@ export function useSubgroupStaff(instanceId: string) {
         .select("id, first_name, last_name, surname, email")
         .in("id", uIds);
 
-      const userMap = new Map(
-        (users ?? []).map((u) => [u.id, u])
-      );
-
-      return { assignments: data, userMap };
+      const userMap = new Map((users ?? []).map((u) => [u.id, u]));
+      return data.map((a) => ({ ...a, user: userMap.get(a.user_id) }));
     },
   });
 }
