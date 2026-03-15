@@ -246,14 +246,14 @@ const DashboardHeader = () => {
   let flatIndex = -1;
 
   return (
-    <header className="flex items-center justify-between px-6 py-3 bg-card border-b border-border">
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <img src={jlgbLogo} alt="JLGB" className="h-9 w-auto" />
-        </div>
+    <header className="flex items-center px-6 py-3 bg-card border-b border-border">
+      <div className="flex items-center gap-2 shrink-0">
+        <img src={jlgbLogo} alt="JLGB" className="h-9 w-auto" />
+      </div>
 
-        {/* Smart Search */}
-        <div ref={containerRef} className="relative">
+      {/* Centered Smart Search */}
+      <div className="flex-1 flex justify-center px-8">
+        <div ref={containerRef} className="relative w-full max-w-lg">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -264,7 +264,7 @@ const DashboardHeader = () => {
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
               placeholder="Search pages, participants, users, cases..."
-              className="w-80 pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+              className="w-full pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query ? (
               <button
@@ -281,7 +281,7 @@ const DashboardHeader = () => {
           </div>
 
           {open && (
-            <div className="absolute top-full left-0 mt-1.5 w-96 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
+            <div className="absolute top-full left-0 mt-1.5 w-full bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50">
               {!query.trim() ? (
                 <div className="py-3 px-4 space-y-3">
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Try searching for</div>
@@ -356,8 +356,7 @@ const DashboardHeader = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <ThemeToggle />
+      <div className="flex items-center gap-2 shrink-0">
         <button className="p-2 rounded-lg hover:bg-muted transition-colors">
           <Bell className="w-5 h-5 text-muted-foreground" />
         </button>
