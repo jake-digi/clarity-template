@@ -72,9 +72,9 @@ const CasesPage = () => {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="gap-2" onClick={() => setWarningsOpen(true)}>
-                  <Shield className="w-4 h-4" />
-                  Formal Warnings
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  New Case
                 </Button>
                 <Button className="gap-2">
                   <Plus className="w-4 h-4" />
