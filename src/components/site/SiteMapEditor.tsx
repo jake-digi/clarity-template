@@ -97,7 +97,7 @@ const SiteMapEditor = ({
     tileLayerRef.current.setUrl(satellite ? SATELLITE_URL : OSM_URL);
   }, [satellite]);
 
-  // Draw site bounds rectangle
+  // Draw site bounds polygon
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -106,18 +106,15 @@ const SiteMapEditor = ({
       boundsLayerRef.current = null;
     }
 
-    if (bounds) {
-      const rect = L.rectangle(
-        [[bounds.southWest.lat, bounds.southWest.lng], [bounds.northEast.lat, bounds.northEast.lng]],
-        {
-          color: "hsl(204, 100%, 40%)",
-          weight: 2,
-          fillOpacity: 0.08,
-          dashArray: "8 4",
-        }
-      ).addTo(mapRef.current);
-      boundsLayerRef.current = rect;
-      mapRef.current.fitBounds(rect.getBounds(), { padding: [30, 30] });
+    if (bounds?.length) {
+      const poly = L.polygon(bounds, {
+        color: "hsl(204, 100%, 40%)",
+        weight: 2,
+        fillOpacity: 0.08,
+        dashArray: "8 4",
+      }).addTo(mapRef.current);
+      boundsLayerRef.current = poly;
+      mapRef.current.fitBounds(poly.getBounds(), { padding: [30, 30] });
     }
   }, [bounds]);
 
