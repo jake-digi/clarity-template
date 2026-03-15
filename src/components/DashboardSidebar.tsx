@@ -11,8 +11,6 @@ const coreItems = [
 ];
 
 const opsItems = [
-  { icon: ClipboardList, label: "Stages", path: "/stages" },
-  { icon: MapPin, label: "Tracking", path: "/tracking" },
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: FileWarning, label: "Cases", path: "/cases" },
   { icon: Tent, label: "Sites", path: "/sites" },
