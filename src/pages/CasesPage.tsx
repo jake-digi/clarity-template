@@ -34,6 +34,7 @@ const CasesPage = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+  const [warningsOpen, setWarningsOpen] = useState(false);
 
   const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
 
