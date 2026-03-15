@@ -75,7 +75,7 @@ const Login = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           {/* logo */}
           <div className="absolute top-6 left-6 flex items-center gap-2">
-            <img src={checkpointLogo} alt="Checkpoint" className="h-8 brightness-0 invert" />
+            <img src={checkpointLogo} alt="Checkpoint" className="h-14 brightness-0 invert" />
           </div>
           {/* testimonial */}
           <div className="absolute bottom-8 left-6 right-6 text-white">
