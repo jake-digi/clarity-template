@@ -177,16 +177,15 @@ const PeopleManagement = () => {
             </div>
           </div>
 
-          {/* Toolbar */}
-          <div className="px-6 py-4 space-y-4">
+          {/* Toolbar — sticky below header */}
+          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3 space-y-2">
             {isLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-10 flex-1 max-w-sm" />
                   <Skeleton className="h-10 w-[180px]" />
                   <Skeleton className="h-10 w-[160px]" />
                 </div>
-                <Skeleton className="h-4 w-48" />
               </div>
             ) : (
               <>
@@ -221,7 +220,9 @@ const PeopleManagement = () => {
                 </div>
               </>
             )}
+          </div>
 
+          <div className="px-6 py-4 space-y-4">
             {/* Data Table */}
             <div className="bg-card rounded-lg border border-border overflow-hidden">
               {isLoading ? (
