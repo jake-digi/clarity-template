@@ -196,13 +196,13 @@ const CaseDetailPage = () => {
   };
 
   const caseActionTypes = [
-    { type: "formal_warning", label: "Formal Warning", icon: Gavel },
-    { type: "phone_call", label: "Log Phone Call", icon: Phone },
-    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus },
-    { type: "email_parent", label: "Email Parent", icon: Mail },
-    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert },
-    { type: "escalate", label: "Escalate", icon: Siren },
-    { type: "add_note", label: "Add Case Note", icon: BookOpen },
+    { type: "formal_warning", label: "Formal Warning", icon: Gavel, variant: "warning" as const },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone, variant: "default" as const },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, variant: "default" as const },
+    { type: "email_parent", label: "Email Parent", icon: Mail, variant: "default" as const },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, variant: "danger" as const },
+    { type: "escalate", label: "Escalate", icon: Siren, variant: "danger" as const },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen, variant: "default" as const },
   ];
 
   const handleCaseAction = async () => {
