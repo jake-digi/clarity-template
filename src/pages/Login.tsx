@@ -62,8 +62,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted flex items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-4xl bg-background rounded-2xl shadow-xl overflow-hidden flex min-h-[600px]">
+    <div className="min-h-screen bg-muted flex">
+      <div className="w-full bg-background flex min-h-screen">
         {/* Left panel – hero image */}
         <div className="hidden md:flex md:w-5/12 relative">
           <img
