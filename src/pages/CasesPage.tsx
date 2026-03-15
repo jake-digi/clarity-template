@@ -42,9 +42,14 @@ const CasesPage = () => {
       c.participant_name?.toLowerCase().includes(search.toLowerCase()) ||
       c.overview?.toLowerCase().includes(search.toLowerCase()) ||
       c.category.toLowerCase().includes(search.toLowerCase());
+    const isWelfare = welfareCategoriesList.includes(c.category);
+    const matchesCategory =
+      categoryFilter === "all" ||
+      (categoryFilter === "welfare" && isWelfare) ||
+      (categoryFilter === "behaviour" && !isWelfare);
     const matchesStatus = statusFilter === "all" || c.status === statusFilter;
     const matchesSeverity = severityFilter === "all" || c.severity_level === severityFilter;
-    return matchesSearch && matchesStatus && matchesSeverity;
+    return matchesSearch && matchesCategory && matchesStatus && matchesSeverity;
   });
 
   return (
