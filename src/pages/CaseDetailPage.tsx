@@ -51,11 +51,11 @@ type TimelineEntry = {
 
 // Happiness gauge component (credit-score style)
 const gaugeSegments = [
-  { label: "POOR", range: "1.0-1.8", color: "#4CAF50", startAngle: 180, endAngle: 144 },
-  { label: "FAIR", range: "1.8-2.6", color: "#8BC34A", startAngle: 144, endAngle: 108 },
+  { label: "POOR", range: "1.0-1.8", color: "#F44336", startAngle: 180, endAngle: 144 },
+  { label: "FAIR", range: "1.8-2.6", color: "#FF9800", startAngle: 144, endAngle: 108 },
   { label: "GOOD", range: "2.6-3.4", color: "#CDDC39", startAngle: 108, endAngle: 72 },
-  { label: "V.GOOD", range: "3.4-4.2", color: "#FF9800", startAngle: 72, endAngle: 36 },
-  { label: "EXCELLENT", range: "4.2-5.0", color: "#F44336", startAngle: 36, endAngle: 0 },
+  { label: "V.GOOD", range: "3.4-4.2", color: "#8BC34A", startAngle: 72, endAngle: 36 },
+  { label: "EXCELLENT", range: "4.2-5.0", color: "#4CAF50", startAngle: 36, endAngle: 0 },
 ];
 
 function gaugePolar(cx: number, cy: number, r: number, angleDeg: number) {
@@ -69,11 +69,11 @@ function scoreToAngle(score: number) {
 }
 
 function getScoreColor(score: number) {
-  if (score < 1.8) return "#4CAF50";
-  if (score < 2.6) return "#8BC34A";
+  if (score < 1.8) return "#F44336";
+  if (score < 2.6) return "#FF9800";
   if (score < 3.4) return "#CDDC39";
-  if (score < 4.2) return "#FF9800";
-  return "#F44336";
+  if (score < 4.2) return "#8BC34A";
+  return "#4CAF50";
 }
 
 function getScoreLabel(score: number) {
