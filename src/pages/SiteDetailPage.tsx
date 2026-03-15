@@ -225,7 +225,7 @@ const SiteDetailPage = () => {
   const [showEditSite, setShowEditSite] = useState(false);
   const [blockForm, setBlockForm] = useState({ name: "", description: "" });
   const [siteForm, setSiteForm] = useState({ name: "", location: "", address: "", description: "" });
-  const [mapMode, setMapMode] = useState<"view" | "set-bounds" | "draw-block">("view");
+  const [mapMode, setMapMode] = useState<MapMode>("view");
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showAssignPolygon, setShowAssignPolygon] = useState(false);
   const [pendingPolygon, setPendingPolygon] = useState<GeoPolygon | null>(null);
