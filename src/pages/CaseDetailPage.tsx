@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
@@ -54,6 +55,18 @@ const CaseDetailPage = () => {
         onError: () => toast.error("Failed to add comment"),
       }
     );
+  };
+
+  const qc = useQueryClient();
+
+  const handleSeverityChange = async (newSeverity: string) => {
+    if (!c || !caseId || newSeverity === c.severity_level) return;
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("behavior_cases").update({ severity_level: newSeverity, updated_at: new Date().toISOString() }).eq("id", caseId);
+    if (error) { toast.error("Failed to update severity"); return; }
+    toast.success(`Severity changed to ${newSeverity}`);
+    qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
+    qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
   const handleStatusChange = (newStatus: string) => {
@@ -136,9 +149,26 @@ const CaseDetailPage = () => {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-2xl font-semibold text-foreground tracking-tight">{c.category} Case</h1>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${severityColors[c.severity_level]}`}>
-                    {c.severity_level}
-                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize cursor-pointer ${severityColors[c.severity_level]}`}>
+                        {c.severity_level}
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {(["low", "medium", "high", "critical"] as const).map((s) => (
+                        <DropdownMenuItem
+                          key={s}
+                          className="capitalize"
+                          onClick={() => handleSeverityChange(s)}
+                        >
+                          {s}
+                          {s === c.severity_level && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   {/* Status dropdown in header */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
