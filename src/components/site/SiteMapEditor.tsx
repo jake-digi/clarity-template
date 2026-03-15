@@ -273,7 +273,7 @@ const SiteMapEditor = ({
             onClick={() => onModeChange(mode === "set-bounds" ? "view" : "set-bounds")}
           >
             <Square className="w-3.5 h-3.5" />
-            {bounds ? "Redraw Bounds" : "Set Bounds"}
+            {bounds?.length ? "Redraw Bounds" : "Set Bounds"}
           </Button>
           {bounds && (
             <Button
