@@ -35,6 +35,7 @@ export interface SiteRoom {
   capacity: number | null;
   site_id: string;
   tenant_id: string;
+  geo_position: { lat: number; lng: number } | null;
 }
 
 export function useSites() {
