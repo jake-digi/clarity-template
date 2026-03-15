@@ -1,4 +1,4 @@
-import { Home, Users, Building2, ClipboardList, MapPin, CheckSquare, Activity, Shield, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench } from "lucide-react";
+import { Home, Users, Building2, CheckSquare, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -11,8 +11,6 @@ const coreItems = [
 ];
 
 const opsItems = [
-  { icon: ClipboardList, label: "Stages", path: "/stages" },
-  { icon: MapPin, label: "Tracking", path: "/tracking" },
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: FileWarning, label: "Cases", path: "/cases" },
   { icon: Tent, label: "Sites", path: "/sites" },
