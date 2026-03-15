@@ -13,7 +13,7 @@ import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
   Navigation, Briefcase, UserCheck, Building, Bus, Package,
-  CalendarDays, Heart,
+  CalendarDays, Heart, Megaphone, FileText,
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
@@ -28,6 +28,8 @@ import InstanceMedicalTab from "@/components/instance/InstanceMedicalTab";
 import StageTemplateManager from "@/components/instance/StageTemplateManager";
 import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
 import StageDetailsModal from "@/components/instance/StageDetailsModal";
+import InstanceAnnouncementsTab from "@/components/instance/InstanceAnnouncementsTab";
+import InstanceDocumentsTab from "@/components/instance/InstanceDocumentsTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
@@ -140,6 +142,8 @@ const InstanceDetailPage = () => {
     { value: "medical", label: "Medical", icon: Heart },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
+    { value: "announcements", label: "Announcements", icon: Megaphone },
+    { value: "documents", label: "Documents", icon: FileText },
     { value: "transport", label: "Transport", icon: Bus },
     { value: "equipment", label: "Equipment", icon: Package },
     { value: "tracking", label: "Tracking", icon: Navigation },
@@ -291,6 +295,16 @@ const InstanceDetailPage = () => {
                 {/* Equipment */}
                 <TabsContent value="equipment" className="mt-0">
                   <InstanceEquipmentTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Announcements */}
+                <TabsContent value="announcements" className="mt-0">
+                  <InstanceAnnouncementsTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Documents */}
+                <TabsContent value="documents" className="mt-0">
+                  <InstanceDocumentsTab instanceId={instanceId!} tenantId={instance.tenant_id} />
                 </TabsContent>
 
                 {/* Tracking */}
