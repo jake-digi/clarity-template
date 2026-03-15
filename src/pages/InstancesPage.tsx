@@ -116,7 +116,7 @@ const InstancesPage = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2"><Download className="w-4 h-4" />Export</Button>
-                <Button className="gap-2"><Plus className="w-4 h-4" />New Instance</Button>
+                <Button className="gap-2" onClick={() => navigate("/instances/new")}><Plus className="w-4 h-4" />New Instance</Button>
               </div>
             </div>
 
