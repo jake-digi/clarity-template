@@ -148,7 +148,6 @@ const CaseDetailPage = () => {
   const [newComment, setNewComment] = useState("");
   const [actionDialog, setActionDialog] = useState<{ open: boolean; type: string; label: string }>({ open: false, type: "", label: "" });
   const [actionNotes, setActionNotes] = useState("");
-  const qc = useQueryClient();
 
   // Fetch all cases for this participant (for summary + related)
   const { data: allParticipantCases } = useQuery({
