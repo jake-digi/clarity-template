@@ -25,7 +25,7 @@ import {
 
 const SitesPage = () => {
   const navigate = useNavigate();
-  const { tenantId } = useAuth();
+  const { data: tenantId } = useTenantId();
   const { data: sites = [], isLoading } = useSites();
   const createSite = useCreateSite();
   const deleteSite = useDeleteSite();

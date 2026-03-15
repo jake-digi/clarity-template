@@ -237,7 +237,7 @@ const BlockCard = ({ block, siteId, tenantId }: { block: SiteBlock; siteId: stri
 const SiteDetailPage = () => {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
-  const { tenantId } = useAuth();
+  const { data: tenantId } = useTenantId();
   const { data, isLoading } = useSiteDetail(siteId ?? "");
   const updateSite = useUpdateSite();
   const createBlock = useCreateBlock();
