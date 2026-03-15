@@ -34,8 +34,41 @@ const searchIndex: SearchItem[] = [
 function getInitials(name: string): string {
   return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 }
+const ProfileMenu = () => {
+  const navigate = useNavigate();
 
-const DashboardHeader = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="w-9 h-9 rounded-full bg-muted overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring">
+          <User className="w-full h-full p-1.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
+          <User className="w-4 h-4 mr-2" />
+          My Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/admin")}>
+          <Settings className="w-4 h-4 mr-2" />
+          Administration
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
