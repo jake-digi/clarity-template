@@ -124,6 +124,7 @@ export function useSiteDetail(siteId: string) {
             site_id: r.site_id!,
             tenant_id: r.tenant_id,
             geo_position: (r as any).geo_position as { lat: number; lng: number } | null,
+            room_type: ((r as any).room_type ?? "room") as RoomType,
           })),
       }));
 
