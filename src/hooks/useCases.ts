@@ -24,6 +24,7 @@ export interface BehaviorCase {
   witnesses: string[];
   metadata: Record<string, unknown>;
   timestamp: string;
+  event_time: string | null;
   created_at: string;
   updated_at: string;
   // joined

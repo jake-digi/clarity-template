@@ -3,22 +3,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus, useCases } from "@/hooks/useCases";
+import { useCase, useCaseActions, useCaseComments, useAddCaseComment, useUpdateCaseStatus } from "@/hooks/useCases";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  ChevronRight, ArrowLeft, User, Calendar, MapPin, AlertTriangle,
+  ChevronRight, ArrowLeft, User, Calendar as CalendarIcon, MapPin, AlertTriangle,
   Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown,
-  Heart, Smile, FileWarning, Users
+  Heart, Smile, FileWarning, Users, Pencil
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const severityColors: Record<string, string> = {
   low: "bg-blue-100 text-blue-800",
@@ -26,6 +31,9 @@ const severityColors: Record<string, string> = {
   high: "bg-orange-100 text-orange-800",
   critical: "bg-red-100 text-red-800",
 };
+
+const categoryOptions = ["Bullying", "Disruption", "Property Damage", "Safeguarding", "Verbal Abuse", "Physical Altercation", "Homesickness", "Other"];
+const locationOptions = ["Main Hall", "Briefing Room", "Welfare Tent", "Dining Hall", "Accommodation Block", "Outdoor Area", "Sports Field", "Other"];
 
 const statusOptions = ["pending", "open", "in-progress", "closed", "resolved"];
 
@@ -130,6 +138,15 @@ const CaseDetailPage = () => {
     const { error } = await supabase.from("behavior_cases").update({ severity_level: newSeverity, updated_at: new Date().toISOString() }).eq("id", caseId);
     if (error) { toast.error("Failed to update severity"); return; }
     toast.success(`Severity changed to ${newSeverity}`);
+    qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
+    qc.invalidateQueries({ queryKey: ["behavior-cases"] });
+  };
+
+  const handleFieldUpdate = async (field: string, value: string | null) => {
+    if (!caseId) return;
+    const { error } = await supabase.from("behavior_cases").update({ [field]: value, updated_at: new Date().toISOString() } as any).eq("id", caseId);
+    if (error) { toast.error(`Failed to update ${field}`); return; }
+    toast.success(`${field.replace(/_/g, " ")} updated`);
     qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
@@ -268,9 +285,75 @@ const CaseDetailPage = () => {
                 {/* Case details row */}
                 <div className="flex items-center gap-5 mt-3 flex-wrap">
                   <DetailChip icon={User} label="Assigned" value={c.assigned_to_name ?? "Unassigned"} />
-                  <DetailChip icon={Calendar} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
-                  <DetailChip icon={MapPin} label="Location" value={c.location || "—"} />
-                  <DetailChip icon={Shield} label="Category" value={c.category} />
+                  <DetailChip icon={CalendarIcon} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
+
+                  {/* Event Time - editable */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="text-xs text-muted-foreground/70">Event Time:</span>
+                        <span className="text-foreground text-xs font-medium">
+                          {c.event_time
+                            ? format(new Date(c.event_time), "d MMM yyyy, HH:mm")
+                            : "Not set"}
+                        </span>
+                        <Pencil className="w-2.5 h-2.5 text-muted-foreground/50" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={c.event_time ? new Date(c.event_time) : undefined}
+                        onSelect={(date) => {
+                          if (date) handleFieldUpdate("event_time", date.toISOString());
+                        }}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Location - dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span className="text-xs text-muted-foreground/70">Location:</span>
+                        <span className="text-foreground text-xs font-medium">{c.location || "—"}</span>
+                        <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {locationOptions.map((loc) => (
+                        <DropdownMenuItem key={loc} onClick={() => handleFieldUpdate("location", loc)}>
+                          {loc}
+                          {loc === c.location && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Category - dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <Shield className="w-3.5 h-3.5" />
+                        <span className="text-xs text-muted-foreground/70">Category:</span>
+                        <span className="text-foreground text-xs font-medium">{c.category}</span>
+                        <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {categoryOptions.map((cat) => (
+                        <DropdownMenuItem key={cat} onClick={() => handleFieldUpdate("category", cat)}>
+                          {cat}
+                          {cat === c.category && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
                   {c.requires_immediate_action && (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
                       <AlertTriangle className="w-3 h-3" /> Immediate Action
