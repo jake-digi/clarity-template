@@ -196,13 +196,13 @@ const CaseDetailPage = () => {
   };
 
   const caseActionTypes = [
-    { type: "formal_warning", label: "Formal Warning", icon: Gavel },
-    { type: "phone_call", label: "Log Phone Call", icon: Phone },
-    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus },
-    { type: "email_parent", label: "Email Parent", icon: Mail },
-    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert },
-    { type: "escalate", label: "Escalate", icon: Siren },
-    { type: "add_note", label: "Add Case Note", icon: BookOpen },
+    { type: "formal_warning", label: "Formal Warning", icon: Gavel, variant: "warning" as const },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone, variant: "default" as const },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, variant: "default" as const },
+    { type: "email_parent", label: "Email Parent", icon: Mail, variant: "default" as const },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, variant: "danger" as const },
+    { type: "escalate", label: "Escalate", icon: Siren, variant: "danger" as const },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen, variant: "default" as const },
   ];
 
   const handleCaseAction = async () => {
@@ -470,7 +470,12 @@ const CaseDetailPage = () => {
                     <button
                       key={action.type}
                       onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
-                      className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors",
+                        action.variant === "warning" && "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
+                        action.variant === "danger" && "border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10",
+                        action.variant === "default" && "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
                     >
                       <action.icon className="w-5 h-5" />
                       <span className="text-[11px] font-medium text-center leading-tight">{action.label}</span>
