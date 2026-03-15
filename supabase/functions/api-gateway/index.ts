@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-api-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
@@ -200,7 +201,7 @@ Deno.serve(async (req) => {
       return json({ success: true, data });
     }
 
-    if (req.method === "DELETE" && action === "revoke") {
+    if ((req.method === "DELETE" || req.method === "POST") && action === "revoke") {
       const body = await req.json();
       if (!body.id) return err("Missing key id");
 
