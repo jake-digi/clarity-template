@@ -1,0 +1,1 @@
+ALTER TABLE public.api_keys ADD COLUMN allowed_ips text[] DEFAULT '{}'::text[];

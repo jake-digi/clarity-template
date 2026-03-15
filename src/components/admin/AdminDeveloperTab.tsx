@@ -24,7 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Copy, Check, Key, Database, Code2,
   Plus, Trash2, AlertTriangle, Play, FileText,
-  RefreshCw, Clock, Send, ChevronDown, ChevronRight, Download,
+  RefreshCw, Clock, Send, ChevronDown, ChevronRight, Download, Shield, X,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,7 @@ interface ApiKey {
   last_used_at: string | null;
   expires_at: string | null;
   revoked_at: string | null;
+  allowed_ips: string[];
 }
 
 interface ApiLog {
@@ -311,6 +312,9 @@ const AdminDeveloperTab = () => {
   const [newKeyExpiry, setNewKeyExpiry] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [newKeyAllowedIps, setNewKeyAllowedIps] = useState("");
+  const [ipDialogKey, setIpDialogKey] = useState<ApiKey | null>(null);
+  const [editingIps, setEditingIps] = useState("");
 
   // Logs state
   const [logs, setLogs] = useState<ApiLog[]>([]);
@@ -532,13 +536,18 @@ const AdminDeveloperTab = () => {
       const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/generate`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName || "Untitled", scopes: newKeyScopes, expires_at: newKeyExpiry || null }),
+        body: JSON.stringify({
+          name: newKeyName || "Untitled",
+          scopes: newKeyScopes,
+          expires_at: newKeyExpiry || null,
+          allowed_ips: newKeyAllowedIps.trim() ? newKeyAllowedIps.split(",").map((ip) => ip.trim()).filter(Boolean) : [],
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setCreatedKey(data.data.key);
         setCreateOpen(false);
-        setNewKeyName(""); setNewKeyScopes(["read"]); setNewKeyExpiry("");
+        setNewKeyName(""); setNewKeyScopes(["read"]); setNewKeyExpiry(""); setNewKeyAllowedIps("");
         fetchKeys();
         toast({ title: "API key created" });
       } else {
@@ -568,6 +577,30 @@ const AdminDeveloperTab = () => {
       toast({ title: "API key revoked" });
     } catch (e) {
       toast({ title: "Error revoking key", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    }
+  };
+
+  const handleUpdateIps = async () => {
+    if (!ipDialogKey) return;
+    try {
+      const session = await getSession();
+      if (!session) return;
+      const ips = editingIps.trim() ? editingIps.split(",").map((ip) => ip.trim()).filter(Boolean) : [];
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/update`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ipDialogKey.id, allowed_ips: ips }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        toast({ title: "Error updating IPs", description: data.error, variant: "destructive" });
+        return;
+      }
+      setIpDialogKey(null);
+      fetchKeys();
+      toast({ title: "IP restrictions updated" });
+    } catch (e) {
+      toast({ title: "Error updating IPs", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
     }
   };
 
@@ -734,6 +767,11 @@ const AdminDeveloperTab = () => {
                       <Label>Expiry (optional)</Label>
                       <Input type="datetime-local" value={newKeyExpiry} onChange={(e) => setNewKeyExpiry(e.target.value)} />
                     </div>
+                    <div className="space-y-1.5">
+                      <Label>Allowed IPs (optional)</Label>
+                      <Input placeholder="e.g. 203.0.113.1, 10.0.0.0" value={newKeyAllowedIps} onChange={(e) => setNewKeyAllowedIps(e.target.value)} />
+                      <p className="text-[10px] text-muted-foreground">Comma-separated. Leave empty to allow all IPs.</p>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button onClick={handleCreate} disabled={creating}>{creating ? "Creating…" : "Create Key"}</Button>
@@ -756,15 +794,16 @@ const AdminDeveloperTab = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Key</TableHead>
                     <TableHead>Scopes</TableHead>
+                    <TableHead>IP Restrictions</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
                     <TableHead>Last Used</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                    <TableHead className="w-20"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {keys.map((key) => {
                     const status = getKeyStatus(key);
+                    const ips = key.allowed_ips || [];
                     return (
                       <TableRow key={key.id}>
                         <TableCell className="font-medium text-sm">{key.name}</TableCell>
@@ -774,15 +813,31 @@ const AdminDeveloperTab = () => {
                             {key.scopes.map((s) => <Badge key={s} variant="outline" className="text-[10px]">{s}</Badge>)}
                           </div>
                         </TableCell>
+                        <TableCell>
+                          {ips.length > 0 ? (
+                            <div className="flex items-center gap-1">
+                              <Shield className="w-3 h-3 text-primary shrink-0" />
+                              <span className="text-xs text-muted-foreground">{ips.length} IP{ips.length > 1 ? "s" : ""}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">All allowed</span>
+                          )}
+                        </TableCell>
                         <TableCell><Badge variant={status.variant} className="text-[10px]">{status.label}</Badge></TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{new Date(key.created_at).toLocaleDateString()}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}</TableCell>
                         <TableCell>
-                          {!key.revoked_at && (
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRevokeTarget(key)}>
-                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {!key.revoked_at && (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setIpDialogKey(key); setEditingIps((key.allowed_ips || []).join(", ")); }}>
+                                  <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRevokeTarget(key)}>
+                                  <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -1121,6 +1176,55 @@ const AdminDeveloperTab = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* IP Restrictions Dialog */}
+      <Dialog open={!!ipDialogKey} onOpenChange={() => setIpDialogKey(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              IP Restrictions — {ipDialogKey?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Restrict this API key to specific IP addresses. Leave empty to allow all IPs.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Allowed IP Addresses</Label>
+              <Textarea
+                placeholder="Enter comma-separated IPs, e.g. 203.0.113.1, 10.0.0.5"
+                value={editingIps}
+                onChange={(e) => setEditingIps(e.target.value)}
+                rows={3}
+                className="font-mono text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Comma-separated IPv4/IPv6 addresses. Requests from unlisted IPs will be rejected with 403.
+              </p>
+            </div>
+            {editingIps.trim() && (
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Preview</Label>
+                <div className="flex flex-wrap gap-1">
+                  {editingIps.split(",").map((ip) => ip.trim()).filter(Boolean).map((ip, i) => (
+                    <Badge key={i} variant="secondary" className="text-[10px] font-mono gap-1">
+                      {ip}
+                      <button onClick={() => setEditingIps((prev) => prev.split(",").map((s) => s.trim()).filter((s) => s !== ip).join(", "))} className="hover:text-destructive">
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIpDialogKey(null)}>Cancel</Button>
+            <Button onClick={handleUpdateIps}>Save Restrictions</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

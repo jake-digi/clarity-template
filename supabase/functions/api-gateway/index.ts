@@ -82,7 +82,7 @@ async function authenticateApiKey(
 
   const { data, error } = await sb
     .from("api_keys")
-    .select("id, tenant_id, scopes, expires_at, revoked_at, key_prefix")
+    .select("id, tenant_id, scopes, expires_at, revoked_at, key_prefix, allowed_ips")
     .eq("key_hash", keyHash)
     .is("revoked_at", null)
     .maybeSingle();
@@ -90,6 +90,17 @@ async function authenticateApiKey(
   if (error || !data) return err("Invalid API key", 401);
   if (data.expires_at && new Date(data.expires_at) < new Date())
     return err("API key expired", 401);
+
+  // IP allowlist enforcement
+  const allowedIps: string[] = data.allowed_ips || [];
+  if (allowedIps.length > 0) {
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      || req.headers.get("cf-connecting-ip")
+      || "";
+    if (!allowedIps.includes(clientIp)) {
+      return err(`IP address ${clientIp} is not allowed for this API key`, 403);
+    }
+  }
 
   // Fire-and-forget update last_used_at
   sb.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("key_hash", keyHash).then();
@@ -183,6 +194,7 @@ Deno.serve(async (req) => {
         name: body.name || "Untitled",
         scopes: body.scopes || ["read"],
         expires_at: body.expires_at || null,
+        allowed_ips: body.allowed_ips || [],
         created_by: user_id,
       });
 
@@ -193,7 +205,7 @@ Deno.serve(async (req) => {
     if (req.method === "GET" && action === "list") {
       const { data, error: listErr } = await sb
         .from("api_keys")
-        .select("id, key_prefix, name, scopes, created_at, last_used_at, expires_at, revoked_at")
+        .select("id, key_prefix, name, scopes, created_at, last_used_at, expires_at, revoked_at, allowed_ips")
         .eq("tenant_id", tenant_id)
         .order("created_at", { ascending: false });
 
@@ -212,6 +224,26 @@ Deno.serve(async (req) => {
         .eq("tenant_id", tenant_id);
 
       if (revokeErr) return err(revokeErr.message, 500);
+      return json({ success: true });
+    }
+
+    if (req.method === "PATCH" && action === "update") {
+      const body = await req.json();
+      if (!body.id) return err("Missing key id");
+
+      const updates: Record<string, unknown> = {};
+      if (body.allowed_ips !== undefined) updates.allowed_ips = body.allowed_ips;
+      if (body.name !== undefined) updates.name = body.name;
+
+      if (Object.keys(updates).length === 0) return err("No valid fields to update");
+
+      const { error: updateErr } = await sb
+        .from("api_keys")
+        .update(updates)
+        .eq("id", body.id)
+        .eq("tenant_id", tenant_id);
+
+      if (updateErr) return err(updateErr.message, 500);
       return json({ success: true });
     }
 
