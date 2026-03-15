@@ -17,7 +17,7 @@ const tabs = [
 const AdministrationPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const tab = searchParams.get("tab") ?? "users";
+  const tab = searchParams.get("tab") ?? "roles";
 
   const setTab = (value: string) => {
     setSearchParams({ tab: value }, { replace: true });
