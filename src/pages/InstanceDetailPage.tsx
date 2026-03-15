@@ -283,6 +283,20 @@ const InstanceDetailPage = () => {
           </div>
         </main>
       </div>
+
+      {/* Stage Details Modal */}
+      {stageModal && (
+        <StageDetailsModal
+          open
+          onOpenChange={() => setStageModal(null)}
+          subgroupId={stageModal.subgroupId}
+          stageId={stageModal.stageId}
+          progressId={stageModal.progressId}
+          subgroupName={subgroups.find((s) => s.id === stageModal.subgroupId)?.name ?? ""}
+          stageName={stages.find((s: any) => s.id === stageModal.stageId)?.title ?? ""}
+          instanceId={instanceId!}
+        />
+      )}
     </div>
   );
 };
