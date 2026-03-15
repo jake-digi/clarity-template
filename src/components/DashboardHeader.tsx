@@ -199,7 +199,7 @@ const DashboardHeader = () => {
                 <div className="py-3 px-4 space-y-3">
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Try searching for</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {["Participants", "Users", "Groups", "Accommodation", "Instances"].map((hint) => (
+                    {["Participants", "Cases", "Users", "Groups", "Instances"].map((hint) => (
                       <button
                         key={hint}
                         onClick={() => { setQuery(hint); }}
