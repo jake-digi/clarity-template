@@ -581,7 +581,7 @@ const AdminDeveloperTab = () => {
         </TabsContent>
 
         {/* ===== PLAYGROUND TAB ===== */}
-        <TabsContent value="playground" className="mt-4">
+        <TabsContent value="playground" className="p-6">
           <div className="rounded-lg border border-border">
             <div className="px-4 py-3 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground">API Playground</h3>
