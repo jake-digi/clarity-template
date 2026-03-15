@@ -311,45 +311,56 @@ const CaseDetailPage = () => {
                 <p className="text-sm text-muted-foreground leading-relaxed">{c.overview || "No overview provided."}</p>
               </div>
 
-              {/* Unified Activity & Comments Timeline */}
+              {/* Activity Timeline */}
               <div className="bg-card rounded-lg border border-border p-5">
                 <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Activity className="w-4 h-4" /> Activity & Comments
+                  <Activity className="w-4 h-4" /> Activity Timeline
                 </h2>
                 <div className="space-y-4">
-                  {timeline.length === 0 ? (
+                  {(actions ?? []).length === 0 ? (
                     <p className="text-sm text-muted-foreground">No activity yet.</p>
                   ) : (
-                    timeline.map((entry) => (
-                      <div key={entry.id} className="flex gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                          entry.type === "comment" ? "bg-primary/10" : "bg-muted"
-                        }`}>
-                          {entry.type === "comment" ? (
-                            <MessageSquare className="w-3.5 h-3.5 text-primary" />
-                          ) : (
-                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          )}
+                    (actions ?? []).map((a) => (
+                      <div key={a.id} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          {entry.type === "comment" ? (
-                            <div className="bg-muted/50 rounded-lg p-3">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-sm font-medium text-foreground">{entry.author}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                                </p>
-                              </div>
-                              <p className="text-sm text-muted-foreground">{entry.content}</p>
-                            </div>
-                          ) : (
-                            <>
-                              <p className="text-sm text-foreground">{entry.content}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {entry.author} · {new Date(entry.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          <p className="text-sm text-foreground">{a.description}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {a.performed_by_name} · {new Date(a.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Comments */}
+              <div className="bg-card rounded-lg border border-border p-5">
+                <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" /> Comments ({(comments ?? []).length})
+                </h2>
+                <div className="space-y-4">
+                  {(comments ?? []).length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No comments yet.</p>
+                  ) : (
+                    (comments ?? []).map((cm) => (
+                      <div key={cm.id} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="bg-muted/50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium text-foreground">{cm.author_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(cm.timestamp).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                               </p>
-                            </>
-                          )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{cm.content}</p>
+                          </div>
                         </div>
                       </div>
                     ))
