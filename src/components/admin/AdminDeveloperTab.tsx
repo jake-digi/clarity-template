@@ -536,13 +536,18 @@ const AdminDeveloperTab = () => {
       const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/generate`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newKeyName || "Untitled", scopes: newKeyScopes, expires_at: newKeyExpiry || null }),
+        body: JSON.stringify({
+          name: newKeyName || "Untitled",
+          scopes: newKeyScopes,
+          expires_at: newKeyExpiry || null,
+          allowed_ips: newKeyAllowedIps.trim() ? newKeyAllowedIps.split(",").map((ip) => ip.trim()).filter(Boolean) : [],
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setCreatedKey(data.data.key);
         setCreateOpen(false);
-        setNewKeyName(""); setNewKeyScopes(["read"]); setNewKeyExpiry("");
+        setNewKeyName(""); setNewKeyScopes(["read"]); setNewKeyExpiry(""); setNewKeyAllowedIps("");
         fetchKeys();
         toast({ title: "API key created" });
       } else {
