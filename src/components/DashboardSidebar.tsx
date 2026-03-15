@@ -11,6 +11,7 @@ const coreItems = [
   { icon: UserCog, label: "Users", path: "/people" },
   { icon: FolderTree, label: "Groups", path: "/groups" },
   { icon: Tent, label: "Sites", path: "/sites" },
+];
 
 const opsItems = [
   { icon: ClipboardList, label: "Stages", path: "/stages" },
