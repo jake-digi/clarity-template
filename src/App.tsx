@@ -33,6 +33,8 @@ import TransportPage from "./pages/TransportPage.tsx";
 import EquipmentPage from "./pages/EquipmentPage.tsx";
 import SchedulePage from "./pages/SchedulePage.tsx";
 import MedicalPage from "./pages/MedicalPage.tsx";
+import AnnouncementsPage from "./pages/AnnouncementsPage.tsx";
+import DocumentsPage from "./pages/DocumentsPage.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
