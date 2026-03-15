@@ -16,9 +16,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import {
   ChevronRight, ArrowLeft, User, Calendar as CalendarIcon, MapPin, AlertTriangle,
   Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown,
-  Heart, Smile, FileWarning, Users, Pencil
+  Heart, Smile, FileWarning, Users, Pencil, Phone, Mail, CalendarPlus,
+  ShieldAlert, Siren, BookOpen, Gavel
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
