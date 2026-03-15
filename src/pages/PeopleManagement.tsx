@@ -106,7 +106,7 @@ const PeopleManagement = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
             {/* Breadcrumb */}
@@ -214,16 +214,12 @@ const PeopleManagement = () => {
                   </Select>
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
-                  {filtered.length < users.length && <span> (filtered from {users.length} total)</span>}
-                </div>
               </>
             )}
           </div>
 
-          <div className="px-6 py-4 space-y-4">
-            {/* Data Table */}
+          {/* Scrollable table area */}
+          <div className="flex-1 overflow-auto px-6 py-4">
             <div className="bg-card rounded-lg border border-border overflow-hidden">
               {isLoading ? (
                 <div className="p-8 space-y-3">
@@ -237,120 +233,126 @@ const PeopleManagement = () => {
                   <p className="text-sm text-muted-foreground mt-1">{(error as Error).message}</p>
                 </div>
               ) : (
-                <>
-                  <Table>
-                    <TableHeader>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[90px]">ID</TableHead>
+                      <SortableHeader field="name">Name</SortableHeader>
+                      <SortableHeader field="email">Email</SortableHeader>
+                      <TableHead>Roles</TableHead>
+                      <TableHead>Instances</TableHead>
+                      <SortableHeader field="status">Status</SortableHeader>
+                      <SortableHeader field="created_at">Joined</SortableHeader>
+                      <TableHead className="w-[50px]" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paged.length === 0 ? (
                       <TableRow>
-                        <TableHead className="w-[90px]">ID</TableHead>
-                        <SortableHeader field="name">Name</SortableHeader>
-                        <SortableHeader field="email">Email</SortableHeader>
-                        <TableHead>Roles</TableHead>
-                        <TableHead>Instances</TableHead>
-                        <SortableHeader field="status">Status</SortableHeader>
-                        <SortableHeader field="created_at">Joined</SortableHeader>
-                        <TableHead className="w-[50px]" />
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          No users found matching your filters.
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paged.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                            No users found matching your filters.
+                    ) : (
+                      paged.map((u) => (
+                        <TableRow key={u.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/people/${u.id}`)}>
+                          <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[90px]">
+                            <span title={u.id}>{u.id.slice(0, 8)}…</span>
+                          </TableCell>
+                          <TableCell className="font-medium text-foreground">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border overflow-hidden shrink-0">
+                                {u.profile_photo_url ? (
+                                  <img src={u.profile_photo_url} alt={getUserDisplayName(u)} className="w-full h-full object-cover" />
+                                ) : (
+                                  <User className="w-4 h-4 text-muted-foreground" />
+                                )}
+                              </div>
+                              <span>{getUserDisplayName(u)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {u.role_names.length > 0 ? u.role_names.map((r) => (
+                                <Badge key={r} variant="outline" className="text-xs font-normal">{r}</Badge>
+                              )) : <span className="text-xs text-muted-foreground">—</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {u.instance_assignments.length > 0 ? u.instance_assignments.map((a) => (
+                                <Badge key={a.instance_id} variant="secondary" className="text-xs font-normal">
+                                  {a.instance_name}
+                                </Badge>
+                              )) : <span className="text-xs text-muted-foreground">—</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusVariant(u.status)} className="capitalize">{u.status}</Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>View Profile</DropdownMenuItem>
+                                <DropdownMenuItem>Edit Details</DropdownMenuItem>
+                                <DropdownMenuItem>Manage Roles</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Deactivate</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        paged.map((u) => (
-                          <TableRow key={u.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/people/${u.id}`)}>
-                            <TableCell className="font-mono text-xs text-muted-foreground truncate max-w-[90px]">
-                              <span title={u.id}>{u.id.slice(0, 8)}…</span>
-                            </TableCell>
-                            <TableCell className="font-medium text-foreground">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center border border-border overflow-hidden shrink-0">
-                                  {u.profile_photo_url ? (
-                                    <img src={u.profile_photo_url} alt={getUserDisplayName(u)} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <User className="w-4 h-4 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <span>{getUserDisplayName(u)}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {u.role_names.length > 0 ? u.role_names.map((r) => (
-                                  <Badge key={r} variant="outline" className="text-xs font-normal">{r}</Badge>
-                                )) : <span className="text-xs text-muted-foreground">—</span>}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {u.instance_assignments.length > 0 ? u.instance_assignments.map((a) => (
-                                  <Badge key={a.instance_id} variant="secondary" className="text-xs font-normal">
-                                    {a.instance_name}
-                                  </Badge>
-                                )) : <span className="text-xs text-muted-foreground">—</span>}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={statusVariant(u.status)} className="capitalize">{u.status}</Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                              {new Date(u.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem>View Profile</DropdownMenuItem>
-                                  <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                                  <DropdownMenuItem>Manage Roles</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive">Deactivate</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-
-                  {/* Pagination */}
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Rows per page</span>
-                      <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
-                        <SelectTrigger className="h-8 w-[70px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PAGE_SIZE_OPTIONS.map((s) => (
-                            <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>
-                        {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
-                      </span>
-                      <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               )}
             </div>
           </div>
+
+          {/* Fixed footer */}
+          {!isLoading && !error && (
+            <div className="shrink-0 bg-card border-t border-border px-6 py-2.5 flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
+                {filtered.length < users.length && <span> (filtered from {users.length} total)</span>}
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-xs">Rows per page</span>
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                    <SelectTrigger className="h-8 w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZE_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-xs">
+                    {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
+                  </span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
