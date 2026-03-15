@@ -71,10 +71,10 @@ const SiteMapEditor = ({
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: bounds
-        ? [(bounds.northEast.lat + bounds.southWest.lat) / 2, (bounds.northEast.lng + bounds.southWest.lng) / 2]
-        : [51.65, -0.35], // Default to London area
-      zoom: bounds ? 17 : 13,
+      center: bounds?.length
+        ? [bounds.reduce((s, p) => s + p[0], 0) / bounds.length, bounds.reduce((s, p) => s + p[1], 0) / bounds.length] as [number, number]
+        : [51.65, -0.35],
+      zoom: bounds?.length ? 17 : 13,
       zoomControl: true,
     });
 
