@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck } from "lucide-react";
+import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import jlgbLogo from "@/assets/jlgb-logo.png";
@@ -33,6 +33,7 @@ const DashboardHeader = () => {
   const [open, setOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [participantResults, setParticipantResults] = useState<SearchItem[]>([]);
+  const [caseResults, setCaseResults] = useState<SearchItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -52,23 +53,42 @@ const DashboardHeader = () => {
 
     if (!query.trim() || query.trim().length < 2) {
       setParticipantResults([]);
+      setCaseResults([]);
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
-      const { data } = await supabase
-        .from("participants")
-        .select("id, full_name")
-        .ilike("full_name", `%${query.trim()}%`)
-        .limit(8);
+      const [participantsRes, casesRes] = await Promise.all([
+        supabase
+          .from("participants")
+          .select("id, full_name")
+          .ilike("full_name", `%${query.trim()}%`)
+          .limit(8),
+        supabase
+          .from("behavior_cases")
+          .select("id, category, severity_level, overview, participant_id")
+          .or(`overview.ilike.%${query.trim()}%,category.ilike.%${query.trim()}%`)
+          .limit(6),
+      ]);
 
-      if (data) {
+      if (participantsRes.data) {
         setParticipantResults(
-          data.map((p) => ({
+          participantsRes.data.map((p) => ({
             label: p.full_name,
             category: "Participants",
             path: `/participants/${p.id}`,
             icon: User,
+          }))
+        );
+      }
+
+      if (casesRes.data) {
+        setCaseResults(
+          casesRes.data.map((c) => ({
+            label: `${c.category} — ${(c.overview ?? "").slice(0, 50)}${(c.overview ?? "").length > 50 ? "…" : ""}`,
+            category: "Cases",
+            path: `/cases/${c.id}`,
+            icon: AlertTriangle,
           }))
         );
       }
@@ -79,7 +99,7 @@ const DashboardHeader = () => {
     };
   }, [query]);
 
-  const results = useMemo(() => [...pageResults, ...participantResults], [pageResults, participantResults]);
+  const results = useMemo(() => [...pageResults, ...participantResults, ...caseResults], [pageResults, participantResults, caseResults]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -156,12 +176,12 @@ const DashboardHeader = () => {
               onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search pages, participants..."
+              placeholder="Search pages, participants, cases..."
               className="w-80 pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query ? (
               <button
-                onClick={() => { setQuery(""); setParticipantResults([]); inputRef.current?.focus(); }}
+                onClick={() => { setQuery(""); setParticipantResults([]); setCaseResults([]); inputRef.current?.focus(); }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
               >
                 ✕
@@ -179,7 +199,7 @@ const DashboardHeader = () => {
                 <div className="py-3 px-4 space-y-3">
                   <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Try searching for</div>
                   <div className="flex flex-wrap gap-1.5">
-                    {["Participants", "Users", "Groups", "Accommodation", "Instances"].map((hint) => (
+                    {["Participants", "Cases", "Users", "Groups", "Instances"].map((hint) => (
                       <button
                         key={hint}
                         onClick={() => { setQuery(hint); }}
