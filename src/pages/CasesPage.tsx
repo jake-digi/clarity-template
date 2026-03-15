@@ -38,6 +38,7 @@ const CasesPage = () => {
   const [severityFilter, setSeverityFilter] = useState("all");
   const [warningsOpen, setWarningsOpen] = useState(false);
   const [view, setView] = useState<"table" | "kanban">("table");
+  const [newCaseOpen, setNewCaseOpen] = useState(false);
 
   const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
 
