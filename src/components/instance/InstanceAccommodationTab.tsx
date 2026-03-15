@@ -10,29 +10,60 @@ interface Props {
 }
 
 const InstanceAccommodationTab = ({ instanceId }: Props) => {
-  const { data: blocks, isLoading: blocksLoading } = useQuery({
-    queryKey: ["instance-blocks", instanceId],
+  // First get instance to find its site_id
+  const { data: instance } = useQuery({
+    queryKey: ["instance-for-accommodation", instanceId],
     queryFn: async () => {
       const { data, error } = await supabase
+        .from("instances")
+        .select("site_id")
+        .eq("id", instanceId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const siteId = instance?.site_id;
+
+  const { data: blocks, isLoading: blocksLoading } = useQuery({
+    queryKey: ["instance-blocks", instanceId, siteId],
+    queryFn: async () => {
+      let query = supabase
         .from("blocks")
         .select("*")
-        .eq("instance_id", instanceId)
         .is("deleted_at", null)
         .order("name");
+
+      if (siteId) {
+        // Get blocks for this instance OR its linked site
+        query = query.or(`instance_id.eq.${instanceId},site_id.eq.${siteId}`);
+      } else {
+        query = query.eq("instance_id", instanceId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
   });
 
   const { data: rooms, isLoading: roomsLoading } = useQuery({
-    queryKey: ["instance-rooms", instanceId],
+    queryKey: ["instance-rooms", instanceId, siteId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("rooms")
         .select("*")
-        .eq("instance_id", instanceId)
         .is("deleted_at", null)
         .order("room_number");
+
+      if (siteId) {
+        query = query.or(`instance_id.eq.${instanceId},site_id.eq.${siteId}`);
+      } else {
+        query = query.eq("instance_id", instanceId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
