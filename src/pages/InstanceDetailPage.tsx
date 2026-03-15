@@ -243,6 +243,16 @@ const InstanceDetailPage = () => {
                   </div>
                 </TabsContent>
 
+                {/* Participants */}
+                <TabsContent value="participants" className="mt-0">
+                  <InstanceParticipantsTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Staff */}
+                <TabsContent value="staff" className="mt-0">
+                  <InstanceStaffTab instanceId={instanceId!} />
+                </TabsContent>
+
                 {/* Stages */}
                 <TabsContent value="stages" className="mt-0">
                   <div className="flex items-center justify-between mb-4">
