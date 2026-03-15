@@ -157,7 +157,7 @@ const InstanceDetailPage = () => {
         <DashboardSidebar />
         <main className="flex-1 overflow-auto">
           <div className="bg-card border-b border-border">
-            <div className="px-6 py-5">
+            <div className="px-3 md:px-6 py-4 md:py-5">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
                 <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
                 <ChevronRight className="w-3 h-3" />
