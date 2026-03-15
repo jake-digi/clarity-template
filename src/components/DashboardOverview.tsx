@@ -80,7 +80,7 @@ const DashboardOverview = () => {
           </div>
 
           {/* Tenant details */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-5">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Organisation</p>
               <p className="text-sm font-semibold text-foreground">{tenant?.name ?? "—"}</p>
