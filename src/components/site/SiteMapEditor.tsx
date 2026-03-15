@@ -260,6 +260,27 @@ const SiteMapEditor = ({
     });
   }, [blocks]);
 
+  // Draw feature markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+    featureMarkersRef.current.forEach((m) => mapRef.current!.removeLayer(m));
+    featureMarkersRef.current = [];
+
+    features.forEach((feature) => {
+      if (!feature.geo_position) return;
+      const typeDef = FEATURE_TYPES.find((t) => t.value === feature.feature_type);
+      const marker = L.marker([feature.geo_position.lat, feature.geo_position.lng], {
+        icon: makeFeatureIcon(feature.feature_type, feature.name, feature.color),
+      }).addTo(mapRef.current!);
+      marker.bindTooltip(
+        `<strong>${feature.name}</strong><br/><em>${typeDef?.label ?? feature.feature_type}</em>${feature.description ? `<br/>${feature.description}` : ""}`,
+        { className: "site-map-tooltip" }
+      );
+      marker.on("click", () => onFeatureClickRef.current?.(feature));
+      featureMarkersRef.current.push(marker);
+    });
+  }, [features]);
+
   // Handle drawing modes (bounds / block polygon)
   useEffect(() => {
     const map = mapRef.current;
