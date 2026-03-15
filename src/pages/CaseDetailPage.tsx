@@ -430,7 +430,29 @@ const CaseDetailPage = () => {
 
                 {/* Case details row */}
                 <div className="flex items-center gap-5 mt-3 flex-wrap">
-                  <DetailChip icon={User} label="Assigned" value={c.assigned_to_name ?? "Unassigned"} />
+                  {/* Assigned To - editable dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <User className="w-3.5 h-3.5" />
+                        <span className="text-xs text-muted-foreground/70">Assigned:</span>
+                        <span className="text-foreground text-xs font-medium">{c.assigned_to_name ?? "Unassigned"}</span>
+                        <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto">
+                      <DropdownMenuItem onClick={() => handleAssignCase(null, null)}>
+                        <span className="text-muted-foreground">Unassigned</span>
+                        {!c.assigned_to_id && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                      </DropdownMenuItem>
+                      {(staffUsers ?? []).map((u) => (
+                        <DropdownMenuItem key={u.id} onClick={() => handleAssignCase(u.id, `${u.first_name}${u.surname ? ` ${u.surname}` : ""}`)}>
+                          {u.first_name}{u.surname ? ` ${u.surname}` : ""} <span className="ml-1 text-muted-foreground text-xs">({u.email})</span>
+                          {u.id === c.assigned_to_id && <span className="ml-auto text-xs text-muted-foreground">current</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <DetailChip icon={CalendarIcon} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
 
                   {/* Event Time - editable */}
