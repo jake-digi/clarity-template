@@ -32,6 +32,7 @@ interface SiteMapEditorProps {
   onBlockPolygonChange: (blockId: string, polygon: GeoPolygon | null) => void;
   onBlockPolygonDrawn?: (polygon: GeoPolygon) => void;
   onRoomPinPlaced?: (blockId: string, position: { lat: number; lng: number }) => void;
+  onRoomClick?: (room: SiteRoom) => void;
   onBlockClick?: (block: SiteBlock) => void;
   selectedBlockId?: string | null;
   mode: MapMode;
