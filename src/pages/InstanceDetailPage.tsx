@@ -23,6 +23,8 @@ import InstanceAccommodationTab from "@/components/instance/InstanceAccommodatio
 import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
 import InstanceTransportTab from "@/components/instance/InstanceTransportTab";
 import InstanceEquipmentTab from "@/components/instance/InstanceEquipmentTab";
+import InstanceScheduleTab from "@/components/instance/InstanceScheduleTab";
+import InstanceMedicalTab from "@/components/instance/InstanceMedicalTab";
 import StageTemplateManager from "@/components/instance/StageTemplateManager";
 import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
 import StageDetailsModal from "@/components/instance/StageDetailsModal";
