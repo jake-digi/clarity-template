@@ -24,17 +24,20 @@ L.Icon.Default.mergeOptions({
 export type GeoBounds = [number, number][];
 export type GeoPolygon = [number, number][];
 
-export type MapMode = "view" | "set-bounds" | "draw-block" | "add-room";
+export type MapMode = "view" | "set-bounds" | "draw-block" | "add-room" | "add-feature";
 
 interface SiteMapEditorProps {
   bounds: GeoBounds | null;
   blocks: SiteBlock[];
+  features?: SiteFeature[];
   onBoundsChange: (bounds: GeoBounds | null) => void;
   onBlockPolygonChange: (blockId: string, polygon: GeoPolygon | null) => void;
   onBlockPolygonDrawn?: (polygon: GeoPolygon) => void;
   onRoomPinPlaced?: (blockId: string, position: { lat: number; lng: number }) => void;
   onRoomClick?: (room: SiteRoom) => void;
   onBlockClick?: (block: SiteBlock) => void;
+  onFeaturePinPlaced?: (position: { lat: number; lng: number }) => void;
+  onFeatureClick?: (feature: SiteFeature) => void;
   selectedBlockId?: string | null;
   mode: MapMode;
   onModeChange: (mode: MapMode) => void;
