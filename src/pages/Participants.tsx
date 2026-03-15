@@ -300,7 +300,7 @@ const Participants = () => {
                       </TableRow>
                     ) : (
                       paged.map((p) => (
-                        <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/participants/${p.id}`)}>
+                        <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => setDrawerParticipantId(p.id)}>
                           {columns.map((col) => (
                             <TableCell key={col.key} className={col.className}>
                               {col.render(p)}
