@@ -3,6 +3,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
+
+// @ts-ignore - leaflet-draw augments L
+const LDraw = (L as any).Draw;
+const LControl = (L as any).Control;
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Map, Layers, Square, Pentagon, Trash2 } from "lucide-react";
