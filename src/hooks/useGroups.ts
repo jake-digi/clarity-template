@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useTenantId } from "./useTenantId";
 import { toast } from "sonner";
 
 export interface Supergroup {
