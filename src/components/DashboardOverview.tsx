@@ -1,5 +1,5 @@
-import { MapPin, Users, Briefcase, Building2, Send, Smartphone, QrCode } from "lucide-react";
-import { SiApple, SiGoogleplay } from "react-icons/si";
+import { Users, Briefcase, Building2, Send, Smartphone } from "lucide-react";
+import qrCode from "@/assets/qr-checkpoint.png";
 import qrCode from "@/assets/qr-checkpoint.png";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
