@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jlgbLogo from "@/assets/jlgb-logo.png";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SearchItem {
   label: string;
