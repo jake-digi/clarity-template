@@ -35,6 +35,7 @@ export interface SiteRoom {
   capacity: number | null;
   site_id: string;
   tenant_id: string;
+  geo_position: { lat: number; lng: number } | null;
 }
 
 export function useSites() {
@@ -106,6 +107,7 @@ export function useSiteDetail(siteId: string) {
             capacity: r.capacity,
             site_id: r.site_id!,
             tenant_id: r.tenant_id,
+            geo_position: (r as any).geo_position as { lat: number; lng: number } | null,
           })),
       }));
 
@@ -226,7 +228,7 @@ export function useDeleteBlock() {
 export function useCreateRoom() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; block_id: string; room_number: string; name?: string; capacity?: number; site_id: string; tenant_id: string }) => {
+    mutationFn: async (input: { id: string; block_id: string; room_number: string; name?: string; capacity?: number; site_id: string; tenant_id: string; geo_position?: { lat: number; lng: number } }) => {
       const { data, error } = await supabase.from("rooms").insert(input).select().single();
       if (error) throw error;
       return data;

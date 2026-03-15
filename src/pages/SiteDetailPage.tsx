@@ -10,7 +10,7 @@ import {
   useUpdateBlockPolygon,
   SiteBlock, SiteRoom,
 } from "@/hooks/useSites";
-import SiteMapEditor, { GeoBounds, GeoPolygon } from "@/components/site/SiteMapEditor";
+import SiteMapEditor, { GeoBounds, GeoPolygon, MapMode } from "@/components/site/SiteMapEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -220,16 +220,21 @@ const SiteDetailPage = () => {
   const updateSite = useUpdateSite();
   const createBlock = useCreateBlock();
   const updateBlockPolygon = useUpdateBlockPolygon();
+  const createRoom = useCreateRoom();
 
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showEditSite, setShowEditSite] = useState(false);
   const [blockForm, setBlockForm] = useState({ name: "", description: "" });
   const [siteForm, setSiteForm] = useState({ name: "", location: "", address: "", description: "" });
-  const [mapMode, setMapMode] = useState<"view" | "set-bounds" | "draw-block">("view");
+  const [mapMode, setMapMode] = useState<MapMode>("view");
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showAssignPolygon, setShowAssignPolygon] = useState(false);
   const [pendingPolygon, setPendingPolygon] = useState<GeoPolygon | null>(null);
   const [assignBlockId, setAssignBlockId] = useState<string>("");
+  // Room pin placement state
+  const [showRoomPinDialog, setShowRoomPinDialog] = useState(false);
+  const [pendingRoomPin, setPendingRoomPin] = useState<{ blockId: string; position: { lat: number; lng: number } } | null>(null);
+  const [roomPinForm, setRoomPinForm] = useState({ room_number: "", name: "", capacity: "" });
 
   const site = data?.site;
   const blocks = data?.blocks ?? [];
@@ -282,6 +287,32 @@ const SiteDetailPage = () => {
   const handleBlockClick = useCallback((block: SiteBlock) => {
     setSelectedBlockId((prev) => prev === block.id ? null : block.id);
   }, []);
+
+  const handleRoomPinPlaced = useCallback((blockId: string, position: { lat: number; lng: number }) => {
+    setPendingRoomPin({ blockId, position });
+    setRoomPinForm({ room_number: "", name: "", capacity: "" });
+    setTimeout(() => setShowRoomPinDialog(true), 0);
+  }, []);
+
+  const handleCreateRoomAtPin = () => {
+    if (!pendingRoomPin || !roomPinForm.room_number.trim() || !siteId || !tenantId) return;
+    createRoom.mutate({
+      id: crypto.randomUUID(),
+      block_id: pendingRoomPin.blockId,
+      room_number: roomPinForm.room_number.trim(),
+      name: roomPinForm.name || undefined,
+      capacity: roomPinForm.capacity ? Number(roomPinForm.capacity) : undefined,
+      site_id: siteId,
+      tenant_id: tenantId,
+      geo_position: pendingRoomPin.position,
+    } as any, {
+      onSuccess: () => {
+        setShowRoomPinDialog(false);
+        setPendingRoomPin(null);
+        setRoomPinForm({ room_number: "", name: "", capacity: "" });
+      },
+    });
+  };
 
   const handleAddBlock = () => {
     if (!blockForm.name.trim() || !tenantId || !siteId) return;
@@ -401,6 +432,7 @@ const SiteDetailPage = () => {
               onBoundsChange={handleBoundsChange}
               onBlockPolygonChange={handleBlockPolygonChange}
               onBlockPolygonDrawn={handleBlockPolygonDrawn}
+              onRoomPinPlaced={handleRoomPinPlaced}
               onBlockClick={handleBlockClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}
@@ -478,6 +510,38 @@ const SiteDetailPage = () => {
             <Button variant="outline" onClick={() => { setShowAssignPolygon(false); setPendingPolygon(null); }}>Cancel</Button>
             <Button onClick={handleAssignPolygon} disabled={!assignBlockId || updateBlockPolygon.isPending}>
               {updateBlockPolygon.isPending ? "Saving..." : "Assign"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Room at Pin Dialog */}
+      <Dialog open={showRoomPinDialog} onOpenChange={setShowRoomPinDialog}>
+        <DialogContent className="sm:max-w-sm" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Add Room at Pin</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Block: <strong>{blocks.find((b) => b.id === pendingRoomPin?.blockId)?.name ?? "—"}</strong>
+          </p>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Room Number *</Label>
+              <Input placeholder="e.g. 101" value={roomPinForm.room_number} onChange={(e) => setRoomPinForm({ ...roomPinForm, room_number: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input placeholder="e.g. Eagle Room" value={roomPinForm.name} onChange={(e) => setRoomPinForm({ ...roomPinForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Capacity</Label>
+              <Input type="number" placeholder="e.g. 4" value={roomPinForm.capacity} onChange={(e) => setRoomPinForm({ ...roomPinForm, capacity: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowRoomPinDialog(false); setPendingRoomPin(null); }}>Cancel</Button>
+            <Button onClick={handleCreateRoomAtPin} disabled={!roomPinForm.room_number.trim() || createRoom.isPending}>
+              {createRoom.isPending ? "Creating..." : "Create Room"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -9,8 +9,8 @@ const LDraw = (L as any).Draw;
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Map, Layers, Square, Pentagon, Trash2, MapPin, Eye, EyeOff, X } from "lucide-react";
-import { SiteBlock } from "@/hooks/useSites";
+import { Map, Layers, Square, Pentagon, Trash2, MapPin, Eye, EyeOff, DoorOpen } from "lucide-react";
+import { SiteBlock, SiteRoom } from "@/hooks/useSites";
 
 // Fix default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -20,9 +20,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Site bounds stored as a polygon (array of [lat, lng] points)
 export type GeoBounds = [number, number][];
 export type GeoPolygon = [number, number][];
+
+export type MapMode = "view" | "set-bounds" | "draw-block" | "add-room";
 
 interface SiteMapEditorProps {
   bounds: GeoBounds | null;
@@ -30,10 +31,11 @@ interface SiteMapEditorProps {
   onBoundsChange: (bounds: GeoBounds | null) => void;
   onBlockPolygonChange: (blockId: string, polygon: GeoPolygon | null) => void;
   onBlockPolygonDrawn?: (polygon: GeoPolygon) => void;
+  onRoomPinPlaced?: (blockId: string, position: { lat: number; lng: number }) => void;
   onBlockClick?: (block: SiteBlock) => void;
   selectedBlockId?: string | null;
-  mode: "view" | "set-bounds" | "draw-block";
-  onModeChange: (mode: "view" | "set-bounds" | "draw-block") => void;
+  mode: MapMode;
+  onModeChange: (mode: MapMode) => void;
 }
 
 const OSM_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -48,28 +50,42 @@ const BLOCK_COLORS = [
   "hsl(180, 60%, 40%)",
 ];
 
+const makeRoomIcon = (color: string) =>
+  L.divIcon({
+    className: "room-pin-icon",
+    html: `<div style="width:20px;height:20px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    </div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+
 const SiteMapEditor = ({
   bounds,
   blocks,
   onBoundsChange,
   onBlockPolygonChange,
   onBlockPolygonDrawn,
+  onRoomPinPlaced,
   onBlockClick,
   selectedBlockId,
   mode,
   onModeChange,
 }: SiteMapEditorProps) => {
-  // Use refs for callbacks to avoid stale closures in Leaflet event handlers
   const onBoundsChangeRef = useRef(onBoundsChange);
   onBoundsChangeRef.current = onBoundsChange;
   const onBlockPolygonDrawnRef = useRef(onBlockPolygonDrawn);
   onBlockPolygonDrawnRef.current = onBlockPolygonDrawn;
+  const onRoomPinPlacedRef = useRef(onRoomPinPlaced);
+  onRoomPinPlacedRef.current = onRoomPinPlaced;
   const onModeChangeRef = useRef(onModeChange);
   onModeChangeRef.current = onModeChange;
+
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const boundsLayerRef = useRef<L.Polygon | null>(null);
   const blockLayersRef = useRef<globalThis.Map<string, L.Polygon>>(new globalThis.Map());
+  const roomMarkersRef = useRef<L.Marker[]>([]);
   const drawControlRef = useRef<any>(null);
   const [satellite, setSatellite] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
@@ -127,7 +143,30 @@ const SiteMapEditor = ({
     });
   }, [blocks, selectedBlockId, onBlockClick]);
 
-  // Handle drawing modes
+  // Draw room markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+    // Remove old markers
+    roomMarkersRef.current.forEach((m) => mapRef.current!.removeLayer(m));
+    roomMarkersRef.current = [];
+
+    blocks.forEach((block, i) => {
+      const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
+      block.rooms.forEach((room) => {
+        if (!room.geo_position) return;
+        const marker = L.marker([room.geo_position.lat, room.geo_position.lng], {
+          icon: makeRoomIcon(color),
+        }).addTo(mapRef.current!);
+        marker.bindTooltip(
+          `<strong>${room.room_number}</strong>${room.name ? ` — ${room.name}` : ""}${room.capacity ? `<br/>Capacity: ${room.capacity}` : ""}`,
+          { className: "site-map-tooltip" }
+        );
+        roomMarkersRef.current.push(marker);
+      });
+    });
+  }, [blocks]);
+
+  // Handle drawing modes (bounds / block polygon)
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -161,7 +200,59 @@ const SiteMapEditor = ({
       map.on(LDraw.Event.CREATED, onCreated);
       return () => { map.off(LDraw.Event.CREATED, onCreated); };
     }
-  }, [mode, onBoundsChange, onModeChange]);
+  }, [mode]);
+
+  // Handle add-room mode: click inside a block to place a pin
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || mode !== "add-room") return;
+
+    // Change cursor
+    const container = map.getContainer();
+    container.style.cursor = "crosshair";
+
+    const onClick = (e: L.LeafletMouseEvent) => {
+      const latlng = e.latlng;
+
+      // Find which block polygon contains this click
+      let targetBlockId: string | null = null;
+      for (const [blockId, polygon] of blockLayersRef.current.entries()) {
+        // Use leaflet's built-in point-in-polygon
+        const bounds = polygon.getBounds();
+        if (!bounds.contains(latlng)) continue;
+
+        // More precise check using ray casting on the polygon's latlngs
+        const latlngs = (polygon.getLatLngs()[0] as L.LatLng[]);
+        if (isPointInPolygon(latlng, latlngs)) {
+          targetBlockId = blockId;
+          break;
+        }
+      }
+
+      if (targetBlockId) {
+        onRoomPinPlacedRef.current?.(targetBlockId, { lat: latlng.lat, lng: latlng.lng });
+      }
+    };
+
+    map.on("click", onClick);
+    return () => {
+      map.off("click", onClick);
+      container.style.cursor = "";
+    };
+  }, [mode]);
+
+  // Ray-casting point-in-polygon check
+  function isPointInPolygon(point: L.LatLng, polygon: L.LatLng[]): boolean {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i].lat, yi = polygon[i].lng;
+      const xj = polygon[j].lat, yj = polygon[j].lng;
+      if ((yi > point.lng) !== (yj > point.lng) && point.lat < ((xj - xi) * (point.lng - yi)) / (yj - yi) + xi) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
 
   const focusBounds = () => {
     if (bounds?.length && mapRef.current && boundsLayerRef.current) {
@@ -178,6 +269,7 @@ const SiteMapEditor = ({
 
   const mappedBlocks = blocks.filter((b) => b.geo_polygon?.length);
   const unmappedBlocks = blocks.filter((b) => !b.geo_polygon?.length);
+  const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
 
   return (
     <div className="rounded-lg border border-border overflow-hidden bg-card">
@@ -188,7 +280,9 @@ const SiteMapEditor = ({
           <span className="text-sm font-medium text-foreground">Site Map</span>
           {mode !== "view" && (
             <Badge variant="secondary" className="text-xs animate-pulse">
-              {mode === "set-bounds" ? "Click points to draw site boundary" : "Click points to draw block area"}
+              {mode === "set-bounds" && "Click points to draw site boundary"}
+              {mode === "draw-block" && "Click points to draw block area"}
+              {mode === "add-room" && (selectedBlock ? `Click inside ${selectedBlock.name} to place a room` : "Select a block first")}
             </Badge>
           )}
         </div>
@@ -210,6 +304,12 @@ const SiteMapEditor = ({
               <Pentagon className="w-3.5 h-3.5" />Draw Block
             </Button>
           ) : null}
+          {mappedBlocks.length > 0 ? (
+            <Button variant={mode === "add-room" ? "default" : "ghost"} size="sm" className="h-7 text-xs gap-1"
+              onClick={() => onModeChange(mode === "add-room" ? "view" : "add-room")}>
+              <DoorOpen className="w-3.5 h-3.5" />Add Room Pin
+            </Button>
+          ) : null}
           {mode !== "view" && (
             <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive" onClick={() => onModeChange("view")}>Cancel</Button>
           )}
@@ -220,7 +320,7 @@ const SiteMapEditor = ({
       <div className="flex" style={{ height: 450 }}>
         <div ref={containerRef} className="flex-1 min-w-0" style={{ height: 450 }} />
 
-        {/* Debug / elements panel */}
+        {/* Elements panel */}
         {showPanel && (
           <div className="w-64 border-l border-border bg-card shrink-0 flex flex-col">
             <div className="px-3 py-2 border-b border-border bg-muted/30">
@@ -252,24 +352,37 @@ const SiteMapEditor = ({
                 {mappedBlocks.length === 0 && (
                   <div className="px-2 py-1.5 text-xs text-muted-foreground italic">No blocks drawn</div>
                 )}
-                {mappedBlocks.map((block, i) => {
+                {mappedBlocks.map((block) => {
                   const color = BLOCK_COLORS[blocks.indexOf(block) % BLOCK_COLORS.length];
                   const pts = block.geo_polygon!.length;
+                  const pinnedRooms = block.rooms.filter((r) => r.geo_position);
                   return (
-                    <div key={block.id}
-                      className={`flex items-center justify-between px-2 py-1.5 rounded-md group transition-colors ${selectedBlockId === block.id ? "bg-accent" : "hover:bg-muted/40"}`}>
-                      <button className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors text-left min-w-0"
-                        onClick={() => { onBlockClick?.(block); focusBlock(block.id); }}>
-                        <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
-                        <div className="min-w-0">
-                          <span className="block truncate">{block.name}</span>
-                          <span className="block text-[10px] text-muted-foreground">{pts} pts · {block.rooms.length} room{block.rooms.length !== 1 ? "s" : ""}</span>
+                    <div key={block.id}>
+                      <div className={`flex items-center justify-between px-2 py-1.5 rounded-md group transition-colors ${selectedBlockId === block.id ? "bg-accent" : "hover:bg-muted/40"}`}>
+                        <button className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors text-left min-w-0"
+                          onClick={() => { onBlockClick?.(block); focusBlock(block.id); }}>
+                          <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                          <div className="min-w-0">
+                            <span className="block truncate">{block.name}</span>
+                            <span className="block text-[10px] text-muted-foreground">{pts} pts · {block.rooms.length} room{block.rooms.length !== 1 ? "s" : ""} · {pinnedRooms.length} pinned</span>
+                          </div>
+                        </button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive shrink-0"
+                          onClick={() => onBlockPolygonChange(block.id, null)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      {/* Show pinned rooms under block */}
+                      {pinnedRooms.length > 0 && selectedBlockId === block.id && (
+                        <div className="ml-5 border-l border-border pl-2 space-y-0.5 mt-0.5 mb-1">
+                          {pinnedRooms.map((room) => (
+                            <div key={room.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground py-0.5">
+                              <DoorOpen className="w-3 h-3 shrink-0" style={{ color }} />
+                              <span className="truncate">{room.room_number}{room.name ? ` — ${room.name}` : ""}</span>
+                            </div>
+                          ))}
                         </div>
-                      </button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive shrink-0"
-                        onClick={() => onBlockPolygonChange(block.id, null)}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      )}
                     </div>
                   );
                 })}
@@ -322,6 +435,10 @@ const SiteMapEditor = ({
         }
         .leaflet-draw-toolbar a {
           background-color: hsl(0, 0%, 100%);
+        }
+        .room-pin-icon {
+          background: none !important;
+          border: none !important;
         }
       `}</style>
     </div>
