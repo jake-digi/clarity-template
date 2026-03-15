@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,7 +109,7 @@ const ReportTypeBadge = ({ type }: { type: Report["type"] }) => (
   </Badge>
 );
 
-const ReportCard = ({ report }: { report: Report }) => {
+const ReportCard = ({ report, onRun }: { report: Report; onRun: (id: string) => void }) => {
   const CatIcon = categoryIcons[report.category] ?? Tag;
   return (
     <Card className="group overflow-hidden border-border/60 hover:border-primary/40 transition-all hover:shadow-lg">
@@ -122,7 +123,7 @@ const ReportCard = ({ report }: { report: Report }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem className="gap-2"><Play className="w-4 h-4" /> Run Now</DropdownMenuItem>
+              <DropdownMenuItem className="gap-2" onClick={() => onRun(report.id)}><Play className="w-4 h-4" /> Run Now</DropdownMenuItem>
               <DropdownMenuItem className="gap-2"><Calendar className="w-4 h-4" /> Schedule</DropdownMenuItem>
               <DropdownMenuItem className="gap-2"><Share2 className="w-4 h-4" /> Share</DropdownMenuItem>
               <DropdownMenuItem className="gap-2"><Star className="w-4 h-4" /> Favourite</DropdownMenuItem>
@@ -149,7 +150,7 @@ const ReportCard = ({ report }: { report: Report }) => {
             </div>
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <Button className="flex-1 h-9 rounded-md gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none text-xs font-semibold uppercase tracking-wider shadow-none">
+            <Button onClick={() => onRun(report.id)} className="flex-1 h-9 rounded-md gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none text-xs font-semibold uppercase tracking-wider shadow-none">
               <Play className="w-3.5 h-3.5" /> Run Report
             </Button>
             <Button variant="outline" size="icon" className="h-9 w-9 rounded-md">
@@ -163,8 +164,10 @@ const ReportCard = ({ report }: { report: Report }) => {
 };
 
 const ReportsPage = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const handleRun = (id: string) => navigate(`/reports/${id}`);
 
   const filtered = useMemo(() => {
     let list = reports;
@@ -248,7 +251,7 @@ const ReportsPage = () => {
                 <TabsContent key={tab} value={tab} className="mt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filtered.map((report) => (
-                      <ReportCard key={report.id} report={report} />
+                      <ReportCard key={report.id} report={report} onRun={handleRun} />
                     ))}
 
                     {/* Create new card */}
