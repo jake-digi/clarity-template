@@ -15,6 +15,7 @@ import {
 import { statusVariant, InfoRow, SectionCard, EmptyState, EditButton } from "@/components/participant/ProfileShared";
 import { InstancesTab } from "@/components/participant/InstancesTab";
 import { TimelineTab } from "@/components/participant/TimelineTab";
+import { CasesTab } from "@/components/participant/CasesTab";
 
 const ParticipantProfile = () => {
   const { id } = useParams<{ id: string }>();
