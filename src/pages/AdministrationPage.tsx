@@ -75,7 +75,7 @@ const AdministrationPage = () => {
               <TabsContent value="activity" className="mt-0 p-6">
                 <AdminActivityTab />
               </TabsContent>
-              <TabsContent value="developer" className="mt-0 p-6">
+              <TabsContent value="developer" className="mt-0">
                 <AdminDeveloperTab />
               </TabsContent>
             </div>
