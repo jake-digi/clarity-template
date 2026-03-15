@@ -150,7 +150,7 @@ const ReportCard = ({ report, onRun }: { report: Report; onRun: (id: string) => 
             </div>
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <Button className="flex-1 h-9 rounded-md gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none text-xs font-semibold uppercase tracking-wider shadow-none">
+            <Button onClick={() => onRun(report.id)} className="flex-1 h-9 rounded-md gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-none text-xs font-semibold uppercase tracking-wider shadow-none">
               <Play className="w-3.5 h-3.5" /> Run Report
             </Button>
             <Button variant="outline" size="icon" className="h-9 w-9 rounded-md">
