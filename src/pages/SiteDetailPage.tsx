@@ -241,18 +241,27 @@ const SiteDetailPage = () => {
   const handleBlockPolygonDrawn = useCallback((polygon: GeoPolygon) => {
     setPendingPolygon(polygon);
 
+    // Prefer assigning to the currently selected block for immediate save flow
+    if (selectedBlockId) {
+      updateBlockPolygon.mutate({ id: selectedBlockId, geo_polygon: polygon });
+      setPendingPolygon(null);
+      return;
+    }
+
     const unmappedBlocks = blocks.filter((b) => !b.geo_polygon?.length);
     if (unmappedBlocks.length === 1) {
       updateBlockPolygon.mutate({ id: unmappedBlocks[0].id, geo_polygon: polygon });
       setPendingPolygon(null);
-    } else if (unmappedBlocks.length > 1) {
-      setAssignBlockId(unmappedBlocks[0].id);
-      setShowAssignPolygon(true);
-    } else if (blocks.length > 0) {
-      setAssignBlockId(blocks[0].id);
-      setShowAssignPolygon(true);
+      return;
     }
-  }, [blocks, updateBlockPolygon]);
+
+    if (blocks.length > 0) {
+      const fallbackId = unmappedBlocks[0]?.id ?? blocks[0].id;
+      setAssignBlockId(fallbackId);
+      // Open after draw click settles, otherwise Radix can close immediately
+      setTimeout(() => setShowAssignPolygon(true), 0);
+    }
+  }, [blocks, selectedBlockId, updateBlockPolygon]);
 
   const handleAssignPolygon = () => {
     if (!pendingPolygon || !assignBlockId) return;
@@ -449,8 +458,8 @@ const SiteDetailPage = () => {
       </Dialog>
 
       {/* Assign Polygon to Block Dialog */}
-      <Dialog open={showAssignPolygon} onOpenChange={(v) => { if (!v) { setShowAssignPolygon(false); setPendingPolygon(null); } }}>
-        <DialogContent className="sm:max-w-sm">
+      <Dialog open={showAssignPolygon} onOpenChange={setShowAssignPolygon}>
+        <DialogContent className="sm:max-w-sm" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader><DialogTitle>Assign Area to Block</DialogTitle></DialogHeader>
           <p className="text-sm text-muted-foreground">Select which block this drawn area belongs to:</p>
           <Select value={assignBlockId} onValueChange={setAssignBlockId}>
