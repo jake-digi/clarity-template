@@ -605,6 +605,40 @@ const CaseDetailPage = () => {
                   <Smile className="w-4 h-4" /> Participant Summary
                 </h3>
 
+                {/* Formal Warnings (Strikes) */}
+                <div className={cn(
+                  "rounded-lg p-4 mb-4 border",
+                  strikeCount === 0 && "bg-muted/50 border-border",
+                  strikeCount === 1 && "bg-orange-50 border-orange-300",
+                  strikeCount === 2 && "bg-orange-100 border-orange-400",
+                  strikeCount >= 3 && "bg-destructive/10 border-destructive/40",
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Gavel className={cn("w-5 h-5", strikeCount === 0 ? "text-muted-foreground" : strikeCount < 3 ? "text-orange-600" : "text-destructive")} />
+                      <div>
+                        <p className={cn("text-sm font-semibold", strikeCount === 0 ? "text-muted-foreground" : strikeCount < 3 ? "text-orange-700" : "text-destructive")}>
+                          Formal Warnings
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                          {strikeCount === 0 ? "No active warnings" : strikeCount === 1 ? "Warning level" : strikeCount === 2 ? "Escalation level" : strikeCount === 3 ? "Critical level" : "Severe level"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "text-3xl font-extrabold",
+                      strikeCount === 0 ? "text-muted-foreground" : strikeCount < 3 ? "text-orange-600" : "text-destructive",
+                    )}>
+                      {strikeCount}
+                    </span>
+                  </div>
+                  {strikeCount >= 3 && (
+                    <p className="text-[11px] text-destructive font-medium mt-2 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> Mandatory parent meeting required
+                    </p>
+                  )}
+                </div>
+
                 {/* Happiness Gauge */}
                 <HappinessGauge score={happinessScore} />
 
