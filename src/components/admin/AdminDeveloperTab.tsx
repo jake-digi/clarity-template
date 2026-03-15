@@ -91,6 +91,7 @@ const AdminDeveloperTab = () => {
   const [pgStatus, setPgStatus] = useState<number | null>(null);
   const [pgTime, setPgTime] = useState<number | null>(null);
   const [pgLoading, setPgLoading] = useState(false);
+  const [pgParams, setPgParams] = useState<Record<string, string>>({});
 
   // Reference state
   const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
