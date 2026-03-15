@@ -1,4 +1,4 @@
-import { Home, Users, Building2, UserCog, ClipboardList, MapPin, CheckSquare, Activity, Settings, Shield, PanelLeftClose, PanelLeft, FileWarning, Tent } from "lucide-react";
+import { Home, Users, Building2, ClipboardList, MapPin, CheckSquare, Activity, Shield, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
