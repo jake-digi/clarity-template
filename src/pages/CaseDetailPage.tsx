@@ -142,6 +142,15 @@ const CaseDetailPage = () => {
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
+  const handleFieldUpdate = async (field: string, value: string | null) => {
+    if (!caseId) return;
+    const { error } = await supabase.from("behavior_cases").update({ [field]: value, updated_at: new Date().toISOString() } as any).eq("id", caseId);
+    if (error) { toast.error(`Failed to update ${field}`); return; }
+    toast.success(`${field.replace(/_/g, " ")} updated`);
+    qc.invalidateQueries({ queryKey: ["behavior-case", caseId] });
+    qc.invalidateQueries({ queryKey: ["behavior-cases"] });
+  };
+
   const handleStatusChange = (newStatus: string) => {
     if (!c || !caseId || !user || newStatus === c.status) return;
     updateStatus.mutate(
