@@ -99,6 +99,7 @@ const SiteMapEditor = ({
   onBlockPolygonChange,
   onBlockPolygonDrawn,
   onRoomPinPlaced,
+  onRoomClick,
   onBlockClick,
   selectedBlockId,
   mode,
@@ -110,6 +111,8 @@ const SiteMapEditor = ({
   onBlockPolygonDrawnRef.current = onBlockPolygonDrawn;
   const onRoomPinPlacedRef = useRef(onRoomPinPlaced);
   onRoomPinPlacedRef.current = onRoomPinPlaced;
+  const onRoomClickRef = useRef(onRoomClick);
+  onRoomClickRef.current = onRoomClick;
   const onModeChangeRef = useRef(onModeChange);
   onModeChangeRef.current = onModeChange;
 
