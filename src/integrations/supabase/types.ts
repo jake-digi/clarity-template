@@ -1378,6 +1378,7 @@ export type Database = {
           capacity: number | null
           created_at: string
           deleted_at: string | null
+          geo_position: Json | null
           id: string
           instance_id: string | null
           name: string | null
@@ -1391,6 +1392,7 @@ export type Database = {
           capacity?: number | null
           created_at?: string
           deleted_at?: string | null
+          geo_position?: Json | null
           id: string
           instance_id?: string | null
           name?: string | null
@@ -1404,6 +1406,7 @@ export type Database = {
           capacity?: number | null
           created_at?: string
           deleted_at?: string | null
+          geo_position?: Json | null
           id?: string
           instance_id?: string | null
           name?: string | null
