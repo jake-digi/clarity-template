@@ -213,8 +213,13 @@ export function useDeleteBlock() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("blocks").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
+      const now = new Date().toISOString();
+      const [blockErr, roomsErr] = await Promise.all([
+        supabase.from("blocks").update({ deleted_at: now }).eq("id", id),
+        supabase.from("rooms").update({ deleted_at: now }).eq("block_id", id).is("deleted_at", null),
+      ]);
+      if (blockErr.error) throw blockErr.error;
+      if (roomsErr.error) throw roomsErr.error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["site"] });
