@@ -238,30 +238,20 @@ const SiteDetailPage = () => {
   const totalRooms = blocks.reduce((sum, b) => sum + b.rooms.length, 0);
   const totalCapacity = blocks.reduce((sum, b) => sum + b.rooms.reduce((rs, r) => rs + (r.capacity ?? 0), 0), 0);
 
-  // Listen for polygon drawn events from the map
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const polygon = (e as CustomEvent).detail.polygon as GeoPolygon;
-      setPendingPolygon(polygon);
+  const handleBlockPolygonDrawn = useCallback((polygon: GeoPolygon) => {
+    setPendingPolygon(polygon);
 
-      // If there are blocks without polygons, show assign dialog
-      const unmappedBlocks = blocks.filter((b) => !b.geo_polygon?.length);
-      if (unmappedBlocks.length === 1) {
-        // Auto-assign if only one unmapped block
-        updateBlockPolygon.mutate({ id: unmappedBlocks[0].id, geo_polygon: polygon });
-        setPendingPolygon(null);
-      } else if (unmappedBlocks.length > 1) {
-        setAssignBlockId(unmappedBlocks[0].id);
-        setShowAssignPolygon(true);
-      } else if (blocks.length > 0) {
-        // All blocks have polygons, let user pick any
-        setAssignBlockId(blocks[0].id);
-        setShowAssignPolygon(true);
-      }
-    };
-
-    window.addEventListener("block-polygon-drawn", handler);
-    return () => window.removeEventListener("block-polygon-drawn", handler);
+    const unmappedBlocks = blocks.filter((b) => !b.geo_polygon?.length);
+    if (unmappedBlocks.length === 1) {
+      updateBlockPolygon.mutate({ id: unmappedBlocks[0].id, geo_polygon: polygon });
+      setPendingPolygon(null);
+    } else if (unmappedBlocks.length > 1) {
+      setAssignBlockId(unmappedBlocks[0].id);
+      setShowAssignPolygon(true);
+    } else if (blocks.length > 0) {
+      setAssignBlockId(blocks[0].id);
+      setShowAssignPolygon(true);
+    }
   }, [blocks, updateBlockPolygon]);
 
   const handleAssignPolygon = () => {
@@ -401,6 +391,7 @@ const SiteDetailPage = () => {
               blocks={blocks}
               onBoundsChange={handleBoundsChange}
               onBlockPolygonChange={handleBlockPolygonChange}
+              onBlockPolygonDrawn={handleBlockPolygonDrawn}
               onBlockClick={handleBlockClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}

@@ -29,6 +29,7 @@ interface SiteMapEditorProps {
   blocks: SiteBlock[];
   onBoundsChange: (bounds: GeoBounds | null) => void;
   onBlockPolygonChange: (blockId: string, polygon: GeoPolygon | null) => void;
+  onBlockPolygonDrawn?: (polygon: GeoPolygon) => void;
   onBlockClick?: (block: SiteBlock) => void;
   selectedBlockId?: string | null;
   mode: "view" | "set-bounds" | "draw-block";
@@ -52,11 +53,19 @@ const SiteMapEditor = ({
   blocks,
   onBoundsChange,
   onBlockPolygonChange,
+  onBlockPolygonDrawn,
   onBlockClick,
   selectedBlockId,
   mode,
   onModeChange,
 }: SiteMapEditorProps) => {
+  // Use refs for callbacks to avoid stale closures in Leaflet event handlers
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  onBoundsChangeRef.current = onBoundsChange;
+  const onBlockPolygonDrawnRef = useRef(onBlockPolygonDrawn);
+  onBlockPolygonDrawnRef.current = onBlockPolygonDrawn;
+  const onModeChangeRef = useRef(onModeChange);
+  onModeChangeRef.current = onModeChange;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const boundsLayerRef = useRef<L.Polygon | null>(null);
@@ -142,11 +151,11 @@ const SiteMapEditor = ({
         const latlngs = (layer.getLatLngs()[0] as L.LatLng[]).map((ll) => [ll.lat, ll.lng] as [number, number]);
         map.removeLayer(layer);
         if (isBounds) {
-          onBoundsChange(latlngs);
+          onBoundsChangeRef.current(latlngs);
         } else {
-          window.dispatchEvent(new CustomEvent("block-polygon-drawn", { detail: { polygon: latlngs } }));
+          onBlockPolygonDrawnRef.current?.(latlngs);
         }
-        onModeChange("view");
+        onModeChangeRef.current("view");
       };
 
       map.on(LDraw.Event.CREATED, onCreated);
