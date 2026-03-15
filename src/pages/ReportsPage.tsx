@@ -210,7 +210,7 @@ const ReportsPage = () => {
                 <Button variant="outline" className="h-9 px-3 gap-2">
                   <Calendar className="w-4 h-4" /> Schedules
                 </Button>
-                <Button className="h-9 px-4 gap-2">
+                <Button className="h-9 px-4 gap-2" onClick={() => navigate("/reports/builder")}>
                   <Plus className="w-4 h-4" /> Create Custom Report
                 </Button>
               </div>
@@ -255,7 +255,7 @@ const ReportsPage = () => {
                     ))}
 
                     {/* Create new card */}
-                    <button className="h-full min-h-[220px] rounded-xl border-2 border-dashed border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-4 text-muted-foreground hover:text-primary group">
+                    <button onClick={() => navigate("/reports/builder")} className="h-full min-h-[220px] rounded-xl border-2 border-dashed border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all flex flex-col items-center justify-center gap-4 text-muted-foreground hover:text-primary group">
                       <div className="w-12 h-12 rounded-full bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                         <Plus className="w-6 h-6" />
                       </div>
