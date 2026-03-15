@@ -360,7 +360,7 @@ const AdminDeveloperTab = () => {
       const params = new URLSearchParams({ limit: "100" });
       if (logFilter.method) params.set("method", logFilter.method);
       if (logFilter.status) params.set("status", logFilter.status);
-      const res = await fetch(`${API_BASE_URL}/api/v1/logs?${params}`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/logs?${params}`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const data = await res.json();
