@@ -142,6 +142,8 @@ const InstanceDetailPage = () => {
     { value: "medical", label: "Medical", icon: Heart },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
+    { value: "announcements", label: "Announcements", icon: Megaphone },
+    { value: "documents", label: "Documents", icon: FileText },
     { value: "transport", label: "Transport", icon: Bus },
     { value: "equipment", label: "Equipment", icon: Package },
     { value: "tracking", label: "Tracking", icon: Navigation },
