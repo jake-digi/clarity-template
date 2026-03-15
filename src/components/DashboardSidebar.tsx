@@ -1,4 +1,4 @@
-import { Home, Users, Building2, CheckSquare, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, Bus, Package } from "lucide-react";
+import { Home, Users, Building2, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, Bus, Package, CalendarDays, Heart, CheckSquare } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -6,21 +6,29 @@ import { useSidebarState } from "@/contexts/SidebarContext";
 
 const coreItems = [
   { icon: Home, label: "Dashboard", path: "/" },
-  { icon: Users, label: "Participants", path: "/participants" },
   { icon: Building2, label: "Instances", path: "/instances" },
+  { icon: CalendarDays, label: "Schedule", path: "/schedule" },
+];
+
+const peopleItems = [
+  { icon: Users, label: "Participants", path: "/participants" },
+  { icon: Users, label: "Staff / Users", path: "/people" },
 ];
 
 const opsItems = [
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
-  { icon: FileWarning, label: "Cases", path: "/cases" },
   { icon: Bus, label: "Transport", path: "/transport" },
   { icon: Package, label: "Equipment", path: "/equipment" },
+  { icon: Heart, label: "Medical", path: "/medical" },
   { icon: Tent, label: "Sites", path: "/sites" },
+];
+
+const caseItems = [
+  { icon: FileWarning, label: "Cases", path: "/cases" },
   { icon: FileBarChart, label: "Reports", path: "/reports" },
 ];
 
 const adminItems = [
-  { icon: Users, label: "Users", path: "/people" },
   { icon: Wrench, label: "Administration", path: "/admin" },
 ];
 
@@ -92,8 +100,14 @@ const DashboardSidebar = () => {
       {expanded ? <SectionLabel>Core</SectionLabel> : <Separator className="w-6 my-1" />}
       {coreItems.map((item) => <NavButton key={item.path} {...item} />)}
 
+      <SectionLabel>People</SectionLabel>
+      {peopleItems.map((item) => <NavButton key={item.path} {...item} />)}
+
       <SectionLabel>Operations</SectionLabel>
       {opsItems.map((item) => <NavButton key={item.path} {...item} />)}
+
+      <SectionLabel>Cases & Reports</SectionLabel>
+      {caseItems.map((item) => <NavButton key={item.path} {...item} />)}
 
       <div className="flex-1" />
 
