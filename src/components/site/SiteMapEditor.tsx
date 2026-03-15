@@ -53,11 +53,19 @@ const SiteMapEditor = ({
   blocks,
   onBoundsChange,
   onBlockPolygonChange,
+  onBlockPolygonDrawn,
   onBlockClick,
   selectedBlockId,
   mode,
   onModeChange,
 }: SiteMapEditorProps) => {
+  // Use refs for callbacks to avoid stale closures in Leaflet event handlers
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  onBoundsChangeRef.current = onBoundsChange;
+  const onBlockPolygonDrawnRef = useRef(onBlockPolygonDrawn);
+  onBlockPolygonDrawnRef.current = onBlockPolygonDrawn;
+  const onModeChangeRef = useRef(onModeChange);
+  onModeChangeRef.current = onModeChange;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const boundsLayerRef = useRef<L.Polygon | null>(null);
