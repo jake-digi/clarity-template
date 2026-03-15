@@ -23,8 +23,10 @@ import {
   ChevronRight, ArrowLeft, User, Calendar as CalendarIcon, MapPin, AlertTriangle,
   Shield, MessageSquare, Clock, Activity, Send, EyeOff, Bell, ChevronDown,
   Heart, Smile, FileWarning, Users, Pencil, Phone, Mail, CalendarPlus,
-  ShieldAlert, Siren, BookOpen, Gavel
+  ShieldAlert, Siren, BookOpen, Gavel, Search, Check
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
