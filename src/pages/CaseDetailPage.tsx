@@ -522,7 +522,13 @@ const CaseDetailPage = () => {
                   {caseActionTypes.map((action) => (
                     <button
                       key={action.type}
-                      onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
+                      onClick={() => {
+                        if (action.type === "checkin_monitoring") {
+                          setCheckInDialogOpen(true);
+                        } else {
+                          setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes("");
+                        }
+                      }}
                       className={cn(
                         "flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors",
                         action.variant === "warning" && "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
