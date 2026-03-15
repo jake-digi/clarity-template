@@ -379,6 +379,72 @@ const SiteDetailPage = () => {
     }
   };
 
+  // Feature handlers
+  const handleFeaturePinPlaced = useCallback((position: { lat: number; lng: number }) => {
+    setPendingFeaturePos(position);
+    setFeatureForm({ name: "", feature_type: "other", description: "" });
+    setTimeout(() => setShowFeatureDialog(true), 0);
+  }, []);
+
+  const handleFeatureClick = useCallback((feature: SiteFeature) => {
+    setEditingFeature(feature);
+    setEditFeatureForm({
+      name: feature.name,
+      feature_type: feature.feature_type,
+      description: feature.description ?? "",
+    });
+    setShowEditFeatureDialog(true);
+  }, []);
+
+  const handleCreateFeature = () => {
+    if (!pendingFeaturePos || !featureForm.name.trim() || !siteId || !tenantId) return;
+    const typeDef = FEATURE_TYPES.find((t) => t.value === featureForm.feature_type);
+    createFeature.mutate({
+      site_id: siteId,
+      tenant_id: tenantId,
+      name: featureForm.name.trim(),
+      feature_type: featureForm.feature_type,
+      description: featureForm.description || undefined,
+      icon: typeDef?.icon,
+      color: typeDef?.color,
+      geo_position: pendingFeaturePos,
+    }, {
+      onSuccess: () => {
+        setShowFeatureDialog(false);
+        setPendingFeaturePos(null);
+      },
+    });
+  };
+
+  const handleSaveEditFeature = () => {
+    if (!editingFeature || !editFeatureForm.name.trim() || !siteId) return;
+    const typeDef = FEATURE_TYPES.find((t) => t.value === editFeatureForm.feature_type);
+    updateFeature.mutate({
+      id: editingFeature.id,
+      site_id: siteId,
+      name: editFeatureForm.name.trim(),
+      feature_type: editFeatureForm.feature_type,
+      description: editFeatureForm.description || undefined,
+      icon: typeDef?.icon,
+      color: typeDef?.color,
+    }, {
+      onSuccess: () => {
+        setShowEditFeatureDialog(false);
+        setEditingFeature(null);
+      },
+    });
+  };
+
+  const handleDeleteFeature = () => {
+    if (!editingFeature || !siteId) return;
+    deleteFeature.mutate({ id: editingFeature.id, site_id: siteId }, {
+      onSuccess: () => {
+        setShowEditFeatureDialog(false);
+        setEditingFeature(null);
+      },
+    });
+  };
+
   const handleAddBlock = () => {
     if (!blockForm.name.trim() || !tenantId || !siteId) return;
     createBlock.mutate({
