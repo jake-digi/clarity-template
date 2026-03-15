@@ -173,11 +173,12 @@ const SiteMapEditor = ({
       const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
       block.rooms.forEach((room) => {
         if (!room.geo_position) return;
+        const label = room.room_number + (room.name ? ` — ${room.name}` : "");
         const marker = L.marker([room.geo_position.lat, room.geo_position.lng], {
-          icon: makeRoomIcon(color),
+          icon: makeRoomIcon(color, room.room_number),
         }).addTo(mapRef.current!);
         marker.bindTooltip(
-          `<strong>${room.room_number}</strong>${room.name ? ` — ${room.name}` : ""}${room.capacity ? `<br/>Capacity: ${room.capacity}` : ""}`,
+          `<strong>${label}</strong>${room.capacity ? `<br/>Capacity: ${room.capacity}` : ""}`,
           { className: "site-map-tooltip" }
         );
         roomMarkersRef.current.push(marker);
