@@ -116,10 +116,12 @@ const PeopleManagement = () => {
               <span className="text-foreground font-medium">Users</span>
             </div>
 
-            <div className="flex items-center justify-between mb-5">
-              <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">Users</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Manage staff and personnel across all CheckPoint instances</p>
+                {!isLoading && (
+                  <Badge variant="secondary" className="text-sm font-medium">{users.length}</Badge>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2">
@@ -132,50 +134,7 @@ const PeopleManagement = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Stat Cards */}
-            <div className="grid grid-cols-4 gap-4">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-lg border border-border bg-background px-4 py-3 space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-7 w-12" />
-                  </div>
-                ))
-              ) : (
-                <>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Users className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Total</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{users.length}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Active</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <UserX className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Shield className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Roles</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{allRoles.length}</p>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+            <p className="text-sm text-muted-foreground mt-1">Manage staff and personnel across all CheckPoint instances</p>
 
           {/* Toolbar — sticky below header */}
           <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3 space-y-2">
