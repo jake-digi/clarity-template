@@ -470,7 +470,7 @@ const AdminDeveloperTab = () => {
                       <TableHead>Scopes</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Last Used</TableHead>
-                      <TableHead>Status</TableHead>
+                      
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
