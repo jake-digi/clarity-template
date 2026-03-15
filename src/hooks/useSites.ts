@@ -95,6 +95,7 @@ export function useSiteDetail(siteId: string) {
         site_id: b.site_id!,
         tenant_id: b.tenant_id,
         created_at: b.created_at,
+        geo_polygon: (b as any).geo_polygon as [number, number][] | null,
         rooms: (roomsRes.data ?? [])
           .filter((r) => r.block_id === b.id)
           .map((r) => ({
