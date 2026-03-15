@@ -60,6 +60,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </SidebarStateProvider>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
