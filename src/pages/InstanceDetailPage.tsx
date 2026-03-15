@@ -12,8 +12,7 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation, Briefcase,
-  UserCheck, Building, Bed
+  Navigation, Briefcase, UserCheck, Building,
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
@@ -21,6 +20,9 @@ import InstanceParticipantsTab from "@/components/instance/InstanceParticipantsT
 import InstanceStaffTab from "@/components/instance/InstanceStaffTab";
 import InstanceAccommodationTab from "@/components/instance/InstanceAccommodationTab";
 import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
+import StageTemplateManager from "@/components/instance/StageTemplateManager";
+import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
+import StageDetailsModal from "@/components/instance/StageDetailsModal";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
