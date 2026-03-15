@@ -100,8 +100,8 @@ const InstancesPage = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto">
-          {/* Banner */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
               <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
@@ -109,125 +109,101 @@ const InstancesPage = () => {
               <span className="text-foreground font-medium">Instances</span>
             </div>
 
-            <div className="flex items-center justify-between mb-5">
-              <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">Instances</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Manage events, camps and DofE expeditions</p>
+                {!isLoading && (
+                  <Badge variant="secondary" className="text-sm font-medium">{instances.length}</Badge>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="gap-2"><Download className="w-4 h-4" />Export</Button>
-                <Button className="gap-2" onClick={() => navigate("/instances/new")}><Plus className="w-4 h-4" />New Instance</Button>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
+                <Button className="gap-2" onClick={() => navigate("/instances/new")}>
+                  <Plus className="w-4 h-4" />
+                  New Instance
+                </Button>
               </div>
             </div>
-
-            {/* Stat Cards */}
-            <div className="grid grid-cols-4 gap-4">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-lg border border-border bg-background px-4 py-3 space-y-2">
-                    <Skeleton className="h-4 w-20" /><Skeleton className="h-7 w-12" />
-                  </div>
-                ))
-              ) : (
-                <>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Building2 className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Total</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Calendar className="w-4 h-4 text-[hsl(var(--success))]" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Active</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Award className="w-4 h-4 text-amber-500" />
-                      <span className="text-xs font-medium uppercase tracking-wide">DofE</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{dofeCount}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <FolderTree className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Standard</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{instances.length - dofeCount}</p>
-                  </div>
-                </>
-              )}
-            </div>
+            <p className="text-sm text-muted-foreground mt-1">Manage events, camps and DofE expeditions</p>
           </div>
 
-          {/* Toolbar + Table */}
-          <div className="px-6 py-4 space-y-4">
+          {/* Sticky toolbar */}
+          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
             {isLoading ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3"><Skeleton className="h-10 flex-1 max-w-sm" /><Skeleton className="h-10 w-[160px]" /><Skeleton className="h-10 w-[160px]" /></div>
-                <Skeleton className="h-4 w-48" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 flex-1 max-w-sm" />
+                <Skeleton className="h-10 w-[160px]" />
+                <Skeleton className="h-10 w-[160px]" />
               </div>
             ) : (
-              <>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="relative flex-1 min-w-[320px] max-w-xl">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search by name or location..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-                  </div>
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-[160px]"><SelectValue placeholder="Type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="dofe">DofE</SelectItem>
-                      <SelectItem value="standard">Standard</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      {statuses.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative flex-1 min-w-[320px] max-w-xl">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Search by name or location..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
-                </div>
-              </>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="dofe">DofE</SelectItem>
+                    <SelectItem value="standard">Standard</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {statuses.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
+          </div>
 
-            <div className="bg-card rounded-lg border border-border overflow-hidden">
+          {/* Scrollable table area */}
+          <div className="flex-1 overflow-auto">
+            <div className="bg-card overflow-hidden">
               {isLoading ? (
-                <div className="p-8 space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+                <div className="p-8 space-y-3">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
               ) : error ? (
                 <div className="p-8 text-center text-destructive">
                   <p>Failed to load instances.</p>
                   <p className="text-sm text-muted-foreground mt-1">{(error as Error).message}</p>
                 </div>
               ) : (
-                <>
-                  <Table>
-                    <TableHeader>
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
+                    <TableRow>
+                      <SortableHeader field="name">Name</SortableHeader>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Location</TableHead>
+                      <SortableHeader field="start_date">Start Date</SortableHeader>
+                      <SortableHeader field="status">Status</SortableHeader>
+                      <SortableHeader field="participant_count">Participants</SortableHeader>
+                      <TableHead>Groups</TableHead>
+                      <TableHead className="w-[50px]" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paged.length === 0 ? (
                       <TableRow>
-                        <SortableHeader field="name">Name</SortableHeader>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Location</TableHead>
-                        <SortableHeader field="start_date">Start Date</SortableHeader>
-                        <SortableHeader field="status">Status</SortableHeader>
-                        <SortableHeader field="participant_count">Participants</SortableHeader>
-                        <TableHead>Groups</TableHead>
-                        <TableHead className="w-[50px]" />
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          No instances found matching your filters.
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paged.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No instances found.</TableCell>
-                        </TableRow>
-                      ) : paged.map((inst) => (
+                    ) : (
+                      paged.map((inst) => (
                         <TableRow key={inst.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/instances/${inst.id}`)}>
                           <TableCell className="font-medium text-foreground">
                             <div className="flex items-center gap-2.5">
@@ -252,7 +228,9 @@ const InstancesPage = () => {
                           <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => navigate(`/instances/${inst.id}`)}>View Details</DropdownMenuItem>
@@ -262,28 +240,49 @@ const InstancesPage = () => {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>Rows per page</span>
-                      <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
-                        <SelectTrigger className="h-8 w-[70px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PAGE_SIZE_OPTIONS.map((s) => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}</span>
-                      <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}><ChevronLeft className="w-4 h-4" /></Button>
-                      <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}><ChevronRight className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-                </>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               )}
             </div>
           </div>
+
+          {/* Fixed footer */}
+          {!isLoading && !error && (
+            <div className="shrink-0 bg-card border-t border-border px-6 py-2.5 flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
+                {filtered.length < instances.length && <span> (filtered from {instances.length} total)</span>}
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-xs">Rows per page</span>
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                    <SelectTrigger className="h-8 w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZE_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-xs">
+                    {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
+                  </span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
