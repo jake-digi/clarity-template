@@ -91,6 +91,7 @@ const AdminDeveloperTab = () => {
   const [pgStatus, setPgStatus] = useState<number | null>(null);
   const [pgTime, setPgTime] = useState<number | null>(null);
   const [pgLoading, setPgLoading] = useState(false);
+  const [pgParams, setPgParams] = useState<Record<string, string>>({});
 
   // Reference state
   const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
@@ -194,7 +195,29 @@ const AdminDeveloperTab = () => {
   }, [logFilter]);
 
   // --- Playground ---
+  // Extract param names from path template
+  const pgPathParams = (pgPath.match(/:([a-zA-Z_]+)/g) || []).map((p) => p.slice(1));
+
+  // Resolve path by replacing :param with actual values
+  const resolvedPath = pgPath.replace(/:([a-zA-Z_]+)/g, (_, name) => pgParams[name] || `:${name}`);
+  const hasUnresolvedParams = pgPathParams.some((p) => !pgParams[p]);
+
+  const updatePgPath = (newPath: string) => {
+    setPgPath(newPath);
+    // Reset params when path changes, keeping any that still apply
+    const newParams = (newPath.match(/:([a-zA-Z_]+)/g) || []).map((p) => p.slice(1));
+    setPgParams((prev) => {
+      const next: Record<string, string> = {};
+      newParams.forEach((p) => { if (prev[p]) next[p] = prev[p]; });
+      return next;
+    });
+  };
+
   const sendRequest = async () => {
+    if (hasUnresolvedParams) {
+      toast({ title: "Missing parameters", description: "Please fill in all path parameters before sending.", variant: "destructive" });
+      return;
+    }
     setPgLoading(true);
     setPgResponse(null);
     setPgStatus(null);
@@ -205,7 +228,7 @@ const AdminDeveloperTab = () => {
       if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) {
         headers["Content-Type"] = "application/json";
       }
-      const res = await fetch(`${API_BASE_URL}${pgPath}`, {
+      const res = await fetch(`${API_BASE_URL}${resolvedPath}`, {
         method: pgMethod,
         headers,
         body: ["POST", "PATCH", "PUT"].includes(pgMethod) && pgBody ? pgBody : undefined,
@@ -392,7 +415,7 @@ const AdminDeveloperTab = () => {
 
   const tryEndpoint = (method: string, path: string, body?: string) => {
     setPgMethod(method);
-    setPgPath(path);
+    updatePgPath(path);
     if (body) setPgBody(body);
     else setPgBody("");
     setActiveTab("playground");
@@ -556,7 +579,7 @@ const AdminDeveloperTab = () => {
                 </Select>
                 <Input
                   value={pgPath}
-                  onChange={(e) => setPgPath(e.target.value)}
+                  onChange={(e) => updatePgPath(e.target.value)}
                   placeholder="/api/v1/instances"
                   className="font-mono text-xs flex-1"
                 />
@@ -565,15 +588,38 @@ const AdminDeveloperTab = () => {
                 </Button>
               </div>
 
+              {/* Path parameters */}
+              {pgPathParams.length > 0 && (
+                <div className="space-y-2 rounded-md border border-border bg-muted/20 p-3">
+                  <Label className="text-xs text-muted-foreground font-medium">Path Parameters</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {pgPathParams.map((param) => (
+                      <div key={param} className="space-y-1">
+                        <Label className="text-[10px] text-muted-foreground font-mono">:{param}</Label>
+                        <Input
+                          value={pgParams[param] || ""}
+                          onChange={(e) => setPgParams((prev) => ({ ...prev, [param]: e.target.value }))}
+                          placeholder={`Enter ${param.replace(/_/g, " ")}`}
+                          className="font-mono text-xs h-8"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[10px] font-mono text-muted-foreground mt-1">
+                    Resolved: <span className="text-foreground">{resolvedPath}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Quick endpoint selector */}
               <div className="flex flex-wrap gap-1">
-                {playgroundEndpoints.slice(0, 8).map((ep, i) => (
+                {playgroundEndpoints.slice(0, 10).map((ep, i) => (
                   <Button
                     key={i}
                     variant="outline"
                     size="sm"
                     className="text-[10px] h-6 px-2"
-                    onClick={() => { setPgMethod(ep.method); setPgPath(ep.path); }}
+                    onClick={() => { setPgMethod(ep.method); updatePgPath(ep.path); }}
                   >
                     <Badge variant="outline" className={`text-[9px] font-mono mr-1 px-1 ${methodColor[ep.method] ?? ""}`}>{ep.method}</Badge>
                     {ep.path.replace("/api/v1/", "")}
