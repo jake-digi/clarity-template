@@ -580,6 +580,30 @@ const AdminDeveloperTab = () => {
     }
   };
 
+  const handleUpdateIps = async () => {
+    if (!ipDialogKey) return;
+    try {
+      const session = await getSession();
+      if (!session) return;
+      const ips = editingIps.trim() ? editingIps.split(",").map((ip) => ip.trim()).filter(Boolean) : [];
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/update`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ipDialogKey.id, allowed_ips: ips }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        toast({ title: "Error updating IPs", description: data.error, variant: "destructive" });
+        return;
+      }
+      setIpDialogKey(null);
+      fetchKeys();
+      toast({ title: "IP restrictions updated" });
+    } catch (e) {
+      toast({ title: "Error updating IPs", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    }
+  };
+
   // --- Logs ---
   const fetchLogs = useCallback(async () => {
     setLogsLoading(true);
