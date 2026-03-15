@@ -14,6 +14,7 @@ const opsItems = [
   { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
   { icon: FileWarning, label: "Cases", path: "/cases" },
   { icon: Tent, label: "Sites", path: "/sites" },
+  { icon: FileBarChart, label: "Reports", path: "/reports" },
 ];
 
 const adminItems = [
