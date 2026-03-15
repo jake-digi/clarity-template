@@ -12,37 +12,43 @@ const RolesPage = () => {
   const [tab, setTab] = useState("roles");
 
   return (
-    <div className="flex h-screen bg-background">
-      <DashboardSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardHeader />
-        <main className="flex-1 overflow-auto p-6 space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Roles & Permissions</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage access control, role definitions, and permission assignments</p>
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <DashboardHeader />
+      <div className="flex flex-1 min-h-0">
+        <DashboardSidebar />
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b border-border bg-card px-6 py-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-semibold text-foreground tracking-tight">Roles & Permissions</h1>
+                <p className="text-sm text-muted-foreground mt-1">Manage access control, role definitions, and permission assignments</p>
+              </div>
+            </div>
           </div>
 
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList>
-              <TabsTrigger value="roles" className="gap-1.5">
-                <Shield className="w-4 h-4" /> Roles
-              </TabsTrigger>
-              <TabsTrigger value="permissions" className="gap-1.5">
-                <Key className="w-4 h-4" /> Permissions
-              </TabsTrigger>
-              <TabsTrigger value="assignments" className="gap-1.5">
-                <UserCheck className="w-4 h-4" /> User Assignments
-              </TabsTrigger>
-              <TabsTrigger value="audit" className="gap-1.5">
-                <ScrollText className="w-4 h-4" /> Audit Log
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex-1 overflow-auto p-6 space-y-6">
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsList>
+                <TabsTrigger value="roles" className="gap-1.5">
+                  <Shield className="w-4 h-4" /> Roles
+                </TabsTrigger>
+                <TabsTrigger value="permissions" className="gap-1.5">
+                  <Key className="w-4 h-4" /> Permissions
+                </TabsTrigger>
+                <TabsTrigger value="assignments" className="gap-1.5">
+                  <UserCheck className="w-4 h-4" /> User Assignments
+                </TabsTrigger>
+                <TabsTrigger value="audit" className="gap-1.5">
+                  <ScrollText className="w-4 h-4" /> Audit Log
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="roles"><RolesTab /></TabsContent>
-            <TabsContent value="permissions"><PermissionsTab /></TabsContent>
-            <TabsContent value="assignments"><UserAssignmentsTab /></TabsContent>
-            <TabsContent value="audit"><AuditLogTab /></TabsContent>
-          </Tabs>
+              <TabsContent value="roles"><RolesTab /></TabsContent>
+              <TabsContent value="permissions"><PermissionsTab /></TabsContent>
+              <TabsContent value="assignments"><UserAssignmentsTab /></TabsContent>
+              <TabsContent value="audit"><AuditLogTab /></TabsContent>
+            </Tabs>
+          </div>
         </main>
       </div>
     </div>
