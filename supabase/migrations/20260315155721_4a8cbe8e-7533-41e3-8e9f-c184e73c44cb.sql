@@ -1,0 +1,1 @@
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS room_type text NOT NULL DEFAULT 'room';
