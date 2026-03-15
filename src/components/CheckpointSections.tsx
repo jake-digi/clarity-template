@@ -3,22 +3,16 @@ import {
   Users,
   UserCheck,
   UsersRound,
-  BedDouble,
+  Tent,
   Briefcase,
   FileWarning,
-  CalendarClock,
-  Bus,
-  Wrench,
-  Megaphone,
-  FolderOpen,
-  BarChart3,
-  FileBarChart,
-  GitCompareArrows,
+  MapPin,
+  Activity,
+  ClipboardList,
+  CheckSquare,
   Building2,
   ShieldCheck,
   History,
-  ClipboardCheck,
-  ArrowRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -40,26 +34,32 @@ const sections: SectionGroup[] = [
     items: [
       { icon: Users, title: "Users", description: "Manage staff and personnel", path: "/people" },
       { icon: UserCheck, title: "Participants", description: "Participant records and details", path: "/participants" },
-      { icon: UsersRound, title: "Groups", description: "Group management and assignments" },
-      { icon: BedDouble, title: "Accommodation", description: "Housing and room allocation" },
+      { icon: UsersRound, title: "Groups", description: "Group management and assignments", path: "/groups" },
+      { icon: Tent, title: "Sites", description: "Manage accommodation sites and layouts", path: "/sites" },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { icon: Building2, title: "Instances", description: "Events, camps and expeditions", path: "/instances" },
+      { icon: ClipboardList, title: "Stages", description: "Checklist workflows", path: "/stages" },
+      { icon: MapPin, title: "Tracking", description: "Live group tracking", path: "/tracking" },
+      { icon: CheckSquare, title: "Check-ins", description: "Attendance and check-in sessions", path: "/checkins" },
     ],
   },
   {
     title: "Case Management & Reporting",
     items: [
-      { icon: Briefcase, title: "Case Management", description: "Track and manage cases" },
+      { icon: Briefcase, title: "Cases", description: "Behaviour and welfare cases", path: "/cases" },
+      { icon: Activity, title: "Activity Log", description: "Activity and incident logs", path: "/activity" },
       { icon: FileWarning, title: "Strikes Report", description: "Incident and strike tracking" },
-      { icon: BarChart3, title: "Participant Reports", description: "Individual participant data" },
-      { icon: GitCompareArrows, title: "Cross-Instance Reports", description: "Compare across instances" },
     ],
   },
   {
-    title: "System Management",
+    title: "Administration",
     items: [
-      { icon: Building2, title: "Instances", description: "Manage system instances" },
-      { icon: ShieldCheck, title: "Roles & Permissions", description: "Access control settings" },
+      { icon: ShieldCheck, title: "Roles & Permissions", description: "Access control settings", path: "/roles" },
       { icon: History, title: "Audit & History", description: "Change logs and history" },
-      { icon: ClipboardCheck, title: "Attendance", description: "Attendance tracking" },
     ],
   },
 ];
@@ -69,10 +69,10 @@ const ItemCard = ({ icon: Icon, title, description, path }: SectionItem) => {
   return (
     <div
       onClick={() => path && navigate(path)}
-      className="bg-card rounded-lg p-5 flex flex-col items-start gap-3 hover:shadow-md transition-shadow cursor-pointer border border-border"
+      className={`bg-card rounded-lg p-5 flex flex-col items-start gap-3 transition-shadow border border-border ${path ? "hover:shadow-md cursor-pointer" : "opacity-60 cursor-default"}`}
     >
       <div className="w-12 h-12 rounded-lg bg-accent flex items-center justify-center">
-        <Icon className="w-6 h-6 text-icon-primary" strokeWidth={1.5} />
+        <Icon className="w-6 h-6 text-accent-foreground" strokeWidth={1.5} />
       </div>
       <div>
         <h3 className="font-semibold text-foreground text-sm">{title}</h3>
