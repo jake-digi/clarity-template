@@ -179,6 +179,7 @@ export default function InstanceCasesTab({ instanceId }: InstanceCasesTabProps) 
           </Table>
         )}
       </div>
+      <NewCaseDialog open={newCaseOpen} onOpenChange={setNewCaseOpen} instanceId={instanceId} />
     </div>
   );
 }

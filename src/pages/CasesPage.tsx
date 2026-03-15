@@ -238,6 +238,7 @@ const CasesPage = () => {
         </main>
       </div>
       <FormalWarningsSheet open={warningsOpen} onOpenChange={setWarningsOpen} />
+      <NewCaseDialog open={newCaseOpen} onOpenChange={setNewCaseOpen} />
     </div>
   );
 };
