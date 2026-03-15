@@ -196,13 +196,13 @@ const CaseDetailPage = () => {
   };
 
   const caseActionTypes = [
-    { type: "formal_warning", label: "Add Formal Warning", icon: Gavel, color: "text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100" },
-    { type: "phone_call", label: "Log Phone Call", icon: Phone, color: "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100" },
-    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, color: "text-purple-600 bg-purple-50 border-purple-200 hover:bg-purple-100" },
-    { type: "email_parent", label: "Email Parent", icon: Mail, color: "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
-    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
-    { type: "escalate", label: "Escalate", icon: Siren, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
-    { type: "add_note", label: "Add Case Note", icon: BookOpen, color: "text-muted-foreground bg-muted border-border hover:bg-accent" },
+    { type: "formal_warning", label: "Formal Warning", icon: Gavel },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus },
+    { type: "email_parent", label: "Email Parent", icon: Mail },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert },
+    { type: "escalate", label: "Escalate", icon: Siren },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen },
   ];
 
   const handleCaseAction = async () => {
@@ -465,15 +465,15 @@ const CaseDetailPage = () => {
                 <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                   <Gavel className="w-4 h-4" /> Case Actions
                 </h2>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                   {caseActionTypes.map((action) => (
                     <button
                       key={action.type}
                       onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${action.color}`}
+                      className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <action.icon className="w-3.5 h-3.5" />
-                      {action.label}
+                      <action.icon className="w-5 h-5" />
+                      <span className="text-[11px] font-medium text-center leading-tight">{action.label}</span>
                     </button>
                   ))}
                 </div>
