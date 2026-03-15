@@ -225,6 +225,10 @@ const InstanceDetailPage = () => {
                     </SectionCard>
                   </div>
                 </TabsContent>
+                {/* Schedule */}
+                <TabsContent value="schedule" className="mt-0">
+                  <InstanceScheduleTab instanceId={instanceId!} />
+                </TabsContent>
 
                 {/* Participants */}
                 <TabsContent value="participants" className="mt-0">
