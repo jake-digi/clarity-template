@@ -8,18 +8,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  DialogTrigger } from
+"@/components/ui/dialog";
 
 const stats = [
-  { label: "Total Participants", value: "1,247", icon: Users, trend: "+12%" },
-  { label: "Active Cases", value: "38", icon: Briefcase, trend: "-3%" },
-  { label: "Attendance Today", value: "96%", icon: CalendarCheck, trend: "+2%" },
-  { label: "Safeguarding Alerts", value: "3", icon: ShieldCheck, trend: "" },
-];
+{ label: "Total Participants", value: "1,247", icon: Users, trend: "+12%" },
+{ label: "Active Cases", value: "38", icon: Briefcase, trend: "-3%" },
+{ label: "Attendance Today", value: "96%", icon: CalendarCheck, trend: "+2%" },
+{ label: "Safeguarding Alerts", value: "3", icon: ShieldCheck, trend: "" }];
 
-const StatCard = ({ label, value, icon: Icon, trend }: typeof stats[0]) => (
-  <div className="bg-card rounded-lg p-5 border border-border flex flex-col justify-between gap-3">
+
+const StatCard = ({ label, value, icon: Icon, trend }: typeof stats[0]) =>
+<div className="bg-card rounded-lg p-5 border border-border flex flex-col justify-between gap-3">
     <div className="flex items-center justify-between">
       <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</span>
       <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center">
@@ -28,15 +28,15 @@ const StatCard = ({ label, value, icon: Icon, trend }: typeof stats[0]) => (
     </div>
     <div className="flex items-end gap-2">
       <span className="text-2xl font-bold text-foreground leading-none">{value}</span>
-      {trend && (
-        <span className={`text-xs font-medium mb-0.5 ${trend.startsWith("+") ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
+      {trend &&
+    <span className={`text-xs font-medium mb-0.5 ${trend.startsWith("+") ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
           <TrendingUp className="w-3 h-3 inline mr-0.5" />
           {trend}
         </span>
-      )}
+    }
     </div>
-  </div>
-);
+  </div>;
+
 
 const DashboardOverview = () => {
   const [sendMode, setSendMode] = useState<"single" | "bulk">("single");
@@ -109,28 +109,28 @@ const DashboardOverview = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setSendMode("single")}
-                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "single" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
-                    >
+                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "single" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                      
                       Single Send
                     </button>
                     <button
                       onClick={() => setSendMode("bulk")}
-                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "bulk" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
-                    >
+                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${sendMode === "bulk" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
+                      
                       Bulk Send
                     </button>
                   </div>
-                  {sendMode === "single" ? (
-                    <div className="space-y-2">
+                  {sendMode === "single" ?
+                  <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">Email or phone number</label>
                       <input type="text" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="email@example.com or +44..." className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
+                    </div> :
+
+                  <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">Recipients (one per line)</label>
                       <textarea value={bulkRecipients} onChange={(e) => setBulkRecipients(e.target.value)} placeholder={"email1@example.com\nemail2@example.com\n+447..."} rows={5} className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
                     </div>
-                  )}
+                  }
                   <Button onClick={handleSend} className="w-full gap-2">
                     <Send className="w-4 h-4" />
                     {sendMode === "single" ? "Send Link" : "Send to All"}
@@ -143,13 +143,13 @@ const DashboardOverview = () => {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-4 gap-3">
-        {stats.map((stat) => (
-          <StatCard key={stat.label} {...stat} />
-        ))}
-      </div>
-    </div>
-  );
+      
+
+
+
+      
+    </div>);
+
 };
 
 export default DashboardOverview;
