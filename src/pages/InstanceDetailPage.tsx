@@ -137,22 +137,6 @@ const InstanceDetailPage = () => {
 
   const settings = instance.settings as Record<string, any> | null;
   const isDofe = settings?.type === "dofe" || settings?.is_dofe === true;
-  const tasksByStage = new Map<string, typeof stageTasks>();
-  stageTasks.forEach((t) => {
-    if (!t.stage_template_id) return;
-    const list = tasksByStage.get(t.stage_template_id) ?? [];
-    list.push(t);
-    tasksByStage.set(t.stage_template_id, list);
-  });
-
-  const fieldTypeLabel: Record<string, string> = {
-    checkbox: "Checkbox",
-    text: "Text",
-    textarea: "Text Area",
-    multiple_choice: "Multiple Choice",
-    rating: "Rating",
-    number: "Number",
-  };
 
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
