@@ -514,6 +514,38 @@ const SiteDetailPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Room at Pin Dialog */}
+      <Dialog open={showRoomPinDialog} onOpenChange={setShowRoomPinDialog}>
+        <DialogContent className="sm:max-w-sm" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Add Room at Pin</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Block: <strong>{blocks.find((b) => b.id === pendingRoomPin?.blockId)?.name ?? "—"}</strong>
+          </p>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Room Number *</Label>
+              <Input placeholder="e.g. 101" value={roomPinForm.room_number} onChange={(e) => setRoomPinForm({ ...roomPinForm, room_number: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Name</Label>
+              <Input placeholder="e.g. Eagle Room" value={roomPinForm.name} onChange={(e) => setRoomPinForm({ ...roomPinForm, name: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Capacity</Label>
+              <Input type="number" placeholder="e.g. 4" value={roomPinForm.capacity} onChange={(e) => setRoomPinForm({ ...roomPinForm, capacity: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowRoomPinDialog(false); setPendingRoomPin(null); }}>Cancel</Button>
+            <Button onClick={handleCreateRoomAtPin} disabled={!roomPinForm.room_number.trim() || createRoom.isPending}>
+              {createRoom.isPending ? "Creating..." : "Create Room"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
