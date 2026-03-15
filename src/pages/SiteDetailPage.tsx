@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
@@ -7,8 +7,10 @@ import {
   useSiteDetail, useUpdateSite,
   useCreateBlock, useUpdateBlock, useDeleteBlock,
   useCreateRoom, useUpdateRoom, useDeleteRoom,
+  useUpdateBlockPolygon,
   SiteBlock, SiteRoom,
 } from "@/hooks/useSites";
+import SiteMapEditor, { GeoBounds, GeoPolygon } from "@/components/site/SiteMapEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +26,9 @@ import {
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   ChevronRight, ChevronDown, ArrowLeft, MapPin, Building, DoorOpen,
   Plus, MoreHorizontal, Pencil, Trash2, Tent,
@@ -78,6 +83,8 @@ const BlockCard = ({ block, siteId, tenantId }: { block: SiteBlock; siteId: stri
     });
   };
 
+  const hasPolygon = !!block.geo_polygon?.length;
+
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -91,6 +98,7 @@ const BlockCard = ({ block, siteId, tenantId }: { block: SiteBlock; siteId: stri
                 {block.description && <p className="text-xs text-muted-foreground">{block.description}</p>}
               </div>
               <Badge variant="secondary" className="text-xs">{block.rooms.length} room{block.rooms.length !== 1 ? "s" : ""}</Badge>
+              {hasPolygon && <Badge variant="outline" className="text-xs text-primary border-primary/30">📍 Mapped</Badge>}
             </div>
             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => setShowAddRoom(true)}>
@@ -158,24 +166,13 @@ const BlockCard = ({ block, siteId, tenantId }: { block: SiteBlock; siteId: stri
         <DialogContent className="sm:max-w-sm">
           <DialogHeader><DialogTitle>Add Room to {block.name}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Room Number *</Label>
-              <Input placeholder="e.g. 101" value={roomForm.room_number} onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Name</Label>
-              <Input placeholder="e.g. Eagle Room" value={roomForm.name} onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Capacity</Label>
-              <Input type="number" placeholder="e.g. 4" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} />
-            </div>
+            <div className="space-y-1.5"><Label>Room Number *</Label><Input placeholder="e.g. 101" value={roomForm.room_number} onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Name</Label><Input placeholder="e.g. Eagle Room" value={roomForm.name} onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Capacity</Label><Input type="number" placeholder="e.g. 4" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddRoom(false)}>Cancel</Button>
-            <Button onClick={handleAddRoom} disabled={!roomForm.room_number.trim() || createRoom.isPending}>
-              {createRoom.isPending ? "Adding..." : "Add Room"}
-            </Button>
+            <Button onClick={handleAddRoom} disabled={!roomForm.room_number.trim() || createRoom.isPending}>{createRoom.isPending ? "Adding..." : "Add Room"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -185,24 +182,13 @@ const BlockCard = ({ block, siteId, tenantId }: { block: SiteBlock; siteId: stri
         <DialogContent className="sm:max-w-sm">
           <DialogHeader><DialogTitle>Edit Room</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Room Number *</Label>
-              <Input value={roomForm.room_number} onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Name</Label>
-              <Input value={roomForm.name} onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Capacity</Label>
-              <Input type="number" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} />
-            </div>
+            <div className="space-y-1.5"><Label>Room Number *</Label><Input value={roomForm.room_number} onChange={(e) => setRoomForm({ ...roomForm, room_number: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Name</Label><Input value={roomForm.name} onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Capacity</Label><Input type="number" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditRoom(null)}>Cancel</Button>
-            <Button onClick={handleEditRoom} disabled={!roomForm.room_number.trim() || updateRoom.isPending}>
-              {updateRoom.isPending ? "Saving..." : "Save"}
-            </Button>
+            <Button onClick={handleEditRoom} disabled={!roomForm.room_number.trim() || updateRoom.isPending}>{updateRoom.isPending ? "Saving..." : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -212,20 +198,12 @@ const BlockCard = ({ block, siteId, tenantId }: { block: SiteBlock; siteId: stri
         <DialogContent className="sm:max-w-sm">
           <DialogHeader><DialogTitle>Edit Block</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Name *</Label>
-              <Input value={blockForm.name} onChange={(e) => setBlockForm({ ...blockForm, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Description</Label>
-              <Textarea value={blockForm.description} onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })} rows={2} />
-            </div>
+            <div className="space-y-1.5"><Label>Name *</Label><Input value={blockForm.name} onChange={(e) => setBlockForm({ ...blockForm, name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Description</Label><Textarea value={blockForm.description} onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })} rows={2} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditBlock(false)}>Cancel</Button>
-            <Button onClick={handleEditBlock} disabled={!blockForm.name.trim() || updateBlock.isPending}>
-              {updateBlock.isPending ? "Saving..." : "Save"}
-            </Button>
+            <Button onClick={handleEditBlock} disabled={!blockForm.name.trim() || updateBlock.isPending}>{updateBlock.isPending ? "Saving..." : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -241,17 +219,70 @@ const SiteDetailPage = () => {
   const { data, isLoading } = useSiteDetail(siteId ?? "");
   const updateSite = useUpdateSite();
   const createBlock = useCreateBlock();
+  const updateBlockPolygon = useUpdateBlockPolygon();
 
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showEditSite, setShowEditSite] = useState(false);
   const [blockForm, setBlockForm] = useState({ name: "", description: "" });
   const [siteForm, setSiteForm] = useState({ name: "", location: "", address: "", description: "" });
+  const [mapMode, setMapMode] = useState<"view" | "set-bounds" | "draw-block">("view");
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [showAssignPolygon, setShowAssignPolygon] = useState(false);
+  const [pendingPolygon, setPendingPolygon] = useState<GeoPolygon | null>(null);
+  const [assignBlockId, setAssignBlockId] = useState<string>("");
 
   const site = data?.site;
   const blocks = data?.blocks ?? [];
+  const geoBounds = (site as any)?.geo_bounds as GeoBounds | null;
 
   const totalRooms = blocks.reduce((sum, b) => sum + b.rooms.length, 0);
   const totalCapacity = blocks.reduce((sum, b) => sum + b.rooms.reduce((rs, r) => rs + (r.capacity ?? 0), 0), 0);
+
+  // Listen for polygon drawn events from the map
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const polygon = (e as CustomEvent).detail.polygon as GeoPolygon;
+      setPendingPolygon(polygon);
+
+      // If there are blocks without polygons, show assign dialog
+      const unmappedBlocks = blocks.filter((b) => !b.geo_polygon?.length);
+      if (unmappedBlocks.length === 1) {
+        // Auto-assign if only one unmapped block
+        updateBlockPolygon.mutate({ id: unmappedBlocks[0].id, geo_polygon: polygon });
+        setPendingPolygon(null);
+      } else if (unmappedBlocks.length > 1) {
+        setAssignBlockId(unmappedBlocks[0].id);
+        setShowAssignPolygon(true);
+      } else if (blocks.length > 0) {
+        // All blocks have polygons, let user pick any
+        setAssignBlockId(blocks[0].id);
+        setShowAssignPolygon(true);
+      }
+    };
+
+    window.addEventListener("block-polygon-drawn", handler);
+    return () => window.removeEventListener("block-polygon-drawn", handler);
+  }, [blocks, updateBlockPolygon]);
+
+  const handleAssignPolygon = () => {
+    if (!pendingPolygon || !assignBlockId) return;
+    updateBlockPolygon.mutate({ id: assignBlockId, geo_polygon: pendingPolygon });
+    setPendingPolygon(null);
+    setShowAssignPolygon(false);
+  };
+
+  const handleBoundsChange = useCallback((newBounds: GeoBounds) => {
+    if (!siteId) return;
+    updateSite.mutate({ id: siteId, geo_bounds: newBounds }, { onSuccess: () => {} });
+  }, [siteId, updateSite]);
+
+  const handleBlockPolygonChange = useCallback((blockId: string, polygon: GeoPolygon) => {
+    updateBlockPolygon.mutate({ id: blockId, geo_polygon: polygon });
+  }, [updateBlockPolygon]);
+
+  const handleBlockClick = useCallback((block: SiteBlock) => {
+    setSelectedBlockId((prev) => prev === block.id ? null : block.id);
+  }, []);
 
   const handleAddBlock = () => {
     if (!blockForm.name.trim() || !tenantId || !siteId) return;
@@ -360,12 +391,23 @@ const SiteDetailPage = () => {
             </div>
           </div>
 
-          {/* Blocks */}
+          {/* Content */}
           <div className="p-6 space-y-4">
-            {site.description && (
-              <p className="text-sm text-muted-foreground">{site.description}</p>
-            )}
+            {site.description && <p className="text-sm text-muted-foreground">{site.description}</p>}
 
+            {/* Map */}
+            <SiteMapEditor
+              bounds={geoBounds}
+              blocks={blocks}
+              onBoundsChange={handleBoundsChange}
+              onBlockPolygonChange={handleBlockPolygonChange}
+              onBlockClick={handleBlockClick}
+              selectedBlockId={selectedBlockId}
+              mode={mapMode}
+              onModeChange={setMapMode}
+            />
+
+            {/* Blocks list */}
             {blocks.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border bg-card px-6 py-12 text-center">
                 <Building className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
@@ -388,20 +430,12 @@ const SiteDetailPage = () => {
         <DialogContent className="sm:max-w-sm">
           <DialogHeader><DialogTitle>Add Block</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Block Name *</Label>
-              <Input placeholder="e.g. Block A, North Village" value={blockForm.name} onChange={(e) => setBlockForm({ ...blockForm, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Description</Label>
-              <Textarea placeholder="Optional description..." value={blockForm.description} onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })} rows={2} />
-            </div>
+            <div className="space-y-1.5"><Label>Block Name *</Label><Input placeholder="e.g. Block A, North Village" value={blockForm.name} onChange={(e) => setBlockForm({ ...blockForm, name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Description</Label><Textarea placeholder="Optional description..." value={blockForm.description} onChange={(e) => setBlockForm({ ...blockForm, description: e.target.value })} rows={2} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddBlock(false)}>Cancel</Button>
-            <Button onClick={handleAddBlock} disabled={!blockForm.name.trim() || createBlock.isPending}>
-              {createBlock.isPending ? "Adding..." : "Add Block"}
-            </Button>
+            <Button onClick={handleAddBlock} disabled={!blockForm.name.trim() || createBlock.isPending}>{createBlock.isPending ? "Adding..." : "Add Block"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -411,27 +445,39 @@ const SiteDetailPage = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Edit Site</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Name *</Label>
-              <Input value={siteForm.name} onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Location</Label>
-              <Input value={siteForm.location} onChange={(e) => setSiteForm({ ...siteForm, location: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Address</Label>
-              <Input value={siteForm.address} onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Description</Label>
-              <Textarea value={siteForm.description} onChange={(e) => setSiteForm({ ...siteForm, description: e.target.value })} rows={3} />
-            </div>
+            <div className="space-y-1.5"><Label>Name *</Label><Input value={siteForm.name} onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Location</Label><Input value={siteForm.location} onChange={(e) => setSiteForm({ ...siteForm, location: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Address</Label><Input value={siteForm.address} onChange={(e) => setSiteForm({ ...siteForm, address: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Description</Label><Textarea value={siteForm.description} onChange={(e) => setSiteForm({ ...siteForm, description: e.target.value })} rows={3} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditSite(false)}>Cancel</Button>
-            <Button onClick={handleEditSite} disabled={!siteForm.name.trim() || updateSite.isPending}>
-              {updateSite.isPending ? "Saving..." : "Save"}
+            <Button onClick={handleEditSite} disabled={!siteForm.name.trim() || updateSite.isPending}>{updateSite.isPending ? "Saving..." : "Save"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Polygon to Block Dialog */}
+      <Dialog open={showAssignPolygon} onOpenChange={(v) => { if (!v) { setShowAssignPolygon(false); setPendingPolygon(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Assign Area to Block</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Select which block this drawn area belongs to:</p>
+          <Select value={assignBlockId} onValueChange={setAssignBlockId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a block" />
+            </SelectTrigger>
+            <SelectContent>
+              {blocks.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name} {b.geo_polygon?.length ? "(will replace existing)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowAssignPolygon(false); setPendingPolygon(null); }}>Cancel</Button>
+            <Button onClick={handleAssignPolygon} disabled={!assignBlockId || updateBlockPolygon.isPending}>
+              {updateBlockPolygon.isPending ? "Saving..." : "Assign"}
             </Button>
           </DialogFooter>
         </DialogContent>
