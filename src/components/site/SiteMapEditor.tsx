@@ -50,14 +50,25 @@ const BLOCK_COLORS = [
   "hsl(180, 60%, 40%)",
 ];
 
-const makeRoomIcon = (color: string) =>
+const makeRoomIcon = (color: string, label: string) =>
   L.divIcon({
     className: "room-pin-icon",
-    html: `<div style="width:20px;height:20px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      </div>
+      <span style="font-size:10px;font-weight:600;color:${color};text-shadow:0 0 3px white,0 0 3px white,0 0 3px white;white-space:nowrap;pointer-events:none;">${label}</span>
     </div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [60, 36],
+    iconAnchor: [30, 11],
+  });
+
+const makeBlockLabel = (name: string, color: string) =>
+  L.divIcon({
+    className: "block-label-icon",
+    html: `<div style="font-size:12px;font-weight:700;color:${color};text-shadow:0 0 4px white,0 0 4px white,0 0 4px white,0 0 4px white;white-space:nowrap;pointer-events:none;text-align:center;">${name}</div>`,
+    iconSize: [100, 20],
+    iconAnchor: [50, 10],
   });
 
 const SiteMapEditor = ({
@@ -85,6 +96,7 @@ const SiteMapEditor = ({
   const mapRef = useRef<L.Map | null>(null);
   const boundsLayerRef = useRef<L.Polygon | null>(null);
   const blockLayersRef = useRef<globalThis.Map<string, L.Polygon>>(new globalThis.Map());
+  const blockLabelLayersRef = useRef<L.Marker[]>([]);
   const roomMarkersRef = useRef<L.Marker[]>([]);
   const drawControlRef = useRef<any>(null);
   const [satellite, setSatellite] = useState(false);
@@ -123,11 +135,13 @@ const SiteMapEditor = ({
     }
   }, [bounds]);
 
-  // Draw block polygons
+  // Draw block polygons + labels
   useEffect(() => {
     if (!mapRef.current) return;
     blockLayersRef.current.forEach((layer) => mapRef.current!.removeLayer(layer));
     blockLayersRef.current.clear();
+    blockLabelLayersRef.current.forEach((m) => mapRef.current!.removeLayer(m));
+    blockLabelLayersRef.current = [];
 
     blocks.forEach((block, i) => {
       const polygon = block.geo_polygon;
@@ -140,6 +154,11 @@ const SiteMapEditor = ({
       poly.bindTooltip(`<strong>${block.name}</strong><br/>${block.rooms.length} room${block.rooms.length !== 1 ? "s" : ""}`, { sticky: true, className: "site-map-tooltip" });
       poly.on("click", () => onBlockClick?.(block));
       blockLayersRef.current.set(block.id, poly);
+
+      // Add persistent label at polygon center
+      const center = poly.getBounds().getCenter();
+      const label = L.marker(center, { icon: makeBlockLabel(block.name, color), interactive: false }).addTo(mapRef.current!);
+      blockLabelLayersRef.current.push(label);
     });
   }, [blocks, selectedBlockId, onBlockClick]);
 
@@ -154,11 +173,12 @@ const SiteMapEditor = ({
       const color = BLOCK_COLORS[i % BLOCK_COLORS.length];
       block.rooms.forEach((room) => {
         if (!room.geo_position) return;
+        const label = room.room_number + (room.name ? ` — ${room.name}` : "");
         const marker = L.marker([room.geo_position.lat, room.geo_position.lng], {
-          icon: makeRoomIcon(color),
+          icon: makeRoomIcon(color, room.room_number),
         }).addTo(mapRef.current!);
         marker.bindTooltip(
-          `<strong>${room.room_number}</strong>${room.name ? ` — ${room.name}` : ""}${room.capacity ? `<br/>Capacity: ${room.capacity}` : ""}`,
+          `<strong>${label}</strong>${room.capacity ? `<br/>Capacity: ${room.capacity}` : ""}`,
           { className: "site-map-tooltip" }
         );
         roomMarkersRef.current.push(marker);

@@ -221,6 +221,7 @@ const SiteDetailPage = () => {
   const createBlock = useCreateBlock();
   const updateBlockPolygon = useUpdateBlockPolygon();
   const createRoom = useCreateRoom();
+  const updateRoom = useUpdateRoom();
 
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showEditSite, setShowEditSite] = useState(false);
@@ -234,6 +235,8 @@ const SiteDetailPage = () => {
   // Room pin placement state
   const [showRoomPinDialog, setShowRoomPinDialog] = useState(false);
   const [pendingRoomPin, setPendingRoomPin] = useState<{ blockId: string; position: { lat: number; lng: number } } | null>(null);
+  const [roomPinMode, setRoomPinMode] = useState<"new" | "existing">("new");
+  const [selectedExistingRoomId, setSelectedExistingRoomId] = useState<string>("");
   const [roomPinForm, setRoomPinForm] = useState({ room_number: "", name: "", capacity: "" });
 
   const site = data?.site;
@@ -299,27 +302,37 @@ const SiteDetailPage = () => {
   const handleRoomPinPlaced = useCallback((blockId: string, position: { lat: number; lng: number }) => {
     setPendingRoomPin({ blockId, position });
     setRoomPinForm({ room_number: "", name: "", capacity: "" });
+    setRoomPinMode("new");
+    setSelectedExistingRoomId("");
     setTimeout(() => setShowRoomPinDialog(true), 0);
   }, []);
 
-  const handleCreateRoomAtPin = () => {
-    if (!pendingRoomPin || !roomPinForm.room_number.trim() || !siteId || !tenantId) return;
-    createRoom.mutate({
-      id: crypto.randomUUID(),
-      block_id: pendingRoomPin.blockId,
-      room_number: roomPinForm.room_number.trim(),
-      name: roomPinForm.name || undefined,
-      capacity: roomPinForm.capacity ? Number(roomPinForm.capacity) : undefined,
-      site_id: siteId,
-      tenant_id: tenantId,
-      geo_position: pendingRoomPin.position,
-    } as any, {
-      onSuccess: () => {
-        setShowRoomPinDialog(false);
-        setPendingRoomPin(null);
-        setRoomPinForm({ room_number: "", name: "", capacity: "" });
-      },
-    });
+  const handleSaveRoomPin = () => {
+    if (!pendingRoomPin) return;
+    const closeDialog = () => {
+      setShowRoomPinDialog(false);
+      setPendingRoomPin(null);
+      setRoomPinForm({ room_number: "", name: "", capacity: "" });
+      setSelectedExistingRoomId("");
+    };
+
+    if (roomPinMode === "existing" && selectedExistingRoomId) {
+      updateRoom.mutate({
+        id: selectedExistingRoomId,
+        geo_position: pendingRoomPin.position,
+      }, { onSuccess: closeDialog });
+    } else if (roomPinMode === "new" && roomPinForm.room_number.trim() && siteId && tenantId) {
+      createRoom.mutate({
+        id: crypto.randomUUID(),
+        block_id: pendingRoomPin.blockId,
+        room_number: roomPinForm.room_number.trim(),
+        name: roomPinForm.name || undefined,
+        capacity: roomPinForm.capacity ? Number(roomPinForm.capacity) : undefined,
+        site_id: siteId,
+        tenant_id: tenantId,
+        geo_position: pendingRoomPin.position,
+      } as any, { onSuccess: closeDialog });
+    }
   };
 
   const handleAddBlock = () => {
@@ -523,33 +536,80 @@ const SiteDetailPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Create Room at Pin Dialog */}
+      {/* Room Pin Dialog */}
       <Dialog open={showRoomPinDialog} onOpenChange={setShowRoomPinDialog}>
-        <DialogContent className="sm:max-w-sm" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Add Room at Pin</DialogTitle>
+            <DialogTitle>Place Room Pin</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Block: <strong>{blocks.find((b) => b.id === pendingRoomPin?.blockId)?.name ?? "—"}</strong>
-          </p>
-          <div className="space-y-3 py-2">
-            <div className="space-y-1.5">
-              <Label>Room Number *</Label>
-              <Input placeholder="e.g. 101" value={roomPinForm.room_number} onChange={(e) => setRoomPinForm({ ...roomPinForm, room_number: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Name</Label>
-              <Input placeholder="e.g. Eagle Room" value={roomPinForm.name} onChange={(e) => setRoomPinForm({ ...roomPinForm, name: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Capacity</Label>
-              <Input type="number" placeholder="e.g. 4" value={roomPinForm.capacity} onChange={(e) => setRoomPinForm({ ...roomPinForm, capacity: e.target.value })} />
-            </div>
-          </div>
+          {(() => {
+            const targetBlock = blocks.find((b) => b.id === pendingRoomPin?.blockId);
+            const blockRooms = targetBlock?.rooms ?? [];
+            return (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Block: <strong>{targetBlock?.name ?? "—"}</strong>
+                </p>
+
+                {/* Mode toggle */}
+                <div className="flex gap-2 pt-1">
+                  <Button variant={roomPinMode === "existing" ? "default" : "outline"} size="sm" className="flex-1"
+                    onClick={() => setRoomPinMode("existing")} disabled={blockRooms.length === 0}>
+                    Assign Existing Room
+                  </Button>
+                  <Button variant={roomPinMode === "new" ? "default" : "outline"} size="sm" className="flex-1"
+                    onClick={() => setRoomPinMode("new")}>
+                    Create New Room
+                  </Button>
+                </div>
+
+                {roomPinMode === "existing" ? (
+                  <div className="space-y-3 py-2">
+                    <div className="space-y-1.5">
+                      <Label>Select Room</Label>
+                      <Select value={selectedExistingRoomId} onValueChange={setSelectedExistingRoomId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a room…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {blockRooms.map((r) => (
+                            <SelectItem key={r.id} value={r.id}>
+                              {r.room_number}{r.name ? ` — ${r.name}` : ""}
+                              {r.geo_position ? " (will move pin)" : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 py-2">
+                    <div className="space-y-1.5">
+                      <Label>Room Number *</Label>
+                      <Input placeholder="e.g. 101" value={roomPinForm.room_number} onChange={(e) => setRoomPinForm({ ...roomPinForm, room_number: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Name</Label>
+                      <Input placeholder="e.g. Eagle Room" value={roomPinForm.name} onChange={(e) => setRoomPinForm({ ...roomPinForm, name: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Capacity</Label>
+                      <Input type="number" placeholder="e.g. 4" value={roomPinForm.capacity} onChange={(e) => setRoomPinForm({ ...roomPinForm, capacity: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowRoomPinDialog(false); setPendingRoomPin(null); }}>Cancel</Button>
-            <Button onClick={handleCreateRoomAtPin} disabled={!roomPinForm.room_number.trim() || createRoom.isPending}>
-              {createRoom.isPending ? "Creating..." : "Create Room"}
+            <Button onClick={handleSaveRoomPin}
+              disabled={
+                (roomPinMode === "new" && !roomPinForm.room_number.trim()) ||
+                (roomPinMode === "existing" && !selectedExistingRoomId) ||
+                createRoom.isPending || updateRoom.isPending
+              }>
+              {createRoom.isPending || updateRoom.isPending ? "Saving..." : roomPinMode === "existing" ? "Assign Pin" : "Create Room"}
             </Button>
           </DialogFooter>
         </DialogContent>
