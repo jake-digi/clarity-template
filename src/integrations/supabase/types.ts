@@ -248,8 +248,9 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           id: string
-          instance_id: string
+          instance_id: string | null
           name: string
+          site_id: string | null
           tenant_id: string
           updated_at: string
         }
@@ -258,8 +259,9 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id: string
-          instance_id: string
+          instance_id?: string | null
           name: string
+          site_id?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -268,8 +270,9 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
-          instance_id?: string
+          instance_id?: string | null
           name?: string
+          site_id?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -279,6 +282,13 @@ export type Database = {
             columns: ["instance_id"]
             isOneToOne: false
             referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocks_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
           {
@@ -829,6 +839,7 @@ export type Database = {
           name: string
           owner_id: string | null
           settings: Json | null
+          site_id: string | null
           start_date: string | null
           status: string
           tenant_id: string
@@ -844,6 +855,7 @@ export type Database = {
           name: string
           owner_id?: string | null
           settings?: Json | null
+          site_id?: string | null
           start_date?: string | null
           status?: string
           tenant_id: string
@@ -859,12 +871,20 @@ export type Database = {
           name?: string
           owner_id?: string | null
           settings?: Json | null
+          site_id?: string | null
           start_date?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "instances_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "instances_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -1356,9 +1376,10 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           id: string
-          instance_id: string
+          instance_id: string | null
           name: string | null
           room_number: string
+          site_id: string | null
           tenant_id: string
           updated_at: string
         }
@@ -1368,9 +1389,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id: string
-          instance_id: string
+          instance_id?: string | null
           name?: string | null
           room_number: string
+          site_id?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -1380,9 +1402,10 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           id?: string
-          instance_id?: string
+          instance_id?: string | null
           name?: string | null
           room_number?: string
+          site_id?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -1399,6 +1422,13 @@ export type Database = {
             columns: ["instance_id"]
             isOneToOne: false
             referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rooms_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
           {
@@ -1457,6 +1487,50 @@ export type Database = {
           },
           {
             foreignKeyName: "routes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sites: {
+        Row: {
+          address: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          id: string
+          location: string | null
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sites_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
