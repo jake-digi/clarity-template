@@ -470,7 +470,12 @@ const CaseDetailPage = () => {
                     <button
                       key={action.type}
                       onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
-                      className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors",
+                        action.variant === "warning" && "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
+                        action.variant === "danger" && "border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10",
+                        action.variant === "default" && "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+                      )}
                     >
                       <action.icon className="w-5 h-5" />
                       <span className="text-[11px] font-medium text-center leading-tight">{action.label}</span>
