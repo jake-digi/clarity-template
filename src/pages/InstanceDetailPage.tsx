@@ -12,10 +12,14 @@ import { SectionCard, InfoRow, EmptyState } from "@/components/participant/Profi
 import {
   ChevronRight, Building2, MapPin, Calendar, Users, Award,
   ClipboardList, ArrowLeft, Pencil, Settings, FolderTree,
-  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation, Briefcase
+  CheckCircle2, Lock, Play, Plus, GripVertical, Navigation, Briefcase,
+  UserCheck, Building, Bed
 } from "lucide-react";
 import InstanceTrackingTab from "@/components/instance/InstanceTrackingTab";
 import InstanceCasesTab from "@/components/instance/InstanceCasesTab";
+import InstanceParticipantsTab from "@/components/instance/InstanceParticipantsTab";
+import InstanceStaffTab from "@/components/instance/InstanceStaffTab";
+import InstanceAccommodationTab from "@/components/instance/InstanceAccommodationTab";
 
 const InstanceDetailPage = () => {
   const { instanceId } = useParams<{ instanceId: string }>();
@@ -149,9 +153,12 @@ const InstanceDetailPage = () => {
 
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
+    { value: "participants", label: "Participants", icon: Users },
+    { value: "staff", label: "Staff", icon: UserCheck },
+    { value: "groups", label: "Groups", icon: FolderTree },
+    { value: "accommodation", label: "Accommodation", icon: Building },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
-    { value: "groups", label: "Groups", icon: FolderTree },
     { value: "tracking", label: "Tracking", icon: Navigation },
     { value: "settings", label: "Settings", icon: Settings },
   ];
@@ -236,6 +243,16 @@ const InstanceDetailPage = () => {
                   </div>
                 </TabsContent>
 
+                {/* Participants */}
+                <TabsContent value="participants" className="mt-0">
+                  <InstanceParticipantsTab instanceId={instanceId!} />
+                </TabsContent>
+
+                {/* Staff */}
+                <TabsContent value="staff" className="mt-0">
+                  <InstanceStaffTab instanceId={instanceId!} />
+                </TabsContent>
+
                 {/* Stages */}
                 <TabsContent value="stages" className="mt-0">
                   <div className="flex items-center justify-between mb-4">
@@ -315,6 +332,11 @@ const InstanceDetailPage = () => {
                       })}
                     </div>
                   )}
+                </TabsContent>
+
+                {/* Accommodation */}
+                <TabsContent value="accommodation" className="mt-0">
+                  <InstanceAccommodationTab instanceId={instanceId!} />
                 </TabsContent>
 
                 {/* Cases */}
