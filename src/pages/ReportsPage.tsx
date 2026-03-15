@@ -210,7 +210,7 @@ const ReportsPage = () => {
                 <Button variant="outline" className="h-9 px-3 gap-2">
                   <Calendar className="w-4 h-4" /> Schedules
                 </Button>
-                <Button className="h-9 px-4 gap-2">
+                <Button className="h-9 px-4 gap-2" onClick={() => navigate("/reports/builder")}>
                   <Plus className="w-4 h-4" /> Create Custom Report
                 </Button>
               </div>
