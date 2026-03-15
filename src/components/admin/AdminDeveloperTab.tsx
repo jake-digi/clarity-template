@@ -397,7 +397,7 @@ const AdminDeveloperTab = () => {
 
   return (
     <div className="space-y-4 max-w-5xl">
-      <Tabs defaultValue="keys" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="keys" className="flex items-center gap-1.5"><Key className="w-3.5 h-3.5" />Keys</TabsTrigger>
           <TabsTrigger value="playground" className="flex items-center gap-1.5"><Play className="w-3.5 h-3.5" />Playground</TabsTrigger>
