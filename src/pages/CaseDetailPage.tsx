@@ -461,29 +461,67 @@ const CaseDetailPage = () => {
 
                 {/* Case details row */}
                 <div className="flex items-center gap-5 mt-3 flex-wrap">
-                  {/* Assigned To - editable dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                  {/* Assigned To - searchable popover */}
+                  <Popover open={assignPopoverOpen} onOpenChange={(open) => { setAssignPopoverOpen(open); if (!open) setAssignSearch(""); }}>
+                    <PopoverTrigger asChild>
                       <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                        <User className="w-3.5 h-3.5" />
+                        {c.assigned_to_id && (() => {
+                          const assignedUser = (staffUsers ?? []).find((u) => u.id === c.assigned_to_id);
+                          return assignedUser?.profile_photo_url ? (
+                            <Avatar className="w-4 h-4">
+                              <AvatarImage src={assignedUser.profile_photo_url} />
+                              <AvatarFallback className="text-[8px]">{assignedUser.first_name?.[0]}</AvatarFallback>
+                            </Avatar>
+                          ) : <User className="w-3.5 h-3.5" />;
+                        })()}
+                        {!c.assigned_to_id && <User className="w-3.5 h-3.5" />}
                         <span className="text-xs text-muted-foreground/70">Assigned:</span>
                         <span className="text-foreground text-xs font-medium">{c.assigned_to_name ?? "Unassigned"}</span>
                         <ChevronDown className="w-2.5 h-2.5 text-muted-foreground/50" />
                       </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto">
-                      <DropdownMenuItem onClick={() => handleAssignCase(null, null)}>
-                        <span className="text-muted-foreground">Unassigned</span>
-                        {!c.assigned_to_id && <span className="ml-auto text-xs text-muted-foreground">current</span>}
-                      </DropdownMenuItem>
-                      {(staffUsers ?? []).map((u) => (
-                        <DropdownMenuItem key={u.id} onClick={() => handleAssignCase(u.id, `${u.first_name}${u.surname ? ` ${u.surname}` : ""}`)}>
-                          {u.first_name}{u.surname ? ` ${u.surname}` : ""} <span className="ml-1 text-muted-foreground text-xs">({u.email})</span>
-                          {u.id === c.assigned_to_id && <span className="ml-auto text-xs text-muted-foreground">current</span>}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0" align="start">
+                      <Command shouldFilter={false}>
+                        <CommandInput placeholder="Search staff..." value={assignSearch} onValueChange={setAssignSearch} />
+                        <CommandList>
+                          <CommandEmpty>No users found</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem onSelect={() => { handleAssignCase(null, null); setAssignPopoverOpen(false); }}>
+                              <User className="w-4 h-4 mr-2 text-muted-foreground" />
+                              <span className="text-muted-foreground">Unassigned</span>
+                              {!c.assigned_to_id && <Check className="ml-auto w-3.5 h-3.5 text-primary" />}
+                            </CommandItem>
+                            {(staffUsers ?? [])
+                              .filter((u) => {
+                                if (!assignSearch) return true;
+                                const q = assignSearch.toLowerCase();
+                                const name = `${u.first_name} ${u.surname ?? ""}`.toLowerCase();
+                                return name.includes(q) || u.email?.toLowerCase().includes(q);
+                              })
+                              .map((u) => (
+                                <CommandItem
+                                  key={u.id}
+                                  onSelect={() => {
+                                    handleAssignCase(u.id, `${u.first_name}${u.surname ? ` ${u.surname}` : ""}`);
+                                    setAssignPopoverOpen(false);
+                                  }}
+                                >
+                                  <Avatar className="w-6 h-6 mr-2">
+                                    <AvatarImage src={u.profile_photo_url ?? undefined} />
+                                    <AvatarFallback className="text-[10px] bg-muted">{u.first_name?.[0]}{u.surname?.[0] ?? ""}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-sm truncate">{u.first_name}{u.surname ? ` ${u.surname}` : ""}</span>
+                                    <span className="text-[10px] text-muted-foreground truncate">{u.email}</span>
+                                  </div>
+                                  {u.id === c.assigned_to_id && <Check className="ml-auto w-3.5 h-3.5 text-primary shrink-0" />}
+                                </CommandItem>
+                              ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <DetailChip icon={CalendarIcon} label="Raised" value={new Date(c.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} />
 
                   {/* Event Time - editable */}
