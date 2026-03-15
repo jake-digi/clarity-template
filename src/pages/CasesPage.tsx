@@ -30,8 +30,11 @@ const CasesPage = () => {
   const navigate = useNavigate();
   const { data: cases, isLoading } = useCases();
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
+
+  const welfareCategoriesList = ["Safeguarding", "Homesickness", "Other"];
 
   const filtered = (cases ?? []).filter((c) => {
     const matchesSearch =
