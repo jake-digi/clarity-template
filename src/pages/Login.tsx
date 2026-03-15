@@ -130,7 +130,7 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="h-11"
+                    className="h-11 rounded-none"
                   />
                 </div>
 
