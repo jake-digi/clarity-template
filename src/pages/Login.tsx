@@ -114,7 +114,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="h-11"
+                className="h-11 rounded-none"
               />
             </div>
 
