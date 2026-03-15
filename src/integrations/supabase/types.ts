@@ -479,6 +479,95 @@ export type Database = {
           },
         ]
       }
+      formal_warnings: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by_participant: boolean
+          case_id: string | null
+          created_at: string
+          details: string | null
+          id: string
+          instance_id: string
+          issued_by: string | null
+          issued_by_name: string | null
+          metadata: Json | null
+          parent_notification_date: string | null
+          parent_notified: boolean
+          participant_id: string
+          reason: string
+          tenant_id: string
+          updated_at: string
+          warning_level: number
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by_participant?: boolean
+          case_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          instance_id: string
+          issued_by?: string | null
+          issued_by_name?: string | null
+          metadata?: Json | null
+          parent_notification_date?: string | null
+          parent_notified?: boolean
+          participant_id: string
+          reason: string
+          tenant_id: string
+          updated_at?: string
+          warning_level?: number
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by_participant?: boolean
+          case_id?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          instance_id?: string
+          issued_by?: string | null
+          issued_by_name?: string | null
+          metadata?: Json | null
+          parent_notification_date?: string | null
+          parent_notified?: boolean
+          participant_id?: string
+          reason?: string
+          tenant_id?: string
+          updated_at?: string
+          warning_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formal_warnings_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "behavior_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formal_warnings_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formal_warnings_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formal_warnings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       global_stage_templates: {
         Row: {
           created_at: string | null
