@@ -132,10 +132,12 @@ const InstanceDetailPage = () => {
 
   const tabs = [
     { value: "overview", label: "Overview", icon: Building2 },
+    { value: "schedule", label: "Schedule", icon: CalendarDays },
     { value: "participants", label: "Participants", icon: Users },
     { value: "staff", label: "Staff", icon: UserCheck },
     { value: "groups", label: "Groups", icon: FolderTree },
     { value: "accommodation", label: "Accommodation", icon: Building },
+    { value: "medical", label: "Medical", icon: Heart },
     { value: "stages", label: "Stages", icon: ClipboardList },
     { value: "cases", label: "Cases", icon: Briefcase },
     { value: "transport", label: "Transport", icon: Bus },
