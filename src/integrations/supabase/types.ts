@@ -121,6 +121,7 @@ export type Database = {
       }
       api_keys: {
         Row: {
+          allowed_ips: string[] | null
           created_at: string
           created_by: string | null
           expires_at: string | null
@@ -135,6 +136,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          allowed_ips?: string[] | null
           created_at?: string
           created_by?: string | null
           expires_at?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          allowed_ips?: string[] | null
           created_at?: string
           created_by?: string | null
           expires_at?: string | null
