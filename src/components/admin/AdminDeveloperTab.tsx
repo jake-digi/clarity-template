@@ -333,7 +333,7 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/revoke`, {
+      const res = await fetch(`${API_INTERNAL_URL}/api/v1/api-keys/revoke`, {
         method: "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ id: revokeTarget.id }),
