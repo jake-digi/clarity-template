@@ -21,7 +21,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import CasesPage from "./pages/CasesPage.tsx";
 import CaseDetailPage from "./pages/CaseDetailPage.tsx";
-
+import RolesPage from "./pages/RolesPage.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
