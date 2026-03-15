@@ -250,7 +250,7 @@ export function useDeleteBlock() {
 export function useCreateRoom() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; block_id: string; room_number: string; name?: string; capacity?: number; site_id: string; tenant_id: string; geo_position?: { lat: number; lng: number } }) => {
+    mutationFn: async (input: { id: string; block_id: string; room_number: string; name?: string; capacity?: number; site_id: string; tenant_id: string; geo_position?: { lat: number; lng: number }; room_type?: string }) => {
       const { data, error } = await supabase.from("rooms").insert(input).select().single();
       if (error) throw error;
       return data;
