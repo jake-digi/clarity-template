@@ -267,7 +267,7 @@ export function useCreateRoom() {
 export function useUpdateRoom() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; room_number?: string; name?: string; capacity?: number; geo_position?: { lat: number; lng: number } | null }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; room_number?: string; name?: string; capacity?: number; geo_position?: { lat: number; lng: number } | null; room_type?: string }) => {
       const { error } = await supabase.from("rooms").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
     },
