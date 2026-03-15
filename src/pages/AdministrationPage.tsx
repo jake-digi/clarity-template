@@ -30,20 +30,14 @@ const AdministrationPage = () => {
         <DashboardSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           <Tabs value={tab} onValueChange={setTab} className="flex flex-col flex-1 min-h-0">
-            {/* Page banner — matches Participants page */}
+            {/* Page banner */}
             <div className="border-b border-border bg-card px-6 py-5 shrink-0">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-                <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
-                <ChevronRight className="w-3 h-3" />
-                <span className="text-foreground font-medium">Administration</span>
-              </div>
-
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div>
                   <h1 className="text-2xl font-semibold text-foreground tracking-tight">Administration</h1>
+                  <p className="text-sm text-muted-foreground mt-1">Manage users, roles, activity logs, and developer settings</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">Manage users, roles, activity logs, and developer settings</p>
             </div>
 
             {/* Tab bar — sticky below banner */}
