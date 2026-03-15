@@ -29,6 +29,7 @@ interface SiteMapEditorProps {
   blocks: SiteBlock[];
   onBoundsChange: (bounds: GeoBounds | null) => void;
   onBlockPolygonChange: (blockId: string, polygon: GeoPolygon | null) => void;
+  onBlockPolygonDrawn?: (polygon: GeoPolygon) => void;
   onBlockClick?: (block: SiteBlock) => void;
   selectedBlockId?: string | null;
   mode: "view" | "set-bounds" | "draw-block";
