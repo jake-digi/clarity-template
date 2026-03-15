@@ -3,12 +3,14 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Activity, Code2, ChevronRight, Wrench } from "lucide-react";
+import { Shield, Activity, Code2, Users, Wrench } from "lucide-react";
 import AdminRolesTab from "@/components/admin/AdminRolesTab";
+import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminActivityTab from "@/components/admin/AdminActivityTab";
 import AdminDeveloperTab from "@/components/admin/AdminDeveloperTab";
 
 const tabs = [
+  { value: "users", label: "Users", icon: Users },
   { value: "roles", label: "Roles & Permissions", icon: Shield },
   { value: "activity", label: "Activity Log", icon: Activity },
   { value: "developer", label: "Developer", icon: Code2 },
@@ -17,7 +19,7 @@ const tabs = [
 const AdministrationPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const tab = searchParams.get("tab") ?? "roles";
+  const tab = searchParams.get("tab") ?? "users";
 
   const setTab = (value: string) => {
     setSearchParams({ tab: value }, { replace: true });
@@ -58,6 +60,9 @@ const AdministrationPage = () => {
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-auto">
+              <TabsContent value="users" className="mt-0 p-6">
+                <AdminUsersTab />
+              </TabsContent>
               <TabsContent value="roles" className="mt-0 p-6">
                 <AdminRolesTab />
               </TabsContent>
