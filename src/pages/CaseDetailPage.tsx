@@ -196,13 +196,13 @@ const CaseDetailPage = () => {
   };
 
   const caseActionTypes = [
-    { type: "formal_warning", label: "Add Formal Warning", icon: Gavel, color: "text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100" },
-    { type: "phone_call", label: "Log Phone Call", icon: Phone, color: "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100" },
-    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, color: "text-purple-600 bg-purple-50 border-purple-200 hover:bg-purple-100" },
-    { type: "email_parent", label: "Email Parent", icon: Mail, color: "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
-    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
-    { type: "escalate", label: "Escalate", icon: Siren, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
-    { type: "add_note", label: "Add Case Note", icon: BookOpen, color: "text-muted-foreground bg-muted border-border hover:bg-accent" },
+    { type: "formal_warning", label: "Formal Warning", icon: Gavel },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus },
+    { type: "email_parent", label: "Email Parent", icon: Mail },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert },
+    { type: "escalate", label: "Escalate", icon: Siren },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen },
   ];
 
   const handleCaseAction = async () => {
