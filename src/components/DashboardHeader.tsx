@@ -311,9 +311,7 @@ const DashboardHeader = () => {
         <button className="p-2 rounded-lg hover:bg-muted transition-colors">
           <MessageSquare className="w-5 h-5 text-muted-foreground" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
-          <User className="w-full h-full p-1.5 text-muted-foreground" />
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   );
