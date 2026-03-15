@@ -335,6 +335,18 @@ const SiteMapEditor = ({
     };
   }, [mode]);
 
+  // Handle add-feature mode: click anywhere to place a feature
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || mode !== "add-feature") return;
+    const container = map.getContainer();
+    container.style.cursor = "crosshair";
+    const onClick = (e: L.LeafletMouseEvent) => {
+      onFeaturePinPlacedRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng });
+    };
+    map.on("click", onClick);
+    return () => { map.off("click", onClick); container.style.cursor = ""; };
+
   // Ray-casting point-in-polygon check
   function isPointInPolygon(point: L.LatLng, polygon: L.LatLng[]): boolean {
     let inside = false;
