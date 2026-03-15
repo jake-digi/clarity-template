@@ -202,9 +202,9 @@ const SiteMapEditor = ({
         onModeChange("view");
       };
 
-      map.on(L.Draw.Event.CREATED, onCreated);
+      map.on(LDraw.Event.CREATED, onCreated);
       return () => {
-        map.off(L.Draw.Event.CREATED, onCreated);
+        map.off(LDraw.Event.CREATED, onCreated);
       };
     }
 
