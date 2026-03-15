@@ -24,10 +24,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Copy, Check, Key, Database, Code2,
   Plus, Trash2, AlertTriangle, Play, FileText,
-  RefreshCw, Clock, Send, ChevronDown, ChevronRight,
+  RefreshCw, Clock, Send, ChevronDown, ChevronRight, Download,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
 const API_INTERNAL_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
@@ -333,6 +334,163 @@ const AdminDeveloperTab = () => {
   const [refSearch, setRefSearch] = useState("");
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // ── PDF Download ──
+  const downloadPdf = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pw = doc.internal.pageSize.getWidth();
+    const margin = 16;
+    const contentW = pw - margin * 2;
+    let y = 20;
+
+    const checkPage = (need: number) => {
+      if (y + need > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        y = 20;
+      }
+    };
+
+    // Brand header bar
+    doc.setFillColor(10, 36, 34); // JLGB navy-ish
+    doc.rect(0, 0, pw, 32, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("CheckPoint API Reference", margin, 14);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Base URL: ${API_BASE_URL}`, margin, 22);
+    doc.text(`Generated: ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`, margin, 28);
+    y = 42;
+
+    // Auth note
+    doc.setTextColor(80, 80, 80);
+    doc.setFontSize(8);
+    doc.text("All endpoints require X-API-Key header unless otherwise noted.", margin, y);
+    y += 8;
+
+    endpointGroups.forEach((group) => {
+      checkPage(24);
+
+      // Group header
+      doc.setFillColor(245, 245, 245);
+      doc.rect(margin, y - 4, contentW, 10, "F");
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(group.title, margin + 2, y + 2);
+      y += 10;
+
+      if (group.description) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(group.description, margin + 2, y);
+        y += 5;
+      }
+
+      group.endpoints.forEach((ep) => {
+        checkPage(30);
+
+        // Method + path
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        const methodColors: Record<string, [number, number, number]> = {
+          GET: [16, 185, 129], POST: [59, 130, 246], PATCH: [245, 158, 11],
+          PUT: [245, 158, 11], DELETE: [239, 68, 68],
+        };
+        const mc = methodColors[ep.method] || [100, 100, 100];
+        doc.setTextColor(mc[0], mc[1], mc[2]);
+        doc.text(ep.method, margin + 2, y);
+        const mw = doc.getTextWidth(ep.method) + 3;
+        doc.setTextColor(30, 30, 30);
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        doc.text(ep.path, margin + 2 + mw, y);
+        y += 4;
+
+        // Description
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 100, 100);
+        doc.text(ep.description, margin + 2, y);
+        y += 4;
+
+        // Example body
+        if (ep.exampleBody) {
+          checkPage(20);
+          doc.setFontSize(6.5);
+          doc.setTextColor(60, 60, 60);
+          doc.setFont("helvetica", "bold");
+          doc.text("Request Body:", margin + 2, y);
+          y += 3;
+          doc.setFont("courier", "normal");
+          doc.setFontSize(6);
+          try {
+            const formatted = JSON.stringify(JSON.parse(ep.exampleBody), null, 2);
+            const lines = formatted.split("\n").slice(0, 12);
+            lines.forEach((line) => {
+              checkPage(4);
+              doc.text(line, margin + 4, y);
+              y += 3;
+            });
+            if (formatted.split("\n").length > 12) {
+              doc.text("  ...", margin + 4, y);
+              y += 3;
+            }
+          } catch { /* skip */ }
+        }
+
+        // Example response
+        if (ep.exampleResponse) {
+          checkPage(20);
+          doc.setFontSize(6.5);
+          doc.setTextColor(60, 60, 60);
+          doc.setFont("helvetica", "bold");
+          doc.text("Example Response:", margin + 2, y);
+          y += 3;
+          doc.setFont("courier", "normal");
+          doc.setFontSize(6);
+          try {
+            const formatted = JSON.stringify(JSON.parse(ep.exampleResponse), null, 2);
+            const lines = formatted.split("\n").slice(0, 12);
+            lines.forEach((line) => {
+              checkPage(4);
+              doc.text(line, margin + 4, y);
+              y += 3;
+            });
+            if (formatted.split("\n").length > 12) {
+              doc.text("  ...", margin + 4, y);
+              y += 3;
+            }
+          } catch { /* skip */ }
+        }
+
+        // Separator line
+        y += 2;
+        doc.setDrawColor(220, 220, 220);
+        doc.line(margin, y, pw - margin, y);
+        y += 4;
+      });
+
+      y += 4;
+    });
+
+    // Footer on every page
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(160, 160, 160);
+      doc.setFont("helvetica", "normal");
+      const ph = doc.internal.pageSize.getHeight();
+      doc.text(`CheckPoint API Reference — Page ${i} of ${totalPages}`, margin, ph - 8);
+      doc.text("checkpoint.jlgb.org", pw - margin - doc.getTextWidth("checkpoint.jlgb.org"), ph - 8);
+    }
+
+    doc.save("CheckPoint-API-Reference.pdf");
+    toast({ title: "PDF downloaded" });
+  };
 
   const copyToClipboard = (value: string, field: string) => {
     navigator.clipboard.writeText(value);
@@ -853,15 +1011,21 @@ const AdminDeveloperTab = () => {
             <CopyButton value={API_BASE_URL} field="ref_base_url" />
           </div>
 
-          {/* Search */}
-          <div className="relative">
-            <Input
-              placeholder="Search endpoints…"
-              value={refSearch}
-              onChange={(e) => setRefSearch(e.target.value)}
-              className="text-xs h-9 pl-8"
-            />
-            <Code2 className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+          {/* Search + Download */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search endpoints…"
+                value={refSearch}
+                onChange={(e) => setRefSearch(e.target.value)}
+                className="text-xs h-9 pl-8"
+              />
+              <Code2 className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+            </div>
+            <Button variant="outline" size="sm" className="h-9 gap-1.5 shrink-0" onClick={downloadPdf}>
+              <Download className="w-3.5 h-3.5" />
+              Download PDF
+            </Button>
           </div>
 
           {/* Endpoint tables by group */}
