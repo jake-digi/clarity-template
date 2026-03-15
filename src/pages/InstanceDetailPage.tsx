@@ -58,20 +58,7 @@ const InstanceDetailPage = () => {
     },
   });
 
-  const { data: stageTasks = [] } = useQuery({
-    queryKey: ["stage-tasks", instanceId],
-    enabled: !!instanceId && stages.length > 0,
-    queryFn: async () => {
-      const stageIds = stages.map((s) => s.id);
-      const { data, error } = await supabase
-        .from("stage_tasks")
-        .select("*")
-        .in("stage_template_id", stageIds)
-        .order("order_number", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+
 
   const { data: subgroups = [] } = useQuery({
     queryKey: ["instance-subgroups", instanceId],
