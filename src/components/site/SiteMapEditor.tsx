@@ -20,10 +20,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-export interface GeoBounds {
-  northEast: { lat: number; lng: number };
-  southWest: { lat: number; lng: number };
-}
+// Site bounds stored as a polygon (array of [lat, lng] points)
+export type GeoBounds = [number, number][];
 
 export type GeoPolygon = [number, number][];
 
@@ -62,7 +60,7 @@ const SiteMapEditor = ({
 }: SiteMapEditorProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const boundsLayerRef = useRef<L.Rectangle | null>(null);
+  const boundsLayerRef = useRef<L.Polygon | null>(null);
   const blockLayersRef = useRef<globalThis.Map<string, L.Polygon>>(new globalThis.Map());
   const drawControlRef = useRef<any>(null);
   const [satellite, setSatellite] = useState(false);
@@ -73,10 +71,10 @@ const SiteMapEditor = ({
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
-      center: bounds
-        ? [(bounds.northEast.lat + bounds.southWest.lat) / 2, (bounds.northEast.lng + bounds.southWest.lng) / 2]
-        : [51.65, -0.35], // Default to London area
-      zoom: bounds ? 17 : 13,
+      center: bounds?.length
+        ? [bounds.reduce((s, p) => s + p[0], 0) / bounds.length, bounds.reduce((s, p) => s + p[1], 0) / bounds.length] as [number, number]
+        : [51.65, -0.35],
+      zoom: bounds?.length ? 17 : 13,
       zoomControl: true,
     });
 
@@ -99,7 +97,7 @@ const SiteMapEditor = ({
     tileLayerRef.current.setUrl(satellite ? SATELLITE_URL : OSM_URL);
   }, [satellite]);
 
-  // Draw site bounds rectangle
+  // Draw site bounds polygon
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -108,18 +106,15 @@ const SiteMapEditor = ({
       boundsLayerRef.current = null;
     }
 
-    if (bounds) {
-      const rect = L.rectangle(
-        [[bounds.southWest.lat, bounds.southWest.lng], [bounds.northEast.lat, bounds.northEast.lng]],
-        {
-          color: "hsl(204, 100%, 40%)",
-          weight: 2,
-          fillOpacity: 0.08,
-          dashArray: "8 4",
-        }
-      ).addTo(mapRef.current);
-      boundsLayerRef.current = rect;
-      mapRef.current.fitBounds(rect.getBounds(), { padding: [30, 30] });
+    if (bounds?.length) {
+      const poly = L.polygon(bounds, {
+        color: "hsl(204, 100%, 40%)",
+        weight: 2,
+        fillOpacity: 0.08,
+        dashArray: "8 4",
+      }).addTo(mapRef.current);
+      boundsLayerRef.current = poly;
+      mapRef.current.fitBounds(poly.getBounds(), { padding: [30, 30] });
     }
   }, [bounds]);
 
@@ -173,14 +168,15 @@ const SiteMapEditor = ({
       const drawControl = new (L.Control as any).Draw({
         position: "topright",
         draw: {
-          rectangle: {
+          polygon: {
+            allowIntersection: false,
             shapeOptions: {
               color: "hsl(204, 100%, 40%)",
               weight: 2,
               fillOpacity: 0.1,
             },
           },
-          polygon: false,
+          rectangle: false,
           polyline: false,
           circle: false,
           marker: false,
@@ -192,13 +188,10 @@ const SiteMapEditor = ({
       drawControlRef.current = drawControl;
 
       const onCreated = (e: any) => {
-        const layer = e.layer as L.Rectangle;
-        const b = layer.getBounds();
-        onBoundsChange({
-          northEast: { lat: b.getNorthEast().lat, lng: b.getNorthEast().lng },
-          southWest: { lat: b.getSouthWest().lat, lng: b.getSouthWest().lng },
-        });
+        const layer = e.layer as L.Polygon;
+        const latlngs = (layer.getLatLngs()[0] as L.LatLng[]).map((ll) => [ll.lat, ll.lng] as [number, number]);
         map.removeLayer(layer);
+        onBoundsChange(latlngs);
         onModeChange("view");
       };
 
@@ -280,9 +273,9 @@ const SiteMapEditor = ({
             onClick={() => onModeChange(mode === "set-bounds" ? "view" : "set-bounds")}
           >
             <Square className="w-3.5 h-3.5" />
-            {bounds ? "Redraw Bounds" : "Set Bounds"}
+            {bounds?.length ? "Redraw Bounds" : "Set Bounds"}
           </Button>
-          {bounds && (
+          {bounds?.length ? (
             <Button
               variant={mode === "draw-block" ? "default" : "ghost"}
               size="sm"
@@ -292,7 +285,7 @@ const SiteMapEditor = ({
               <Pentagon className="w-3.5 h-3.5" />
               Draw Block
             </Button>
-          )}
+          ) : null}
           {mode !== "view" && (
             <Button
               variant="ghost"
