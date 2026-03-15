@@ -25,6 +25,7 @@ const InviteUserDialog = ({ open, onOpenChange }: InviteUserDialogProps) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [roleId, setRoleId] = useState("");
+  const [inviteType, setInviteType] = useState<"checkpoint" | "developer">("checkpoint");
   const [loading, setLoading] = useState(false);
 
   const { data: roles = [] } = useQuery({

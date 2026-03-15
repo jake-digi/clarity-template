@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Resend: from address must use a verified domain (e.g. checkpoint.jlgb.org in Resend dashboard)
 const INVITE_FROM_EMAIL = "Checkpoint <noreply@checkpoint.jlgb.org>";
 const DEFAULT_ORIGIN = "https://checkpoint.jlgb.org";
-const LOGO_URL = "https://checkpoint.jlgb.org/checkpoint-logo.png";
+const CHECKPOINT_LOGO_URL = "https://checkpoint.jlgb.org/checkpoint-logo.png";
+const JLGB_LOGO_URL = "https://www.jlgb.org/components/com_jlgb/assets/JLGB_logo_BYBS_navy_notagline_315x215.png";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,22 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+/** Decode JWT payload and return sub claim. Works with Auth0 and Supabase JWTs. */
+function getJwtSub(authHeader: string): string | null {
+  try {
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    const parsed = JSON.parse(decoded) as { sub?: string };
+    return parsed.sub ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function buildInviteEmailHtml(firstName: string, resetLink: string): string {
@@ -32,10 +49,19 @@ function buildInviteEmailHtml(firstName: string, resetLink: string): string {
     <tr>
       <td align="center" style="padding: 40px 20px;">
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;">
-          <!-- Header with logo -->
+          <!-- Header with logos -->
           <tr>
             <td style="padding: 36px 40px 28px 40px; background-color: #ffffff; text-align: center; border-bottom: 3px solid #0a2422;">
-              <img src="${LOGO_URL}" alt="Checkpoint" width="180" height="54" style="display: inline-block; max-width: 180px; height: auto; vertical-align: middle;" />
+              <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto;">
+                <tr>
+                  <td style="padding: 0 12px; vertical-align: middle;">
+                    <img src="${CHECKPOINT_LOGO_URL}" alt="Checkpoint" width="140" height="42" style="display: block; max-width: 140px; height: auto;" />
+                  </td>
+                  <td style="padding: 0 12px; vertical-align: middle; border-left: 1px solid #e2e8f0;">
+                    <img src="${JLGB_LOGO_URL}" alt="JLGB" width="100" height="68" style="display: block; max-width: 100px; height: auto;" />
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <!-- Main content -->
@@ -96,29 +122,25 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) return json({ error: "RESEND_API_KEY not configured" }, 500);
 
-    // Verify the calling user is authenticated
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user: caller }, error: authErr } = await userClient.auth.getUser();
-    if (authErr || !caller) {
-      const msg = authErr?.message ?? "Invalid or expired session. Please sign in again.";
-      return json({ error: msg }, 401);
-    }
+    // Extract sub from JWT (supports Auth0 and Supabase JWTs)
+    const sub = getJwtSub(authHeader);
+    if (!sub) return json({ error: "Invalid or expired token. Please sign in again." }, 401);
 
-    // Get caller's tenant
     const adminClient = createClient(supabaseUrl, serviceKey);
     const { data: callerUser } = await adminClient
       .from("users")
       .select("tenant_id")
-      .eq("auth_id", caller.id)
+      .eq("auth_id", sub)
       .single();
-    if (!callerUser) return json({ error: "User record not found" }, 403);
+    if (!callerUser) return json({ error: "User record not found. Your account may not be synced." }, 403);
 
     const { email, first_name, last_name, role_id } = await req.json();
     if (!email || !first_name) return json({ error: "email and first_name are required" }, 400);
 
-    // Create the auth user with a temp password (they'll reset via invite link)
+    const origin = req.headers.get("origin") || DEFAULT_ORIGIN;
+    let authUserId: string;
+
+    // Create the auth user (or use existing if already registered)
     const tempPassword = crypto.randomUUID() + "Aa1!";
     const { data: newAuth, error: createErr } = await adminClient.auth.admin.createUser({
       email,
@@ -126,37 +148,38 @@ Deno.serve(async (req) => {
       email_confirm: true,
       user_metadata: { first_name, last_name },
     });
+
     if (createErr) {
-      const msg = createErr.message?.includes("already been registered") || createErr.message?.includes("already exists")
-        ? "A user with this email is already registered."
-        : createErr.message;
-      return json({ error: msg }, 400);
-    }
-
-    // Create user record in users table
-    const newUserId = crypto.randomUUID();
-    const { error: insertErr } = await adminClient.from("users").insert({
-      id: newUserId,
-      auth_id: newAuth.user.id,
-      email,
-      first_name,
-      last_name: last_name || null,
-      surname: last_name || null,
-      tenant_id: callerUser.tenant_id,
-      status: "active",
-    });
-    if (insertErr) return json({ error: insertErr.message || "Failed to create user record" }, 500);
-
-    // Assign role if provided
-    if (role_id) {
-      await adminClient.from("user_role_assignments").insert({
-        user_id: newUserId,
-        role_id,
+      const isAlreadyRegistered = createErr.message?.includes("already been registered") || createErr.message?.includes("already exists");
+      if (!isAlreadyRegistered) return json({ error: createErr.message }, 400);
+      // User exists in auth — send invite anyway (generateLink works with email)
+      authUserId = ""; // Not needed for generateLink
+    } else {
+      authUserId = newAuth!.user.id;
+      const newUserId = crypto.randomUUID();
+      const { error: insertErr } = await adminClient.from("users").insert({
+        id: newUserId,
+        auth_id: authUserId,
+        email,
+        first_name,
+        last_name: last_name || null,
+        surname: last_name || null,
+        tenant_id: callerUser.tenant_id,
+        status: "active",
       });
+      if (insertErr) {
+        const isDuplicate = insertErr.message?.includes("duplicate key") || insertErr.message?.includes("unique constraint");
+        if (!isDuplicate) return json({ error: insertErr.message || "Failed to create user record" }, 500);
+        // User already in public.users (e.g. from partial previous run) — continue to send email
+      } else if (role_id) {
+        await adminClient.from("user_role_assignments").insert({
+          user_id: newUserId,
+          role_id,
+        });
+      }
     }
 
     // Generate password reset link for the invite
-    const origin = req.headers.get("origin") || DEFAULT_ORIGIN;
     const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
       type: "recovery",
       email,
@@ -184,11 +207,10 @@ Deno.serve(async (req) => {
     if (!emailRes.ok) {
       const errBody = await emailRes.text();
       console.error("Resend error:", errBody);
-      // User was still created, just email failed
-      return json({ success: true, user_id: newUserId, email_sent: false, email_error: errBody });
+      return json({ success: true, user_id: authUserId, email_sent: false, email_error: errBody });
     }
 
-    return json({ success: true, user_id: newUserId, email_sent: true });
+    return json({ success: true, user_id: authUserId, email_sent: true });
   } catch (e) {
     console.error("invite-user error:", e);
     return json({ error: e.message }, 500);
