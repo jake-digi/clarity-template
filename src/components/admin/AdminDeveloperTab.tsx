@@ -26,7 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Copy, Check, ExternalLink, Key, Database, Code2,
   Plus, Trash2, AlertTriangle, Play, FileText,
-  RefreshCw, Clock, Send,
+  RefreshCw, Clock, Send, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
