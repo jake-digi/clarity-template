@@ -77,10 +77,6 @@ const Login = () => {
           <div className="absolute top-6 left-6 flex items-center gap-2">
             <img src={checkpointLogo} alt="Checkpoint" className="h-14 brightness-0 invert" />
           </div>
-          {/* branding */}
-          <div className="absolute bottom-8 left-6 right-6 text-white">
-            <p className="text-sm font-medium">Checkpoint</p>
-          </div>
         </div>
 
         {/* Right panel – form */}
