@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle } from "lucide-react";
+import { Search, Bell, MessageSquare, User, Users, UserCheck, UsersRound, BedDouble, Briefcase, FileWarning, BarChart3, GitCompareArrows, Building2, ShieldCheck, History, ClipboardCheck, AlertTriangle, LogOut, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import jlgbLogo from "@/assets/jlgb-logo.png";
 
 interface SearchItem {
@@ -33,6 +34,39 @@ const searchIndex: SearchItem[] = [
 function getInitials(name: string): string {
   return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 }
+const ProfileMenu = () => {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="w-9 h-9 rounded-full bg-muted overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring">
+          <User className="w-full h-full p-1.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => navigate("/profile")}>
+          <User className="w-4 h-4 mr-2" />
+          My Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/admin")}>
+          <Settings className="w-4 h-4 mr-2" />
+          Administration
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+          <LogOut className="w-4 h-4 mr-2" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const DashboardHeader = () => {
   const navigate = useNavigate();
@@ -311,9 +345,7 @@ const DashboardHeader = () => {
         <button className="p-2 rounded-lg hover:bg-muted transition-colors">
           <MessageSquare className="w-5 h-5 text-muted-foreground" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
-          <User className="w-full h-full p-1.5 text-muted-foreground" />
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   );
