@@ -219,8 +219,8 @@ const PeopleManagement = () => {
           </div>
 
           {/* Scrollable table area */}
-          <div className="flex-1 overflow-auto px-6 py-4">
-            <div className="bg-card rounded-lg border border-border overflow-hidden">
+          <div className="flex-1 overflow-auto">
+            <div className="bg-card overflow-hidden">
               {isLoading ? (
                 <div className="p-8 space-y-3">
                   {Array.from({ length: 8 }).map((_, i) => (
