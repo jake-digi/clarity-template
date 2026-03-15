@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useTenantId } from "@/hooks/useTenantId";
 import {
   useSiteDetail, useUpdateSite,
   useCreateBlock, useUpdateBlock, useDeleteBlock,
