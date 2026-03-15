@@ -317,6 +317,11 @@ const InstanceDetailPage = () => {
                   )}
                 </TabsContent>
 
+                {/* Cases */}
+                <TabsContent value="cases" className="mt-0">
+                  <InstanceCasesTab instanceId={instanceId!} />
+                </TabsContent>
+
                 {/* Tracking */}
                 <TabsContent value="tracking" className="mt-0">
                   <InstanceTrackingTab instanceId={instanceId!} subgroups={subgroups} />
