@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import ParticipantDrawer from "@/components/ParticipantDrawer";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Input } from "@/components/ui/input";
@@ -124,6 +125,7 @@ const Participants = () => {
     return [...names].sort();
   }, [participants]);
   const statuses = useMemo(() => [...new Set(participants.map((p) => p.status))], [participants]);
+  const [drawerParticipantId, setDrawerParticipantId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return participants
@@ -298,7 +300,7 @@ const Participants = () => {
                       </TableRow>
                     ) : (
                       paged.map((p) => (
-                        <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => navigate(`/participants/${p.id}`)}>
+                        <TableRow key={p.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => setDrawerParticipantId(p.id)}>
                           {columns.map((col) => (
                             <TableCell key={col.key} className={col.className}>
                               {col.render(p)}
@@ -363,6 +365,12 @@ const Participants = () => {
               </div>
             </div>
           )}
+
+          <ParticipantDrawer
+            participantId={drawerParticipantId}
+            open={!!drawerParticipantId}
+            onOpenChange={(open) => { if (!open) setDrawerParticipantId(null); }}
+          />
         </main>
       </div>
     </div>

@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SectionCard, EmptyState } from "@/components/participant/ProfileShared";
-import { Search, Users, ExternalLink, MapPin, Bed } from "lucide-react";
+import { Search, Users, Bed } from "lucide-react";
+import ParticipantDrawer from "@/components/ParticipantDrawer";
 
 interface Props {
   instanceId: string;
 }
 
 const InstanceParticipantsTab = ({ instanceId }: Props) => {
-  const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [drawerParticipantId, setDrawerParticipantId] = useState<string | null>(null);
 
   const { data: assignments, isLoading } = useQuery({
     queryKey: ["instance-participant-assignments", instanceId],
@@ -78,12 +77,15 @@ const InstanceParticipantsTab = ({ instanceId }: Props) => {
                 <th className="text-left font-medium text-muted-foreground px-4 py-2.5">Unit</th>
                 <th className="text-left font-medium text-muted-foreground px-4 py-2.5">Room</th>
                 <th className="text-left font-medium text-muted-foreground px-4 py-2.5">Status</th>
-                <th className="text-right font-medium text-muted-foreground px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((a) => (
-                <tr key={a.id} className="hover:bg-muted/30 transition-colors">
+                <tr
+                  key={a.id}
+                  className="hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => setDrawerParticipantId(a.participant_id)}
+                >
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
@@ -105,17 +107,18 @@ const InstanceParticipantsTab = ({ instanceId }: Props) => {
                       <Badge variant="secondary" className="text-[10px]">On-site</Badge>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/participants/${a.participant_id}`)}>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <ParticipantDrawer
+        participantId={drawerParticipantId}
+        open={!!drawerParticipantId}
+        onOpenChange={(open) => { if (!open) setDrawerParticipantId(null); }}
+      />
     </div>
   );
 };

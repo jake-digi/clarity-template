@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import ParticipantDrawer from "@/components/ParticipantDrawer";
 import {
   useSupergroups, useSubgroups, useSubgroupParticipants,
   useCreateSupergroup, useUpdateSupergroup, useDeleteSupergroup,
@@ -53,6 +54,7 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
   const [deleteTarget, setDeleteTarget] = useState<{ type: "supergroup" | "subgroup"; id: string; name: string } | null>(null);
   const [assignDialog, setAssignDialog] = useState<{ open: boolean; subgroupId: string; supergroupId: string } | null>(null);
   const [assignSearch, setAssignSearch] = useState("");
+  const [drawerParticipantId, setDrawerParticipantId] = useState<string | null>(null);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -243,14 +245,14 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
                                 {subParticipants.map((a) => {
                                   const p = participantMap.get(a.participant_id);
                                   return (
-                                    <div key={a.id} className="flex items-center gap-2.5 py-1">
+                                    <div key={a.id} className="flex items-center gap-2.5 py-1 cursor-pointer hover:bg-muted/30 rounded-md px-1 -mx-1 transition-colors" onClick={() => setDrawerParticipantId(a.participant_id)}>
                                       <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">
                                         {p?.first_name?.[0]}{p?.surname?.[0]}
                                       </div>
                                       <span className="text-xs text-foreground flex-1">{p?.full_name ?? "Unknown"}</span>
                                       <Button
                                         variant="ghost" size="icon" className="h-5 w-5 text-muted-foreground hover:text-destructive"
-                                        onClick={() => handleAssign(a.id, null, null)}
+                                        onClick={(e) => { e.stopPropagation(); handleAssign(a.id, null, null); }}
                                         title="Remove from subgroup"
                                       >
                                         <UserMinus className="w-3 h-3" />
@@ -282,7 +284,7 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
             {unassignedParticipants.map((a) => {
               const p = participantMap.get(a.participant_id);
               return (
-                <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm">
+                <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm cursor-pointer hover:bg-muted transition-colors" onClick={() => setDrawerParticipantId(a.participant_id)}>
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">
                     {p?.first_name?.[0]}{p?.surname?.[0]}
                   </div>
@@ -439,6 +441,12 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ParticipantDrawer
+        participantId={drawerParticipantId}
+        open={!!drawerParticipantId}
+        onOpenChange={(open) => { if (!open) setDrawerParticipantId(null); }}
+      />
     </div>
   );
 };
