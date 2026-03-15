@@ -108,7 +108,7 @@ export default function InstanceCasesTab({ instanceId }: InstanceCasesTabProps) 
           </SelectContent>
         </Select>
         <div className="ml-auto">
-          <Button size="sm" className="gap-1.5 h-8">
+          <Button size="sm" className="gap-1.5 h-8" onClick={() => setNewCaseOpen(true)}>
             <Plus className="w-3.5 h-3.5" />
             New Case
           </Button>
