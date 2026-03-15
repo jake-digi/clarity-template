@@ -41,9 +41,8 @@ const InstanceAccommodationTab = ({ instanceId }: Props) => {
   const [reassignOccupant, setReassignOccupant] = useState<RoomOccupant | null>(null);
   const [drawerParticipantId, setDrawerParticipantId] = useState<string | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  );
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
+  const sensors = useSensors(pointerSensor);
 
   // Occupants grouped by room
   const occupantsByRoom = useMemo(() => {
