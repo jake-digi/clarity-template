@@ -133,8 +133,8 @@ export function useCreateSite() {
 export function useUpdateSite() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; name?: string; location?: string; address?: string; description?: string }) => {
-      const { error } = await supabase.from("sites").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", id);
+    mutationFn: async ({ id, ...updates }: { id: string; name?: string; location?: string; address?: string; description?: string; geo_bounds?: any }) => {
+      const { error } = await supabase.from("sites").update({ ...updates, updated_at: new Date().toISOString() } as any).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -143,6 +143,20 @@ export function useUpdateSite() {
       toast.success("Site updated");
     },
     onError: (e) => toast.error("Failed to update site: " + e.message),
+  });
+}
+
+export function useUpdateBlockPolygon() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, geo_polygon }: { id: string; geo_polygon: [number, number][] }) => {
+      const { error } = await supabase.from("blocks").update({ geo_polygon, updated_at: new Date().toISOString() } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["site"] });
+    },
+    onError: (e) => toast.error("Failed to update block polygon: " + e.message),
   });
 }
 
