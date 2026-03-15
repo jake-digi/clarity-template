@@ -465,15 +465,15 @@ const CaseDetailPage = () => {
                 <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                   <Gavel className="w-4 h-4" /> Case Actions
                 </h2>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
                   {caseActionTypes.map((action) => (
                     <button
                       key={action.type}
                       onClick={() => { setActionDialog({ open: true, type: action.type, label: action.label }); setActionNotes(""); }}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${action.color}`}
+                      className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <action.icon className="w-3.5 h-3.5" />
-                      {action.label}
+                      <action.icon className="w-5 h-5" />
+                      <span className="text-[11px] font-medium text-center leading-tight">{action.label}</span>
                     </button>
                   ))}
                 </div>
