@@ -223,6 +223,7 @@ const CaseDetailPage = () => {
     qc.invalidateQueries({ queryKey: ["case-actions", caseId] });
   };
 
+  const handleStatusChange = (newStatus: string) => {
     if (!c || !caseId || !user || newStatus === c.status) return;
     updateStatus.mutate(
       { caseId, newStatus, oldStatus: c.status, performedBy: user.id, performedByName: user.email ?? "Unknown" },
