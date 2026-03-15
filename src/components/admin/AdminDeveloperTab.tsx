@@ -158,15 +158,22 @@ const AdminDeveloperTab = () => {
     try {
       const session = await getSession();
       if (!session) return;
-      await fetch(`${API_BASE_URL}/api/v1/api-keys/revoke`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/api-keys/revoke`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ id: revokeTarget.id }),
       });
+      const data = await res.json();
+      if (!data.success) {
+        toast({ title: "Error revoking key", description: data.error, variant: "destructive" });
+        return;
+      }
       setRevokeTarget(null);
       fetchKeys();
       toast({ title: "API key revoked" });
-    } catch { toast({ title: "Error revoking key", variant: "destructive" }); }
+    } catch (e) {
+      toast({ title: "Error revoking key", description: e instanceof Error ? e.message : "Unknown error", variant: "destructive" });
+    }
   };
 
   // --- Logs ---
