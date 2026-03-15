@@ -20,6 +20,8 @@ import InstanceParticipantsTab from "@/components/instance/InstanceParticipantsT
 import InstanceStaffTab from "@/components/instance/InstanceStaffTab";
 import InstanceAccommodationTab from "@/components/instance/InstanceAccommodationTab";
 import InstanceGroupsTab from "@/components/instance/InstanceGroupsTab";
+import InstanceTransportTab from "@/components/instance/InstanceTransportTab";
+import InstanceEquipmentTab from "@/components/instance/InstanceEquipmentTab";
 import StageTemplateManager from "@/components/instance/StageTemplateManager";
 import StagesProgressMatrix from "@/components/instance/StagesProgressMatrix";
 import StageDetailsModal from "@/components/instance/StageDetailsModal";
