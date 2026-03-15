@@ -367,6 +367,7 @@ const SiteMapEditor = ({
     };
     map.on("click", onClick);
     return () => { map.off("click", onClick); container.style.cursor = ""; };
+  }, [mode]);
 
   // Ray-casting point-in-polygon check
   function isPointInPolygon(point: L.LatLng, polygon: L.LatLng[]): boolean {
