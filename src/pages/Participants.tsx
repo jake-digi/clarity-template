@@ -13,7 +13,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Download, MoreHorizontal, ArrowUpDown, UserCheck, Settings2, ChevronLeft, ChevronRight, Users, Clock, UserX, ChevronRight as ChevronRightIcon, User } from "lucide-react";
+import { Search, Plus, Download, MoreHorizontal, ArrowUpDown, Settings2, ChevronLeft, ChevronRight, ChevronRight as ChevronRightIcon, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useParticipants, type ParticipantRow } from "@/hooks/useParticipants";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,9 +148,6 @@ const Participants = () => {
 
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
-  const activeCount = participants.filter((p) => p.status === "active").length;
-
-  const inactiveCount = participants.filter((p) => p.status === "inactive").length;
 
   const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <TableHead>
@@ -166,20 +163,21 @@ const Participants = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 flex flex-col overflow-hidden">
           {/* Page Banner */}
           <div className="border-b border-border bg-card px-6 py-5">
-            {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
               <button onClick={() => navigate("/")} className="hover:text-foreground transition-colors">Dashboard</button>
               <ChevronRightIcon className="w-3 h-3" />
               <span className="text-foreground font-medium">Participants</span>
             </div>
 
-            <div className="flex items-center justify-between mb-5">
-              <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">Participants</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Manage participant records across all CheckPoint instances</p>
+                {!isLoading && (
+                  <Badge variant="secondary" className="text-sm font-medium">{participants.length}</Badge>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2">
@@ -192,145 +190,94 @@ const Participants = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Stat Cards */}
-            <div className="grid grid-cols-4 gap-4">
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="rounded-lg border border-border bg-background px-4 py-3 space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-7 w-12" />
-                  </div>
-                ))
-              ) : (
-                <>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Users className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Total</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{participants.length}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <UserCheck className="w-4 h-4 text-[hsl(var(--success))]" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Active</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{activeCount}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <UserX className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Inactive</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{inactiveCount}</p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background px-4 py-3">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-xs font-medium uppercase tracking-wide">Instances</span>
-                    </div>
-                    <p className="text-2xl font-semibold text-foreground">{instances.length}</p>
-                  </div>
-                </>
-              )}
-            </div>
+            <p className="text-sm text-muted-foreground mt-1">Manage participant records across all CheckPoint instances</p>
           </div>
 
-          {/* Toolbar */}
-          <div className="px-6 py-4 space-y-4">
+          {/* Sticky toolbar */}
+          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
             {isLoading ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 flex-1 max-w-sm" />
-                  <Skeleton className="h-10 w-[200px]" />
-                  <Skeleton className="h-10 w-[180px]" />
-                  <Skeleton className="h-10 w-[160px]" />
-                  <Skeleton className="h-10 w-10" />
-                </div>
-                <Skeleton className="h-4 w-48" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 flex-1 max-w-sm" />
+                <Skeleton className="h-10 w-[200px]" />
+                <Skeleton className="h-10 w-[180px]" />
+                <Skeleton className="h-10 w-[160px]" />
+                <Skeleton className="h-10 w-10" />
               </div>
             ) : (
-              <>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="relative flex-1 min-w-[320px] max-w-xl">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search by name, ID or unit..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-                  </div>
-                  <Select value={instanceFilter} onValueChange={setInstanceFilter}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Instance" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Instances</SelectItem>
-                      {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Subgroup" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Subgroups</SelectItem>
-                      {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" title="Toggle columns">
-                        <Settings2 className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {ALL_COLUMNS.map((col) => (
-                        <DropdownMenuCheckboxItem
-                          key={col.key}
-                          checked={visibleColumns.has(col.key)}
-                          onCheckedChange={() => toggleColumn(col.key)}
-                        >
-                          {col.label}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative flex-1 min-w-[320px] max-w-xl">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Search by name, ID or unit..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
                 </div>
+                <Select value={instanceFilter} onValueChange={setInstanceFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Instance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Instances</SelectItem>
+                    {instances.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={subgroupFilter} onValueChange={setSubgroupFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Subgroup" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subgroups</SelectItem>
+                    {subgroups.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
 
-                <div className="text-xs text-muted-foreground">
-                  Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
-                  {filtered.length < participants.length && <span> (filtered from {participants.length} total)</span>}
-                </div>
-              </>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" title="Toggle columns">
+                      <Settings2 className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {ALL_COLUMNS.map((col) => (
+                      <DropdownMenuCheckboxItem
+                        key={col.key}
+                        checked={visibleColumns.has(col.key)}
+                        onCheckedChange={() => toggleColumn(col.key)}
+                      >
+                        {col.label}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
+          </div>
 
-          {/* Data Table */}
-          <div className="bg-card rounded-lg border border-border overflow-hidden">
-            {isLoading ? (
-              <div className="p-8 space-y-3">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
-                ))}
-              </div>
-            ) : error ? (
-              <div className="p-8 text-center text-destructive">
-                <p>Failed to load participants. Make sure you're logged in.</p>
-                <p className="text-sm text-muted-foreground mt-1">{(error as Error).message}</p>
-              </div>
-            ) : (
-              <>
+          {/* Scrollable table area */}
+          <div className="flex-1 overflow-auto">
+            <div className="bg-card overflow-hidden">
+              {isLoading ? (
+                <div className="p-8 space-y-3">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : error ? (
+                <div className="p-8 text-center text-destructive">
+                  <p>Failed to load participants. Make sure you're logged in.</p>
+                  <p className="text-sm text-muted-foreground mt-1">{(error as Error).message}</p>
+                </div>
+              ) : (
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       {columns.map((col) =>
                         col.sortable ? (
@@ -377,38 +324,45 @@ const Participants = () => {
                     )}
                   </TableBody>
                 </Table>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>Rows per page</span>
-                    <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
-                      <SelectTrigger className="h-8 w-[70px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAGE_SIZE_OPTIONS.map((s) => (
-                          <SelectItem key={s} value={String(s)}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>
-                      {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
-                    </span>
-                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-           </div>
+              )}
+            </div>
           </div>
+
+          {/* Fixed footer */}
+          {!isLoading && !error && (
+            <div className="shrink-0 bg-card border-t border-border px-6 py-2.5 flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Showing {filtered.length === 0 ? 0 : page * pageSize + 1}–{Math.min((page + 1) * pageSize, filtered.length)} of {filtered.length} results
+                {filtered.length < participants.length && <span> (filtered from {participants.length} total)</span>}
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-xs">Rows per page</span>
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(0); }}>
+                    <SelectTrigger className="h-8 w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZE_OPTIONS.map((s) => (
+                        <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="text-xs">
+                    {filtered.length === 0 ? "0" : `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, filtered.length)}`} of {filtered.length}
+                  </span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(page + 1)}>
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

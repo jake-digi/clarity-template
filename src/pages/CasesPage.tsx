@@ -61,12 +61,15 @@ const CasesPage = () => {
       <DashboardHeader />
       <div className="flex flex-1 min-h-0">
         <DashboardSidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Page Banner */}
           <div className="bg-card border-b border-border px-6 py-5">
             <div className="flex items-center justify-between">
-              <div>
+              <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-semibold text-foreground tracking-tight">Case Management</h1>
-                <p className="text-sm text-muted-foreground mt-1">Track and manage behaviour cases across instances</p>
+                {!isLoading && (
+                  <Badge variant="secondary" className="text-sm font-medium">{(cases ?? []).length}</Badge>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-2" onClick={() => setWarningsOpen(true)}>
@@ -79,10 +82,11 @@ const CasesPage = () => {
                 </Button>
               </div>
             </div>
+            <p className="text-sm text-muted-foreground mt-1">Track and manage behaviour cases across instances</p>
           </div>
 
-          <div className="p-6 space-y-4">
-            {/* Filters + View Toggle */}
+          {/* Sticky toolbar */}
+          <div className="sticky top-0 z-10 bg-card border-b border-border px-6 py-3">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="relative flex-1 min-w-[200px] max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -151,26 +155,30 @@ const CasesPage = () => {
                 </button>
               </div>
             </div>
+          </div>
 
-            {/* Content */}
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-auto">
             {isLoading ? (
-              <div className="bg-card rounded-lg border border-border p-6 space-y-3">
+              <div className="p-6 space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
             ) : view === "kanban" ? (
-              <CasesKanban cases={filtered} />
+              <div className="p-6">
+                <CasesKanban cases={filtered} />
+              </div>
             ) : filtered.length === 0 ? (
-              <div className="bg-card rounded-lg border border-border flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                 <AlertTriangle className="w-10 h-10 mb-3 opacity-40" />
                 <p className="font-medium">No cases found</p>
                 <p className="text-sm mt-1">Adjust your filters or create a new case</p>
               </div>
             ) : (
-              <div className="bg-card rounded-lg border border-border">
+              <div className="bg-card overflow-hidden">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
                       <TableHead>Participant</TableHead>
                       <TableHead>Category</TableHead>
@@ -217,6 +225,15 @@ const CasesPage = () => {
               </div>
             )}
           </div>
+
+          {/* Fixed footer */}
+          {!isLoading && view === "table" && filtered.length > 0 && (
+            <div className="shrink-0 bg-card border-t border-border px-6 py-2.5 flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Showing {filtered.length} of {(cases ?? []).length} cases
+              </div>
+            </div>
+          )}
         </main>
       </div>
       <FormalWarningsSheet open={warningsOpen} onOpenChange={setWarningsOpen} />
