@@ -33,8 +33,24 @@ const sections: SectionGroup[] = [
     items: [
       { icon: Building2, title: "Instances", description: "Events, camps and expeditions", path: "/instances" },
       { icon: PlusCircle, title: "Add Instance", description: "Create a new instance", path: "/instances/new" },
+      { icon: CalendarDays, title: "Schedule", description: "Daily programme builder", path: "/schedule" },
       { icon: Tent, title: "Sites", description: "Manage accommodation sites", path: "/sites" },
+    ],
+  },
+  {
+    title: "Logistics & Support",
+    items: [
+      { icon: Bus, title: "Transport", description: "Vehicles, routes and manifests", path: "/transport" },
+      { icon: Package, title: "Equipment", description: "Kit inventory and checkouts", path: "/equipment" },
+      { icon: Heart, title: "Medical", description: "Medical & dietary overview", path: "/medical" },
       { icon: MapPin, title: "Tracking", description: "Live group tracking", path: "/tracking" },
+    ],
+  },
+  {
+    title: "Communications",
+    items: [
+      { icon: Megaphone, title: "Announcements", description: "Broadcast to staff and groups", path: "/announcements" },
+      { icon: FileText, title: "Documents", description: "Consent forms, risk assessments", path: "/documents" },
     ],
   },
   {
