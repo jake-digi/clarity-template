@@ -256,6 +256,7 @@ const InstanceAccommodationTab = ({ instanceId }: Props) => {
       <RoomAssignDialog
         roomId={reassignOccupant ? "__reassign" : null}
         rooms={rooms}
+        blocks={blocks}
         unassigned={reassignOccupant ? [reassignOccupant] : []}
         reassignMode
         currentOccupant={reassignOccupant}
