@@ -10,6 +10,8 @@ import { Megaphone, Plus, Pin, Trash2, Eye, AlertTriangle, Info, Bell } from "lu
 import { useToast } from "@/hooks/use-toast";
 import { useTenantId } from "@/hooks/useTenantId";
 
+
+
 const priorityConfig: Record<string, { label: string; color: string; icon: typeof Bell }> = {
   urgent: { label: "Urgent", color: "text-destructive", icon: AlertTriangle },
   high: { label: "High", color: "text-[hsl(var(--warning))]", icon: Bell },
