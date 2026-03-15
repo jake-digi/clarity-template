@@ -12,6 +12,7 @@ import Participants from "./pages/Participants.tsx";
 import ParticipantProfile from "./pages/ParticipantProfile.tsx";
 import ParticipantInstancePage from "./pages/ParticipantInstancePage.tsx";
 import InstancesPage from "./pages/InstancesPage.tsx";
+import NewInstancePage from "./pages/NewInstancePage.tsx";
 import InstanceDetailPage from "./pages/InstanceDetailPage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
