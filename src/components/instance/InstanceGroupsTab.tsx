@@ -284,7 +284,7 @@ const InstanceGroupsTab = ({ instanceId }: Props) => {
             {unassignedParticipants.map((a) => {
               const p = participantMap.get(a.participant_id);
               return (
-                <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm">
+                <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 text-sm cursor-pointer hover:bg-muted transition-colors" onClick={() => setDrawerParticipantId(a.participant_id)}>
                   <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">
                     {p?.first_name?.[0]}{p?.surname?.[0]}
                   </div>
