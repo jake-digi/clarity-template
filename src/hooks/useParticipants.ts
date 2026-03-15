@@ -41,14 +41,25 @@ export function useParticipants() {
   return useQuery({
     queryKey: ["participants"],
     queryFn: async (): Promise<ParticipantRow[]> => {
-      // Fetch participants
-      const { data: participants, error } = await supabase
-        .from("participants")
-        .select("*")
-        .order("full_name", { ascending: true });
+      // Fetch ALL participants using pagination (Supabase caps at 1000 per request)
+      let allParticipants: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("participants")
+          .select("*")
+          .order("full_name", { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        if (!data?.length) break;
+        allParticipants = allParticipants.concat(data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
 
-      if (error) throw error;
-      if (!participants?.length) return [];
+      const participants = allParticipants;
+      if (!participants.length) return [];
 
       // Fetch all instance assignments
       const participantIds = participants.map((p) => p.id);
