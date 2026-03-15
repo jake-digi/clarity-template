@@ -201,7 +201,7 @@ Deno.serve(async (req) => {
       return json({ success: true, data });
     }
 
-    if (req.method === "DELETE" && action === "revoke") {
+    if ((req.method === "DELETE" || req.method === "POST") && action === "revoke") {
       const body = await req.json();
       if (!body.id) return err("Missing key id");
 
