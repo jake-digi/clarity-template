@@ -20,10 +20,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-export interface GeoBounds {
-  northEast: { lat: number; lng: number };
-  southWest: { lat: number; lng: number };
-}
+// Site bounds stored as a polygon (array of [lat, lng] points)
+export type GeoBounds = [number, number][];
 
 export type GeoPolygon = [number, number][];
 
