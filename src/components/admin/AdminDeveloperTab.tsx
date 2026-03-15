@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -25,7 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Copy, Check, ExternalLink, Key, Database, Code2,
   Plus, Trash2, AlertTriangle, Play, FileText,
-  RefreshCw, Clock, Send,
+  RefreshCw, Clock, Send, ChevronDown, ChevronRight,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +62,9 @@ interface ApiLog {
 }
 
 const AdminDeveloperTab = () => {
+  // Tab state
+  const [activeTab, setActiveTab] = useState("keys");
+
   // Keys state
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [keysLoading, setKeysLoading] = useState(true);
@@ -87,6 +91,9 @@ const AdminDeveloperTab = () => {
   const [pgStatus, setPgStatus] = useState<number | null>(null);
   const [pgTime, setPgTime] = useState<number | null>(null);
   const [pgLoading, setPgLoading] = useState(false);
+
+  // Reference state
+  const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -237,89 +244,152 @@ const AdminDeveloperTab = () => {
       title: "Instances",
       description: "Supports ?type=dofe or ?type=standard filtering. Responses include type, dofe_level, expedition_type.",
       endpoints: [
-        { method: "GET", path: "/api/v1/instances", description: "List all instances" },
-        { method: "GET", path: "/api/v1/instances/:id", description: "Get instance by ID" },
-        { method: "POST", path: "/api/v1/instances", description: "Create instance" },
-        { method: "PATCH", path: "/api/v1/instances/:id", description: "Update instance" },
-        { method: "DELETE", path: "/api/v1/instances/:id", description: "Soft-delete instance" },
+        { method: "GET", path: "/api/v1/instances", description: "List all instances",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "inst-001",\n      "name": "Summer Camp 2025",\n      "status": "active",\n      "start_date": "2025-07-01",\n      "end_date": "2025-07-14",\n      "location": "Peak District",\n      "type": "dofe",\n      "dofe_level": "gold",\n      "expedition_type": "practice"\n    }\n  ],\n  "meta": { "total": 12, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/instances/:id", description: "Get instance by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-001",\n    "name": "Summer Camp 2025",\n    "status": "active",\n    "start_date": "2025-07-01",\n    "end_date": "2025-07-14",\n    "location": "Peak District",\n    "type": "dofe",\n    "dofe_level": "gold"\n  }\n}` },
+        { method: "POST", path: "/api/v1/instances", description: "Create instance",
+          exampleBody: `{\n  "name": "Autumn Expedition",\n  "type": "dofe",\n  "dofe_level": "silver",\n  "start_date": "2025-10-01",\n  "end_date": "2025-10-05",\n  "location": "Lake District"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-new",\n    "name": "Autumn Expedition",\n    "status": "upcoming",\n    "type": "dofe",\n    "dofe_level": "silver"\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/instances/:id", description: "Update instance",
+          exampleBody: `{\n  "name": "Updated Name",\n  "status": "active"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-001",\n    "name": "Updated Name",\n    "status": "active"\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/instances/:id", description: "Soft-delete instance",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Participant Assignments",
       description: "Manage participant-to-instance assignments. Assign participants to instances, move rooms/groups, update off-site status.",
       endpoints: [
-        { method: "GET", path: "/api/v1/instances/:instanceId/participants", description: "List participants assigned to instance (includes participant data)" },
-        { method: "GET", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID" },
-        { method: "POST", path: "/api/v1/instances/:instanceId/participants", description: "Assign participant to instance (requires participant_id)" },
-        { method: "PATCH", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site, dates)" },
-        { method: "DELETE", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/participants", description: "List participants assigned to instance (includes participant data)",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "asgn-001",\n      "instance_id": "inst-001",\n      "participant_id": "p-001",\n      "room_id": "room-101",\n      "block_id": "block-a",\n      "super_group_id": "sg-01",\n      "sub_group_id": "sub-01",\n      "is_off_site": false,\n      "arrival_date": "2025-07-01T10:00:00Z",\n      "participants": {\n        "id": "p-001",\n        "first_name": "John",\n        "surname": "Smith",\n        "full_name": "John Smith"\n      }\n    }\n  ],\n  "meta": { "total": 45, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-001",\n    "instance_id": "inst-001",\n    "participant_id": "p-001",\n    "room_id": "room-101",\n    "is_off_site": false,\n    "participants": { "full_name": "John Smith" }\n  }\n}` },
+        { method: "POST", path: "/api/v1/instances/:instanceId/participants", description: "Assign participant to instance (requires participant_id)",
+          exampleBody: `{\n  "participant_id": "p-001",\n  "super_group_id": "sg-01",\n  "sub_group_id": "sub-01",\n  "room_id": "room-101",\n  "arrival_date": "2025-07-01T10:00:00Z",\n  "departure_date": "2025-07-14T14:00:00Z"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-new",\n    "instance_id": "inst-001",\n    "participant_id": "p-001",\n    "room_id": "room-101",\n    "participants": { "full_name": "John Smith" }\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site, dates)",
+          exampleBody: `{\n  "room_id": "room-202",\n  "block_id": "block-b",\n  "is_off_site": false\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-001",\n    "room_id": "room-202",\n    "block_id": "block-b",\n    "is_off_site": false\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Participants (Global)",
       endpoints: [
-        { method: "GET", path: "/api/v1/participants", description: "List participants (?instance_id=)" },
-        { method: "GET", path: "/api/v1/participants/:id", description: "Get participant by ID" },
-        { method: "POST", path: "/api/v1/participants", description: "Create participant" },
-        { method: "PATCH", path: "/api/v1/participants/:id", description: "Update participant" },
-        { method: "DELETE", path: "/api/v1/participants/:id", description: "Delete participant" },
+        { method: "GET", path: "/api/v1/participants", description: "List participants (?instance_id=)",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "p-001",\n      "first_name": "John",\n      "surname": "Smith",\n      "full_name": "John Smith",\n      "gender": "male",\n      "school_year": "12",\n      "status": "active"\n    }\n  ],\n  "meta": { "total": 150, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/participants/:id", description: "Get participant by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-001",\n    "first_name": "John",\n    "surname": "Smith",\n    "full_name": "John Smith",\n    "date_of_birth": "2008-03-15",\n    "gender": "male",\n    "status": "active"\n  }\n}` },
+        { method: "POST", path: "/api/v1/participants", description: "Create participant",
+          exampleBody: `{\n  "first_name": "Jane",\n  "surname": "Doe",\n  "date_of_birth": "2009-06-20",\n  "gender": "female",\n  "school_year": "11"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-new",\n    "first_name": "Jane",\n    "surname": "Doe",\n    "full_name": "Jane Doe",\n    "status": "active"\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/participants/:id", description: "Update participant",
+          exampleBody: `{\n  "school_year": "12",\n  "status": "active"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-001",\n    "first_name": "John",\n    "surname": "Smith",\n    "school_year": "12"\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/participants/:id", description: "Delete participant",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Supergroups (Instance-scoped)",
       description: "Groups are scoped to instances. Full CRUD with soft-delete. Deleting a supergroup cascades to its subgroups.",
       endpoints: [
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups", description: "List supergroups for instance" },
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID" },
-        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups", description: "Create supergroup" },
-        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Update supergroup" },
-        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup (cascades to subgroups)" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups", description: "List supergroups for instance",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "sg-01",\n      "name": "Red House",\n      "instance_id": "inst-001",\n      "color": "#e74c3c"\n    }\n  ],\n  "meta": { "total": 4, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-01",\n    "name": "Red House",\n    "instance_id": "inst-001",\n    "color": "#e74c3c"\n  }\n}` },
+        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups", description: "Create supergroup",
+          exampleBody: `{\n  "name": "Blue House",\n  "color": "#3498db"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-new",\n    "name": "Blue House",\n    "instance_id": "inst-001",\n    "color": "#3498db"\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Update supergroup",
+          exampleBody: `{\n  "name": "Updated House Name"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-01",\n    "name": "Updated House Name"\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup (cascades to subgroups)",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Subgroups (Nested under Supergroup)",
       description: "Subgroups are nested under supergroups within an instance.",
       endpoints: [
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups" },
-        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID" },
-        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup" },
-        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup" },
-        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup" },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "sub-01",\n      "name": "Team Alpha",\n      "supergroup_id": "sg-01",\n      "instance_id": "inst-001"\n    }\n  ],\n  "meta": { "total": 3, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-01",\n    "name": "Team Alpha",\n    "supergroup_id": "sg-01"\n  }\n}` },
+        { method: "POST", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup",
+          exampleBody: `{\n  "name": "Team Bravo"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-new",\n    "name": "Team Bravo",\n    "supergroup_id": "sg-01",\n    "instance_id": "inst-001"\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup",
+          exampleBody: `{\n  "name": "Team Charlie"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-01",\n    "name": "Team Charlie"\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Blocks",
       description: "Filter with ?instance_id= or ?site_id=. Full CRUD with soft-delete.",
       endpoints: [
-        { method: "GET", path: "/api/v1/blocks", description: "List blocks (?instance_id=, ?site_id=)" },
-        { method: "GET", path: "/api/v1/blocks/:blockId", description: "Get block by ID" },
-        { method: "POST", path: "/api/v1/blocks", description: "Create block" },
-        { method: "PATCH", path: "/api/v1/blocks/:blockId", description: "Update block" },
-        { method: "DELETE", path: "/api/v1/blocks/:blockId", description: "Soft-delete block" },
+        { method: "GET", path: "/api/v1/blocks", description: "List blocks (?instance_id=, ?site_id=)",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "block-a",\n      "name": "Block A - Main Building",\n      "instance_id": "inst-001",\n      "description": "Main accommodation block"\n    }\n  ],\n  "meta": { "total": 3, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/blocks/:blockId", description: "Get block by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-a",\n    "name": "Block A - Main Building",\n    "description": "Main accommodation block"\n  }\n}` },
+        { method: "POST", path: "/api/v1/blocks", description: "Create block",
+          exampleBody: `{\n  "name": "Block C - Annexe",\n  "instance_id": "inst-001",\n  "description": "Overflow accommodation"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-new",\n    "name": "Block C - Annexe",\n    "instance_id": "inst-001"\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/blocks/:blockId", description: "Update block",
+          exampleBody: `{\n  "name": "Block A - Updated"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-a",\n    "name": "Block A - Updated"\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/blocks/:blockId", description: "Soft-delete block",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Rooms",
       description: "Filter with ?block_id=, ?instance_id=, or ?site_id=. Full CRUD with soft-delete.",
       endpoints: [
-        { method: "GET", path: "/api/v1/rooms", description: "List rooms (?block_id=, ?instance_id=, ?site_id=)" },
-        { method: "GET", path: "/api/v1/rooms/:roomId", description: "Get room by ID" },
-        { method: "POST", path: "/api/v1/rooms", description: "Create room" },
-        { method: "PATCH", path: "/api/v1/rooms/:roomId", description: "Update room" },
-        { method: "DELETE", path: "/api/v1/rooms/:roomId", description: "Soft-delete room" },
+        { method: "GET", path: "/api/v1/rooms", description: "List rooms (?block_id=, ?instance_id=, ?site_id=)",
+          exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "room-101",\n      "room_number": "101",\n      "name": "Room 101",\n      "block_id": "block-a",\n      "capacity": 4,\n      "room_type": "room"\n    }\n  ],\n  "meta": { "total": 20, "limit": 50, "offset": 0 }\n}` },
+        { method: "GET", path: "/api/v1/rooms/:roomId", description: "Get room by ID",
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-101",\n    "room_number": "101",\n    "name": "Room 101",\n    "block_id": "block-a",\n    "capacity": 4,\n    "room_type": "room"\n  }\n}` },
+        { method: "POST", path: "/api/v1/rooms", description: "Create room",
+          exampleBody: `{\n  "room_number": "205",\n  "name": "Room 205",\n  "block_id": "block-a",\n  "capacity": 6,\n  "room_type": "room",\n  "instance_id": "inst-001"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-new",\n    "room_number": "205",\n    "name": "Room 205",\n    "block_id": "block-a",\n    "capacity": 6\n  }\n}` },
+        { method: "PATCH", path: "/api/v1/rooms/:roomId", description: "Update room",
+          exampleBody: `{\n  "capacity": 8,\n  "name": "Large Room 101"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-101",\n    "capacity": 8,\n    "name": "Large Room 101"\n  }\n}` },
+        { method: "DELETE", path: "/api/v1/rooms/:roomId", description: "Soft-delete room",
+          exampleResponse: `{\n  "success": true\n}` },
       ],
     },
     {
       title: "Groups (Legacy)",
       description: "Backward-compatible endpoints. Prefer instance-scoped routes above.",
       endpoints: [
-        { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups (?instance_id=)" },
-        { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup" },
-        { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups (?instance_id=)" },
-        { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup" },
+        { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups (?instance_id=)",
+          exampleResponse: `{\n  "success": true,\n  "data": [...],\n  "meta": { "total": 4, "limit": 50, "offset": 0 }\n}` },
+        { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup",
+          exampleBody: `{\n  "name": "Green House",\n  "instance_id": "inst-001"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": { "id": "sg-new", "name": "Green House" }\n}` },
+        { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups (?instance_id=)",
+          exampleResponse: `{\n  "success": true,\n  "data": [...],\n  "meta": { "total": 12, "limit": 50, "offset": 0 }\n}` },
+        { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup",
+          exampleBody: `{\n  "name": "Team Delta",\n  "supergroup_id": "sg-01",\n  "instance_id": "inst-001"\n}`,
+          exampleResponse: `{\n  "success": true,\n  "data": { "id": "sub-new", "name": "Team Delta" }\n}` },
       ],
     },
   ];
+
+  const tryEndpoint = (method: string, path: string, body?: string) => {
+    setPgMethod(method);
+    setPgPath(path);
+    if (body) setPgBody(body);
+    else setPgBody("");
+    setActiveTab("playground");
+  };
 
   const playgroundEndpoints = endpointGroups.flatMap((g) =>
     g.endpoints.map((ep) => ({ method: ep.method, path: ep.path, label: `${ep.method} ${ep.path}` }))
@@ -327,7 +397,7 @@ const AdminDeveloperTab = () => {
 
   return (
     <div className="space-y-4 max-w-5xl">
-      <Tabs defaultValue="keys" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="keys" className="flex items-center gap-1.5"><Key className="w-3.5 h-3.5" />Keys</TabsTrigger>
           <TabsTrigger value="playground" className="flex items-center gap-1.5"><Play className="w-3.5 h-3.5" />Playground</TabsTrigger>
@@ -679,48 +749,86 @@ const AdminDeveloperTab = () => {
                     <h4 className="text-sm font-semibold">{group.title}</h4>
                     {group.description && <p className="text-xs text-muted-foreground">{group.description}</p>}
                   </div>
-                  <div className="space-y-1">
-                    {group.endpoints.map((ep, i) => (
-                      <div key={i} className="flex items-center gap-3 py-1.5 px-3 rounded-md hover:bg-muted/30 transition-colors">
-                        <Badge variant="outline" className={`text-[10px] font-mono w-16 justify-center ${methodColor[ep.method] ?? ""}`}>
-                          {ep.method}
-                        </Badge>
-                        <code className="text-xs font-mono text-foreground flex-1">{ep.path}</code>
-                        <span className="text-xs text-muted-foreground hidden sm:block">{ep.description}</span>
-                      </div>
-                    ))}
+                  <div className="space-y-0.5">
+                    {group.endpoints.map((ep, i) => {
+                      const epKey = `${group.title}-${i}`;
+                      const isExpanded = expandedEndpoint === epKey;
+                      return (
+                        <div key={i} className="rounded-md border border-transparent hover:border-border transition-colors">
+                          <div
+                            className="flex items-center gap-3 py-1.5 px-3 cursor-pointer hover:bg-muted/30 rounded-md transition-colors"
+                            onClick={() => setExpandedEndpoint(isExpanded ? null : epKey)}
+                          >
+                            {isExpanded ? <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />}
+                            <Badge variant="outline" className={`text-[10px] font-mono w-16 justify-center shrink-0 ${methodColor[ep.method] ?? ""}`}>
+                              {ep.method}
+                            </Badge>
+                            <code className="text-xs font-mono text-foreground flex-1 truncate">{ep.path}</code>
+                            <span className="text-xs text-muted-foreground hidden sm:block shrink-0">{ep.description}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-[10px] shrink-0 ml-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                tryEndpoint(ep.method, ep.path, ep.exampleBody);
+                              }}
+                            >
+                              <Play className="w-3 h-3 mr-1" />Try it
+                            </Button>
+                          </div>
+                          {isExpanded && (
+                            <div className="px-3 pb-3 pt-1 space-y-3 ml-6 border-t border-border/50">
+                              <p className="text-xs text-muted-foreground">{ep.description}</p>
+
+                              {/* cURL example */}
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">cURL</Label>
+                                <div className="relative mt-1">
+                                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-muted-foreground">
+{`curl '${API_BASE_URL}${ep.path}' \\
+  -X ${ep.method} \\
+  -H "X-API-Key: chk_your_key_here"${ep.exampleBody ? ` \\
+  -H "Content-Type: application/json" \\
+  -d '${ep.exampleBody.replace(/\n/g, "")}'` : ""}`}
+                                  </pre>
+                                  <Button
+                                    variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6"
+                                    onClick={() => copyToClipboard(
+                                      `curl '${API_BASE_URL}${ep.path}' \\\n  -X ${ep.method} \\\n  -H "X-API-Key: chk_your_key_here"${ep.exampleBody ? ` \\\n  -H "Content-Type: application/json" \\\n  -d '${ep.exampleBody}'` : ""}`,
+                                      `curl-${epKey}`
+                                    )}
+                                  >
+                                    {copiedField === `curl-${epKey}` ? <Check className="w-2.5 h-2.5 text-emerald-500" /> : <Copy className="w-2.5 h-2.5" />}
+                                  </Button>
+                                </div>
+                              </div>
+
+                              {/* Request body example */}
+                              {ep.exampleBody && (
+                                <div>
+                                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Request Body</Label>
+                                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-foreground/80 mt-1">
+                                    {ep.exampleBody}
+                                  </pre>
+                                </div>
+                              )}
+
+                              {/* Response example */}
+                              <div>
+                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Example Response</Label>
+                                <pre className="text-xs font-mono bg-muted/50 rounded-md p-2.5 overflow-x-auto text-foreground/80 mt-1">
+                                  {ep.exampleResponse}
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Example cURL request</Label>
-                <div className="relative">
-                  <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-muted-foreground">
-{`curl '${API_BASE_URL}/api/v1/instances?type=dofe' \\
-  -H "X-API-Key: chk_your_api_key_here"`}
-                  </pre>
-                  <Button
-                    variant="ghost" size="icon" className="absolute top-1.5 right-1.5 h-7 w-7"
-                    onClick={() => copyToClipboard(`curl '${API_BASE_URL}/api/v1/instances?type=dofe' \\\n  -H "X-API-Key: chk_your_api_key_here"`, "curl")}
-                  >
-                    {copiedField === "curl" ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Response format</Label>
-                <pre className="text-xs font-mono bg-muted/50 rounded-md p-3 overflow-x-auto text-muted-foreground">
-{`{
-  "success": true,
-  "data": [ ... ],
-  "meta": { "total": 42, "limit": 50, "offset": 0 }
-}`}
-                </pre>
-              </div>
             </CardContent>
           </Card>
 
