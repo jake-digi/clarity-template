@@ -560,12 +560,15 @@ const SiteDetailPage = () => {
             <SiteMapEditor
               bounds={geoBounds}
               blocks={blocks}
+              features={features ?? []}
               onBoundsChange={handleBoundsChange}
               onBlockPolygonChange={handleBlockPolygonChange}
               onBlockPolygonDrawn={handleBlockPolygonDrawn}
               onRoomPinPlaced={handleRoomPinPlaced}
               onRoomClick={handleRoomClick}
               onBlockClick={handleBlockClick}
+              onFeaturePinPlaced={handleFeaturePinPlaced}
+              onFeatureClick={handleFeatureClick}
               selectedBlockId={selectedBlockId}
               mode={mapMode}
               onModeChange={setMapMode}
