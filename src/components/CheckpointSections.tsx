@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, UserCheck, UserPlus, Upload, Tent, Building2,
   Briefcase, PlusCircle, FileBarChart, Code2, BookOpen,
-  MapPin,
+  MapPin, Bus, Package, Heart, CalendarDays, Megaphone, FileText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
