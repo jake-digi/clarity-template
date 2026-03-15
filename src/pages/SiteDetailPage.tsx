@@ -362,6 +362,7 @@ const SiteDetailPage = () => {
         site_id: siteId,
         tenant_id: tenantId,
         geo_position: pendingRoomPin.position,
+        room_type: roomPinForm.room_type,
       } as any, { onSuccess: closeDialog });
     }
   };
