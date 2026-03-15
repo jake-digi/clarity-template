@@ -246,7 +246,7 @@ const SiteDetailPage = () => {
   const handleBlockPolygonDrawn = useCallback((polygon: GeoPolygon) => {
     setPendingPolygon(polygon);
 
-    // Prefer assigning to the currently selected block for immediate save flow
+    // If a block is explicitly selected, assign to it
     if (selectedBlockId) {
       updateBlockPolygon.mutate({ id: selectedBlockId, geo_polygon: polygon });
       setPendingPolygon(null);
@@ -254,16 +254,24 @@ const SiteDetailPage = () => {
     }
 
     const unmappedBlocks = blocks.filter((b) => !b.geo_polygon?.length);
+
+    // If exactly one unmapped block, auto-assign
     if (unmappedBlocks.length === 1) {
       updateBlockPolygon.mutate({ id: unmappedBlocks[0].id, geo_polygon: polygon });
       setPendingPolygon(null);
       return;
     }
 
+    // If there are unmapped blocks, show dialog defaulting to first unmapped
+    if (unmappedBlocks.length > 1) {
+      setAssignBlockId(unmappedBlocks[0].id);
+      setTimeout(() => setShowAssignPolygon(true), 0);
+      return;
+    }
+
+    // All blocks already have polygons — show dialog so user can pick which to reassign
     if (blocks.length > 0) {
-      const fallbackId = unmappedBlocks[0]?.id ?? blocks[0].id;
-      setAssignBlockId(fallbackId);
-      // Open after draw click settles, otherwise Radix can close immediately
+      setAssignBlockId(blocks[0].id);
       setTimeout(() => setShowAssignPolygon(true), 0);
     }
   }, [blocks, selectedBlockId, updateBlockPolygon]);
