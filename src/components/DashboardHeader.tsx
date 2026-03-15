@@ -281,7 +281,7 @@ const DashboardHeader = () => {
               onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
-              placeholder="Search pages, participants, users, cases..."
+              placeholder="Search pages, actions, people, cases..."
               className="w-full pl-9 pr-20 py-2 rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             {query ? (
