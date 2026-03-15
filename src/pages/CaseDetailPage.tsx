@@ -195,7 +195,34 @@ const CaseDetailPage = () => {
     qc.invalidateQueries({ queryKey: ["behavior-cases"] });
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const caseActionTypes = [
+    { type: "formal_warning", label: "Add Formal Warning", icon: Gavel, color: "text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100" },
+    { type: "phone_call", label: "Log Phone Call", icon: Phone, color: "text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100" },
+    { type: "follow_up", label: "Schedule Follow-up", icon: CalendarPlus, color: "text-purple-600 bg-purple-50 border-purple-200 hover:bg-purple-100" },
+    { type: "email_parent", label: "Email Parent", icon: Mail, color: "text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100" },
+    { type: "safeguard", label: "Safeguard Case", icon: ShieldAlert, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
+    { type: "escalate", label: "Escalate", icon: Siren, color: "text-red-600 bg-red-50 border-red-200 hover:bg-red-100" },
+    { type: "add_note", label: "Add Case Note", icon: BookOpen, color: "text-muted-foreground bg-muted border-border hover:bg-accent" },
+  ];
+
+  const handleCaseAction = async () => {
+    if (!caseId || !user || !c) return;
+    const { error } = await supabase.from("case_actions").insert({
+      case_id: caseId,
+      instance_id: c.instance_id,
+      participant_id: c.participant_id,
+      action_type: actionDialog.type,
+      description: `${actionDialog.label}${actionNotes.trim() ? `: ${actionNotes.trim()}` : ""}`,
+      performed_by: user.id,
+      performed_by_name: user.email ?? "Unknown",
+    });
+    if (error) { toast.error("Failed to log action"); return; }
+    toast.success(`${actionDialog.label} logged`);
+    setActionDialog({ open: false, type: "", label: "" });
+    setActionNotes("");
+    qc.invalidateQueries({ queryKey: ["case-actions", caseId] });
+  };
+
     if (!c || !caseId || !user || newStatus === c.status) return;
     updateStatus.mutate(
       { caseId, newStatus, oldStatus: c.status, performedBy: user.id, performedByName: user.email ?? "Unknown" },
