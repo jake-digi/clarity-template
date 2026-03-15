@@ -1503,6 +1503,62 @@ export type Database = {
           },
         ]
       }
+      site_features: {
+        Row: {
+          color: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          feature_type: string
+          geo_polygon: Json | null
+          geo_position: Json | null
+          icon: string | null
+          id: string
+          name: string
+          site_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          feature_type?: string
+          geo_polygon?: Json | null
+          geo_position?: Json | null
+          icon?: string | null
+          id?: string
+          name: string
+          site_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          feature_type?: string
+          geo_polygon?: Json | null
+          geo_position?: Json | null
+          icon?: string | null
+          id?: string
+          name?: string
+          site_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_features_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sites: {
         Row: {
           address: string | null
