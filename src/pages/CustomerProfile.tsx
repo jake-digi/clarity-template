@@ -39,7 +39,12 @@ import {
   Search,
   ShoppingCart,
   Users,
+  UserPlus,
+  Mail,
+  User,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import InviteUserDialog from "@/components/admin/InviteUserDialog";
 
 type CustomerSummary = {
   id: string;
@@ -93,6 +98,11 @@ const CustomerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState("overview");
+
+  // Users tab state
+  const [portalUsers, setPortalUsers] = useState<any[]>([]);
+  const [portalUsersLoading, setPortalUsersLoading] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   // Orders tab state
   const [orders, setOrders] = useState<Order[]>([]);
@@ -192,6 +202,23 @@ const CustomerProfile = () => {
     const t = setTimeout(() => setDebouncedOrdersSearch(ordersSearch), 350);
     return () => clearTimeout(t);
   }, [ordersSearch]);
+
+  // Fetch portal users when users tab is active
+  useEffect(() => {
+    if (tab !== "users" || !customer) return;
+    const fetch = async () => {
+      setPortalUsersLoading(true);
+      const db = supabase as any;
+      const { data } = await db
+        .from("portal_users")
+        .select("id, name, email, role, is_admin, is_active, created_at")
+        .eq("customer_id", customer.id)
+        .order("name", { ascending: true });
+      setPortalUsers(data ?? []);
+      setPortalUsersLoading(false);
+    };
+    fetch();
+  }, [tab, customer, inviteOpen]); // re-fetch after invite dialog closes
 
   // Reset page when filters change
   useEffect(() => { setOrdersPage(0); }, [debouncedOrdersSearch, ordersStatusFilter]);
@@ -365,6 +392,13 @@ const CustomerProfile = () => {
                     >
                       <FileText className="w-3.5 h-3.5" />
                       Notes
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="users"
+                      className="rounded-none h-full px-5 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors shrink-0"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      Users
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -589,6 +623,101 @@ const CustomerProfile = () => {
                     <p className="text-sm text-muted-foreground">
                       Notes and interactions coming soon.
                     </p>
+                  </TabsContent>
+
+                  <TabsContent value="users" className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-sm font-semibold text-foreground">Portal users</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          People who can log in to the ordering platform on behalf of this customer.
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setInviteOpen(true)}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Invite User
+                      </Button>
+                    </div>
+
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      {portalUsersLoading ? (
+                        <div className="p-6 space-y-3">
+                          {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-10 w-full" />
+                          ))}
+                        </div>
+                      ) : portalUsers.length === 0 ? (
+                        <div className="p-10 text-center">
+                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                            <Users className="w-5 h-5 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm font-medium text-foreground">No users yet</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Invite someone from this customer to give them portal access.
+                          </p>
+                        </div>
+                      ) : (
+                        <Table>
+                          <TableHeader className="bg-muted/50">
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead className="w-[100px]">Role</TableHead>
+                              <TableHead className="w-[80px]">Status</TableHead>
+                              <TableHead className="w-[120px]">Added</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {portalUsers.map((u) => (
+                              <TableRow key={u.id} className="hover:bg-muted/40">
+                                <TableCell>
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center border border-border shrink-0">
+                                      <User className="w-3.5 h-3.5 text-muted-foreground" />
+                                    </div>
+                                    <span className="text-sm font-medium">{u.name}</span>
+                                    {u.is_admin && (
+                                      <Badge className="text-[10px] px-1.5 py-0 h-4">Admin</Badge>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <Mail className="w-3.5 h-3.5 shrink-0" />
+                                    {u.email}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="capitalize text-xs">
+                                    {u.role ?? "customer"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${u.is_active ? "bg-emerald-500/10 text-emerald-700" : "bg-red-500/10 text-red-700"}`}>
+                                    {u.is_active ? "Active" : "Disabled"}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-xs text-muted-foreground">
+                                  {new Date(u.created_at).toLocaleDateString("en-GB", {
+                                    day: "numeric", month: "short", year: "2-digit",
+                                  })}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
+
+                    <InviteUserDialog
+                      open={inviteOpen}
+                      onOpenChange={setInviteOpen}
+                      prefilledCustomer={customer ? { id: customer.id, name: customer.name, account_ref: customer.account_ref } : null}
+                    />
                   </TabsContent>
                 </div>
               </Tabs>

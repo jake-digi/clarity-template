@@ -1,26 +1,18 @@
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Shield, Activity, Code2, Users, Database } from "lucide-react";
-import AdminRolesTab from "@/components/admin/AdminRolesTab";
+import { Users, Mail } from "lucide-react";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
-import AdminActivityTab from "@/components/admin/AdminActivityTab";
-import AdminDeveloperTab from "@/components/admin/AdminDeveloperTab";
-import AdminBackupsTab from "@/components/admin/AdminBackupsTab";
+import AdminEmailTemplatesTab from "@/components/admin/AdminEmailTemplatesTab";
 
 const tabs = [
   { value: "users", label: "Users", icon: Users },
-  { value: "roles", label: "Roles & Permissions", icon: Shield },
-  { value: "activity", label: "Activity Log", icon: Activity },
-  { value: "developer", label: "Developer", icon: Code2 },
-  { value: "backups", label: "Backups", icon: Database },
+  { value: "email_templates", label: "Email Templates", icon: Mail },
 ];
 
 const AdministrationPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const tab = searchParams.get("tab") ?? "users";
 
   const setTab = (value: string) => {
@@ -36,15 +28,11 @@ const AdministrationPage = () => {
           <Tabs value={tab} onValueChange={setTab} className="flex flex-col flex-1 min-h-0">
             {/* Page banner */}
             <div className="border-b border-border bg-card px-6 py-5 shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-semibold text-foreground tracking-tight">Administration</h1>
-                  <p className="text-sm text-muted-foreground mt-1">Manage users, roles, activity logs, and developer settings</p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">Administration</h1>
+              <p className="text-sm text-muted-foreground mt-1">Manage users and email templates</p>
             </div>
 
-            {/* Tab bar — sticky below banner */}
+            {/* Tab bar */}
             <div className="sticky top-0 z-10 bg-card border-b border-border px-6 shrink-0">
               <TabsList className="h-auto p-0 bg-transparent rounded-none border-none gap-0">
                 {tabs.map((t) => (
@@ -60,22 +48,13 @@ const AdministrationPage = () => {
               </TabsList>
             </div>
 
-            {/* Scrollable content */}
+            {/* Content */}
             <div className="flex-1 overflow-auto">
-              <TabsContent value="users" className="mt-0 p-6">
+              <TabsContent value="users" className="mt-0">
                 <AdminUsersTab />
               </TabsContent>
-              <TabsContent value="roles" className="mt-0 p-6">
-                <AdminRolesTab />
-              </TabsContent>
-              <TabsContent value="activity" className="mt-0 p-6">
-                <AdminActivityTab />
-              </TabsContent>
-              <TabsContent value="developer" className="mt-0">
-                <AdminDeveloperTab />
-              </TabsContent>
-              <TabsContent value="backups" className="mt-0 p-6">
-                <AdminBackupsTab />
+              <TabsContent value="email_templates" className="mt-0 p-6">
+                <AdminEmailTemplatesTab />
               </TabsContent>
             </div>
           </Tabs>
