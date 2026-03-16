@@ -559,6 +559,7 @@ Deno.serve(async (req) => {
       if (body.type) settings.instanceType = body.type;
       if (body.dofe_level) settings.dofeLevel = body.dofe_level;
       if (body.expedition_type) settings.expeditionType = body.expedition_type;
+      delete body.type; delete body.dofe_level; delete body.expedition_type;
       const { data, error: iErr } = await sb.from("instances").insert({ ...body, tenant_id, settings, id: body.id || crypto.randomUUID() }).select().single();
       if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
       return respond({ success: true, data: enrichInstance(data) }, 201, body);
