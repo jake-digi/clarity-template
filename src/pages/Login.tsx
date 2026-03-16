@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import checkpointLogo from "@/assets/checkpoint-logo.png";
-import loginHero from "@/assets/login-hero.png";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
+import loginHero from "@/assets/freemans-login-hero.png";
+
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY as string;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,13 +21,25 @@ const Login = () => {
   const [m365Loading, setM365Loading] = useState(false);
   const [remember, setRemember] = useState(true);
   const [mode, setMode] = useState<"login" | "reset">("login");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!captchaToken) {
+      toast({ title: "Please complete the captcha", variant: "destructive" });
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken },
+    });
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
     } else {
       navigate("/");
     }
@@ -73,25 +87,17 @@ const Login = () => {
           />
           {/* overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          {/* logo */}
-          <div className="absolute top-6 left-6 flex items-center gap-2">
-            <img src={checkpointLogo} alt="Checkpoint" className="h-14 brightness-0 invert" />
-          </div>
         </div>
 
         <div className="flex-1 flex flex-col py-12 max-w-md mx-auto w-full">
           <div className="flex-1 flex flex-col justify-center px-6 sm:px-8">
-          {/* Mobile logo */}
-          <div className="md:hidden mb-8">
-            <img src={checkpointLogo} alt="Checkpoint" className="h-10" />
-          </div>
 
           <h1 className="text-2xl font-bold text-foreground">
-            {mode === "login" ? "Welcome back to Checkpoint" : "Reset your password"}
+            {mode === "login" ? "Welcome to Freemans Industrial Supplies" : "Reset your password"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground mb-8">
             {mode === "login"
-              ? "Manage your operations effortlessly."
+              ? "Sign in to manage your orders."
               : "Enter your email to receive a reset link."}
           </p>
 
@@ -143,6 +149,15 @@ const Login = () => {
                   </div>
                 </div>
               </>
+            )}
+
+            {mode === "login" && (
+              <HCaptcha
+                ref={captchaRef}
+                sitekey={HCAPTCHA_SITE_KEY}
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+              />
             )}
 
             <Button
@@ -200,7 +215,7 @@ const Login = () => {
 
           {/* Footer */}
           <div className="pt-8 flex items-center justify-between text-xs text-muted-foreground px-6 sm:px-8">
-            <span>© {new Date().getFullYear()} Checkpoint. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} Freemans Industrial Supplies.</span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
               All systems operational

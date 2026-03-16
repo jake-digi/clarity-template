@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const EDGE_FN_URL = "https://oaxctvizaiftgsnzkdjo.supabase.co/functions/v1/backup-manager";
+const EDGE_FN_URL = "https://avcqdbhnxzfkxxsqdvae.supabase.co/functions/v1/backup-manager";
 
 interface Backup {
   id: number | string;
@@ -161,7 +161,7 @@ export default function AdminBackupsTab() {
           </Button>
           <Button variant="outline" size="sm" asChild>
             <a
-              href="https://supabase.com/dashboard/project/oaxctvizaiftgsnzkdjo/database/backups/scheduled"
+              href="https://supabase.com/dashboard/project/avcqdbhnxzfkxxsqdvae/database/backups/scheduled"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -197,7 +197,7 @@ export default function AdminBackupsTab() {
               <li>
                 Run in your terminal:{" "}
                 <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">
-                  supabase secrets set SUPABASE_MANAGEMENT_API_KEY=sbp_xxxx --project-ref oaxctvizaiftgsnzkdjo
+                  supabase secrets set SUPABASE_MANAGEMENT_API_KEY=sbp_xxxx --project-ref avcqdbhnxzfkxxsqdvae
                 </code>
               </li>
               <li>Redeploy the <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">backup-manager</code> edge function</li>

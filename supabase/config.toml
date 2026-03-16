@@ -1,4 +1,4 @@
-project_id = "oaxctvizaiftgsnzkdjo"
+project_id = "avcqdbhnxzfkxxsqdvae"
 
 [functions.api-gateway]
 verify_jwt = false

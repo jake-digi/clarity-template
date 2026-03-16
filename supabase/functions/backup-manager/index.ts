@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const PROJECT_REF = "oaxctvizaiftgsnzkdjo";
+const PROJECT_REF = "avcqdbhnxzfkxxsqdvae";
 const MANAGEMENT_API = "https://api.supabase.com";
 
 const cors = {

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import jlgbLogo from "@/assets/jlgb-logo.png";
+import freemansLogo from "@/assets/freemans-logo.webp";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSidebarState } from "@/contexts/SidebarContext";
 
@@ -239,7 +239,7 @@ const DashboardHeader = () => {
         )}
 
         <div className="flex items-center gap-2 shrink-0">
-          <img src={jlgbLogo} alt="JLGB" className="h-7 md:h-9 w-auto" />
+          <img src={freemansLogo} alt="Freemans Industrial Supplies" className="h-7 md:h-9 w-auto" />
         </div>
 
         {/* Desktop search */}
