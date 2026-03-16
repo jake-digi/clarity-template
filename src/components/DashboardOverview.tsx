@@ -28,7 +28,7 @@ type Stats = {
 };
 
 type MonthPoint = { month: string; orders: number; revenue: number };
-type ProductPoint = { product: string; fullName: string; orders: number; qty: number };
+type ProductPoint = { code: string | null; product: string; fullName: string; orders: number; qty: number };
 type CustomerPoint = { name: string; account_ref: string; id: string; revenue: number; orders: number };
 
 const fmt = (n: number) =>
@@ -147,16 +147,17 @@ const DashboardOverview = () => {
       );
 
       // Product aggregation
-      const prodMap: Record<string, { fullName: string; orderSet: Set<string>; qty: number }> = {};
+      const prodMap: Record<string, { code: string | null; fullName: string; orderSet: Set<string>; qty: number }> = {};
       for (const item of productsRes.data ?? []) {
         const key = item.stock_code ?? item.description;
-        if (!prodMap[key]) prodMap[key] = { fullName: item.description, orderSet: new Set(), qty: 0 };
+        if (!prodMap[key]) prodMap[key] = { code: item.stock_code ?? null, fullName: item.description, orderSet: new Set(), qty: 0 };
         prodMap[key].orderSet.add(item.order_id);
         prodMap[key].qty += item.quantity ?? 0;
       }
       setProductData(
         Object.entries(prodMap)
           .map(([, v]) => ({
+            code: v.code,
             product: v.fullName.length > 20 ? v.fullName.slice(0, 18) + "…" : v.fullName,
             fullName: v.fullName,
             orders: v.orderSet.size,
@@ -340,7 +341,12 @@ const DashboardOverview = () => {
           {!loading && productData.length > 0 && (
             <div className="mt-auto pt-4 border-t border-border space-y-2">
               {productData.slice(0, 6).map((p, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => p.code && navigate(`/products/${encodeURIComponent(p.code)}`)}
+                  className="flex items-center gap-2 w-full text-left hover:bg-muted/60 rounded px-1 py-0.5 transition-colors"
+                >
                   <span className="text-[10px] font-bold text-muted-foreground/50 w-3 shrink-0 text-right">{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
@@ -354,7 +360,7 @@ const DashboardOverview = () => {
                       />
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

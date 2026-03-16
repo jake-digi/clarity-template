@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ type SortDir = "asc" | "desc";
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 const CataloguePage = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState<Record<string, string>>({});
@@ -278,7 +280,11 @@ const CataloguePage = () => {
                       </TableRow>
                     ) : (
                       sortedProducts.map((p) => (
-                        <TableRow key={p.id}>
+                        <TableRow
+                          key={p.id}
+                          className="hover:bg-muted/50 cursor-pointer"
+                          onClick={() => navigate(`/products/${encodeURIComponent(p.code)}`)}
+                        >
                           <TableCell className="font-mono text-sm">
                             {p.code}
                           </TableCell>
