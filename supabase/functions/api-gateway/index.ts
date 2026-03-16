@@ -419,7 +419,7 @@ Deno.serve(async (req) => {
             .from("subgroups")
             .select("*", { count: "exact" })
             .eq("instance_id", instanceId)
-            .eq("supergroup_id", sgId)
+            .eq("parent_supergroup_id", sgId)
             .eq("tenant_id", tenant_id)
             .is("deleted_at", null)
             .range(offset, offset + limit - 1);
@@ -432,7 +432,7 @@ Deno.serve(async (req) => {
             .select("*")
             .eq("id", subId)
             .eq("instance_id", instanceId)
-            .eq("supergroup_id", sgId)
+            .eq("parent_supergroup_id", sgId)
             .eq("tenant_id", tenant_id)
             .maybeSingle();
           if (qErr) return respond({ success: false, error: qErr.message }, 500, null, qErr.message);
@@ -441,7 +441,7 @@ Deno.serve(async (req) => {
         }
         if (req.method === "POST") {
           const body = await req.json();
-          const row = { ...body, tenant_id, instance_id: instanceId, supergroup_id: sgId, id: body.id || crypto.randomUUID() };
+          const row = { ...body, tenant_id, instance_id: instanceId, parent_supergroup_id: sgId, id: body.id || crypto.randomUUID() };
           const { data, error: iErr } = await sb.from("subgroups").insert(row).select().single();
           if (iErr) return respond({ success: false, error: iErr.message }, 500, body, iErr.message);
           return respond({ success: true, data }, 201, body);
@@ -526,7 +526,7 @@ Deno.serve(async (req) => {
           .eq("tenant_id", tenant_id);
         if (dErr) return respond({ success: false, error: dErr.message }, 500, null, dErr.message);
         // Cascade soft-delete child subgroups
-        await sb.from("subgroups").update({ deleted_at: now }).eq("supergroup_id", sgId).eq("tenant_id", tenant_id);
+        await sb.from("subgroups").update({ deleted_at: now }).eq("parent_supergroup_id", sgId).eq("tenant_id", tenant_id);
         return respond({ success: true }, 200);
       }
     }

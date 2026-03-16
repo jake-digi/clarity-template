@@ -32,7 +32,8 @@ import jsPDF from "jspdf";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? "";
 const API_INTERNAL_URL = `${SUPABASE_URL}/functions/v1/api-gateway`;
-const API_BASE_URL = "https://checkpoint.jlgb.org/functions/v1/api-gateway";
+// Public, documented base URL (goes via Vercel rewrite to the edge function)
+const API_BASE_URL = "https://checkpoint.jlgb.org/api/v1";
 
 interface ApiKey {
   id: string;
@@ -81,24 +82,24 @@ const endpointGroups = [
     title: "Health",
     description: "Public health check endpoint. No authentication required.",
     endpoints: [
-      { method: "GET", path: "/health", description: "Health check — returns API status and timestamp", exampleResponse: `{"success":true,"status":"healthy","timestamp":"2025-07-01T12:00:00.000Z"}`, },
+      { method: "GET", path: "/health", description: "Health check — returns API status and timestamp", exampleResponse: `{\n  "success": true,\n  "status": "healthy",\n  "timestamp": "2026-03-16T10:47:39.902Z"\n}`, },
     ],
   },
   {
     title: "Instances",
     description: "Supports ?type=dofe or ?type=standard filtering.",
     endpoints: [
-      { method: "GET", path: "/api/v1/instances", description: "List all instances",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "inst-001",\n      "name": "Summer Camp 2025",\n      "status": "active",\n      "start_date": "2025-07-01",\n      "end_date": "2025-07-14",\n      "location": "Peak District",\n      "type": "dofe",\n      "dofe_level": "gold"\n    }\n  ],\n  "meta": { "total": 12, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/instances/:id", description: "Get instance by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-001",\n    "name": "Summer Camp 2025",\n    "status": "active",\n    "start_date": "2025-07-01",\n    "end_date": "2025-07-14",\n    "location": "Peak District"\n  }\n}` },
-      { method: "POST", path: "/api/v1/instances", description: "Create instance",
+      { method: "GET", path: "/instances", description: "List all instances",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "INS-2026-3658",\n      "tenant_id": "KettleOrganisation",\n      "name": "test",\n      "description": null,\n      "status": "completed",\n      "start_date": "2026-02-12",\n      "end_date": "2026-02-12",\n      "location": null,\n      "owner_id": "6cf5bce2-a132-43df-857b-d18fad103897",\n      "settings": {\n        "code": "INS-2026-3658",\n        "type": "dofe",\n        "level": "Bronze",\n        "capacity": "",\n        "expeditionType": "Walking",\n        "assigned_trackers": ["b01", "b02", "b03", "b04"]\n      },\n      "created_at": "2026-02-05T19:25:15.765",\n      "updated_at": "2026-02-05T23:22:14.139",\n      "deleted_at": null,\n      "site_id": null,\n      "type": "standard",\n      "dofe_level": null,\n      "expedition_type": "Walking"\n    }\n  ],\n  "meta": {\n    "total": 14,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/instances/:id", description: "Get instance by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "INS-2026-3658",\n    "tenant_id": "KettleOrganisation",\n    "name": "test",\n    "description": null,\n    "status": "completed",\n    "start_date": "2026-02-12",\n    "end_date": "2026-02-12",\n    "location": null,\n    "owner_id": "6cf5bce2-a132-43df-857b-d18fad103897",\n    "settings": {\n      "code": "INS-2026-3658",\n      "type": "dofe",\n      "level": "Bronze",\n      "capacity": "",\n      "expeditionType": "Walking",\n      "assigned_trackers": ["b01", "b02", "b03", "b04"]\n    },\n    "created_at": "2026-02-05T19:25:15.765",\n    "updated_at": "2026-02-05T23:22:14.139",\n    "deleted_at": null,\n    "site_id": null,\n    "type": "standard",\n    "dofe_level": null,\n    "expedition_type": "Walking"\n  }\n}` },
+      { method: "POST", path: "/instances", description: "Create instance",
         exampleBody: `{\n  "name": "Autumn Expedition",\n  "type": "dofe",\n  "dofe_level": "silver",\n  "start_date": "2025-10-01",\n  "end_date": "2025-10-05",\n  "location": "Lake District"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-new",\n    "name": "Autumn Expedition",\n    "status": "upcoming",\n    "type": "dofe",\n    "dofe_level": "silver"\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/instances/:id", description: "Update instance",
+      { method: "PATCH", path: "/instances/:id", description: "Update instance",
         exampleBody: `{\n  "name": "Updated Name",\n  "status": "active"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "inst-001",\n    "name": "Updated Name",\n    "status": "active"\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/instances/:id", description: "Soft-delete instance",
+      { method: "DELETE", path: "/instances/:id", description: "Soft-delete instance",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -106,17 +107,17 @@ const endpointGroups = [
     title: "Participant Assignments",
     description: "Manage participant-to-instance assignments.",
     endpoints: [
-      { method: "GET", path: "/api/v1/instances/:instanceId/participants", description: "List participants assigned to instance",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "asgn-001",\n      "instance_id": "inst-001",\n      "participant_id": "p-001",\n      "room_id": "room-101",\n      "block_id": "block-a",\n      "is_off_site": false,\n      "participants": {\n        "id": "p-001",\n        "first_name": "John",\n        "surname": "Smith",\n        "full_name": "John Smith"\n      }\n    }\n  ],\n  "meta": { "total": 45, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-001",\n    "instance_id": "inst-001",\n    "participant_id": "p-001",\n    "room_id": "room-101",\n    "is_off_site": false,\n    "participants": { "full_name": "John Smith" }\n  }\n}` },
-      { method: "POST", path: "/api/v1/instances/:instanceId/participants", description: "Assign participant to instance",
+      { method: "GET", path: "/instances/:instanceId/participants", description: "List participants assigned to instance",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "1ef24860-a8e5-4899-823c-29bcbba962d0",\n      "participant_id": "24600",\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "super_group_id": "fbA7pHMRlOmFIoBbO5k6",\n      "sub_group_id": "5GsHYwfI0hhsgg8SqYKr",\n      "block_id": "dTaMQpjZguej0IrcYgnX",\n      "room_id": "sGUJ3AG5nhdcDtbj88Bb",\n      "room_number": "17",\n      "is_off_site": false,\n      "off_site_comment": null,\n      "arrival_date": "2025-03-08T00:00:00+00:00",\n      "departure_date": "2025-10-08T00:00:00+00:00",\n      "created_at": "2026-02-05T19:02:07.703218+00:00",\n      "updated_at": "2026-02-05T19:02:07.703218+00:00",\n      "participants": {\n        "id": "24600",\n        "rank": "Overs",\n        "gender": "Male",\n        "status": "active",\n        "room_id": "sGUJ3AG5nhdcDtbj88Bb",\n        "surname": "Cook",\n        "user_id": "24600",\n        "block_id": "dTaMQpjZguej0IrcYgnX",\n        "pronouns": null,\n        "full_name": "Miles Cook",\n        "tenant_id": "KettleOrganisation",\n        "unit_name": "UK",\n        "case_flags": [],\n        "created_at": "2025-08-03T17:35:46.465",\n        "first_name": "Miles",\n        "light_load": false,\n        "photo_link": "24600",\n        "updated_at": "2025-08-06T22:49:00.817",\n        "instance_id": "435NDwI1vIXcCIOSnFuQ",\n        "is_off_site": false,\n        "room_number": "17",\n        "school_year": "9",\n        "arrival_date": "2025-03-08T00:00:00",\n        "sub_group_id": "5GsHYwfI0hhsgg8SqYKr",\n        "date_of_birth": null,\n        "departure_date": "2025-10-08T00:00:00",\n        "super_group_id": "fbA7pHMRlOmFIoBbO5k6",\n        "active_case_ids": [],\n        "last_case_update": null,\n        "off_site_comment": null,\n        "school_institute": "King Solomon High School",\n        "current_strike_count": 0,\n        "has_active_welfare_case": false,\n        "has_active_behavior_case": false,\n        "requires_welfare_check_in": false\n      }\n    }\n  ],\n  "meta": {\n    "total": 459,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/instances/:instanceId/participants/:assignmentId", description: "Get assignment by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "1ef24860-a8e5-4899-823c-29bcbba962d0",\n    "participant_id": "24600",\n    "instance_id": "435NDwI1vIXcCIOSnFuQ",\n    "super_group_id": "fbA7pHMRlOmFIoBbO5k6",\n    "sub_group_id": "5GsHYwfI0hhsgg8SqYKr",\n    "block_id": "dTaMQpjZguej0IrcYgnX",\n    "room_id": "sGUJ3AG5nhdcDtbj88Bb",\n    "room_number": "17",\n    "is_off_site": false,\n    "off_site_comment": null,\n    "arrival_date": "2025-03-08T00:00:00+00:00",\n    "departure_date": "2025-10-08T00:00:00+00:00",\n    "created_at": "2026-02-05T19:02:07.703218+00:00",\n    "updated_at": "2026-02-05T19:02:07.703218+00:00",\n    "participants": {\n      "id": "24600",\n      "rank": "Overs",\n      "gender": "Male",\n      "status": "active",\n      "room_id": "sGUJ3AG5nhdcDtbj88Bb",\n      "surname": "Cook",\n      "user_id": "24600",\n      "block_id": "dTaMQpjZguej0IrcYgnX",\n      "pronouns": null,\n      "full_name": "Miles Cook",\n      "tenant_id": "KettleOrganisation",\n      "unit_name": "UK",\n      "case_flags": [],\n      "created_at": "2025-08-03T17:35:46.465",\n      "first_name": "Miles",\n      "light_load": false,\n      "photo_link": "24600",\n      "updated_at": "2025-08-06T22:49:00.817",\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "is_off_site": false,\n      "room_number": "17",\n      "school_year": "9",\n      "arrival_date": "2025-03-08T00:00:00",\n      "sub_group_id": "5GsHYwfI0hhsgg8SqYKr",\n      "date_of_birth": null,\n      "departure_date": "2025-10-08T00:00:00",\n      "super_group_id": "fbA7pHMRlOmFIoBbO5k6",\n      "active_case_ids": [],\n      "last_case_update": null,\n      "off_site_comment": null,\n      "school_institute": "King Solomon High School",\n      "current_strike_count": 0,\n      "has_active_welfare_case": false,\n      "has_active_behavior_case": false,\n      "requires_welfare_check_in": false\n    }\n  }\n}` },
+      { method: "POST", path: "/instances/:instanceId/participants", description: "Assign participant to instance",
         exampleBody: `{\n  "participant_id": "p-001",\n  "super_group_id": "sg-01",\n  "sub_group_id": "sub-01",\n  "room_id": "room-101",\n  "arrival_date": "2025-07-01T10:00:00Z"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-new",\n    "instance_id": "inst-001",\n    "participant_id": "p-001",\n    "room_id": "room-101"\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site)",
+      { method: "PATCH", path: "/instances/:instanceId/participants/:assignmentId", description: "Update assignment (room, group, off-site)",
         exampleBody: `{\n  "room_id": "room-202",\n  "block_id": "block-b",\n  "is_off_site": false\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "asgn-001",\n    "room_id": "room-202",\n    "block_id": "block-b",\n    "is_off_site": false\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance",
+      { method: "DELETE", path: "/instances/:instanceId/participants/:assignmentId", description: "Remove participant from instance",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -124,17 +125,17 @@ const endpointGroups = [
     title: "Participants (Global)",
     description: "Global participant records.",
     endpoints: [
-      { method: "GET", path: "/api/v1/participants", description: "List participants (?instance_id=)",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "p-001",\n      "first_name": "John",\n      "surname": "Smith",\n      "full_name": "John Smith",\n      "gender": "male",\n      "school_year": "12",\n      "status": "active"\n    }\n  ],\n  "meta": { "total": 150, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/participants/:id", description: "Get participant by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-001",\n    "first_name": "John",\n    "surname": "Smith",\n    "full_name": "John Smith",\n    "date_of_birth": "2008-03-15",\n    "gender": "male",\n    "status": "active"\n  }\n}` },
-      { method: "POST", path: "/api/v1/participants", description: "Create participant",
+      { method: "GET", path: "/participants", description: "List participants (?instance_id=)",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "24600",\n      "user_id": "24600",\n      "first_name": "Miles",\n      "surname": "Cook",\n      "full_name": "Miles Cook",\n      "date_of_birth": null,\n      "gender": "Male",\n      "pronouns": null,\n      "rank": "Overs",\n      "status": "active",\n      "school_year": "9",\n      "school_institute": "King Solomon High School",\n      "unit_name": "UK",\n      "tenant_id": "KettleOrganisation",\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "arrival_date": "2025-03-08T00:00:00",\n      "departure_date": "2025-10-08T00:00:00",\n      "is_off_site": false,\n      "off_site_comment": null,\n      "super_group_id": "fbA7pHMRlOmFIoBbO5k6",\n      "sub_group_id": "5GsHYwfI0hhsgg8SqYKr",\n      "block_id": "dTaMQpjZguej0IrcYgnX",\n      "room_id": "sGUJ3AG5nhdcDtbj88Bb",\n      "room_number": "17",\n      "photo_link": "24600",\n      "created_at": "2025-08-03T17:35:46.465",\n      "updated_at": "2025-08-06T22:49:00.817",\n      "light_load": false,\n      "active_case_ids": [],\n      "has_active_behavior_case": false,\n      "has_active_welfare_case": false,\n      "current_strike_count": 0,\n      "case_flags": [],\n      "last_case_update": null,\n      "requires_welfare_check_in": false\n    }\n  ],\n  "meta": {\n    "total": 1160,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/participants/:id", description: "Get participant by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "24600",\n    "user_id": "24600",\n    "first_name": "Miles",\n    "surname": "Cook",\n    "full_name": "Miles Cook",\n    "date_of_birth": null,\n    "gender": "Male",\n    "pronouns": null,\n    "rank": "Overs",\n    "status": "active",\n    "school_year": "9",\n    "school_institute": "King Solomon High School",\n    "unit_name": "UK",\n    "tenant_id": "KettleOrganisation",\n    "instance_id": "435NDwI1vIXcCIOSnFuQ",\n    "arrival_date": "2025-03-08T00:00:00",\n    "departure_date": "2025-10-08T00:00:00",\n    "is_off_site": false,\n    "off_site_comment": null,\n    "super_group_id": "fbA7pHMRlOmFIoBbO5k6",\n    "sub_group_id": "5GsHYwfI0hhsgg8SqYKr",\n    "block_id": "dTaMQpjZguej0IrcYgnX",\n    "room_id": "sGUJ3AG5nhdcDtbj88Bb",\n    "room_number": "17",\n    "photo_link": "24600",\n    "created_at": "2025-08-03T17:35:46.465",\n    "updated_at": "2025-08-06T22:49:00.817",\n    "light_load": false,\n    "active_case_ids": [],\n    "has_active_behavior_case": false,\n    "has_active_welfare_case": false,\n    "current_strike_count": 0,\n    "case_flags": [],\n    "last_case_update": null,\n    "requires_welfare_check_in": false\n  }\n}` },
+      { method: "POST", path: "/participants", description: "Create participant",
         exampleBody: `{\n  "first_name": "Jane",\n  "surname": "Doe",\n  "date_of_birth": "2009-06-20",\n  "gender": "female",\n  "school_year": "11"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-new",\n    "first_name": "Jane",\n    "surname": "Doe",\n    "full_name": "Jane Doe",\n    "status": "active"\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/participants/:id", description: "Update participant",
+      { method: "PATCH", path: "/participants/:id", description: "Update participant",
         exampleBody: `{\n  "school_year": "12",\n  "status": "active"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "p-001",\n    "first_name": "John",\n    "surname": "Smith",\n    "school_year": "12"\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/participants/:id", description: "Delete participant",
+      { method: "DELETE", path: "/participants/:id", description: "Delete participant",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -142,17 +143,17 @@ const endpointGroups = [
     title: "Supergroups",
     description: "Instance-scoped. Deleting cascades to subgroups.",
     endpoints: [
-      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups", description: "List supergroups for instance",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "sg-01",\n      "name": "Red House",\n      "instance_id": "inst-001",\n      "color": "#e74c3c"\n    }\n  ],\n  "meta": { "total": 4, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-01",\n    "name": "Red House",\n    "instance_id": "inst-001",\n    "color": "#e74c3c"\n  }\n}` },
-      { method: "POST", path: "/api/v1/instances/:instanceId/supergroups", description: "Create supergroup",
+      { method: "GET", path: "/instances/:instanceId/supergroups", description: "List supergroups for instance",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "88lhZMucgxNbpK9GkelY",\n      "name": "Realm of Wonder",\n      "description": "Auto-created supergroup: Realm of Wonder",\n      "type": "staff",\n      "purpose": "general",\n      "notifications": true,\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "tenant_id": "KettleOrganisation",\n      "created_at": "2025-08-03T17:35:46.453",\n      "updated_at": "2025-08-03T17:35:46.453",\n      "deleted_at": null\n    }\n  ],\n  "meta": {\n    "total": 5,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/instances/:instanceId/supergroups/:sgId", description: "Get supergroup by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "88lhZMucgxNbpK9GkelY",\n    "name": "Realm of Wonder",\n    "description": "Auto-created supergroup: Realm of Wonder",\n    "type": "staff",\n    "purpose": "general",\n    "notifications": true,\n    "instance_id": "435NDwI1vIXcCIOSnFuQ",\n    "tenant_id": "KettleOrganisation",\n    "created_at": "2025-08-03T17:35:46.453",\n    "updated_at": "2025-08-03T17:35:46.453",\n    "deleted_at": null\n  }\n}` },
+      { method: "POST", path: "/instances/:instanceId/supergroups", description: "Create supergroup",
         exampleBody: `{\n  "name": "Blue House",\n  "color": "#3498db"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-new",\n    "name": "Blue House",\n    "instance_id": "inst-001",\n    "color": "#3498db"\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Update supergroup",
+      { method: "PATCH", path: "/instances/:instanceId/supergroups/:sgId", description: "Update supergroup",
         exampleBody: `{\n  "name": "Updated House Name"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sg-01",\n    "name": "Updated House Name"\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup",
+      { method: "DELETE", path: "/instances/:instanceId/supergroups/:sgId", description: "Soft-delete supergroup",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -160,17 +161,17 @@ const endpointGroups = [
     title: "Subgroups",
     description: "Nested under supergroups within an instance.",
     endpoints: [
-      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "sub-01",\n      "name": "Team Alpha",\n      "supergroup_id": "sg-01",\n      "instance_id": "inst-001"\n    }\n  ],\n  "meta": { "total": 3, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-01",\n    "name": "Team Alpha",\n    "supergroup_id": "sg-01"\n  }\n}` },
-      { method: "POST", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup",
+      { method: "GET", path: "/instances/:instanceId/supergroups/:sgId/subgroups", description: "List subgroups",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "5U6smhNoDXbd4QSMbcu4",\n      "name": "Unicorn",\n      "description": "Auto-created subgroup: Unicorn",\n      "type": "staff",\n      "purpose": "general",\n      "notifications": true,\n      "parent_supergroup_id": "88lhZMucgxNbpK9GkelY",\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "tenant_id": "KettleOrganisation",\n      "created_at": "2025-08-03T17:35:46.453",\n      "updated_at": "2025-08-03T17:35:46.453",\n      "deleted_at": null,\n      "tracker_name": null,\n      "hardware_id": null,\n      "route_id": null,\n      "last_activity_at": null,\n      "is_vehicle": false\n    }\n  ],\n  "meta": {\n    "total": 104,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Get subgroup by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "5U6smhNoDXbd4QSMbcu4",\n    "name": "Unicorn",\n    "description": "Auto-created subgroup: Unicorn",\n    "type": "staff",\n    "purpose": "general",\n    "notifications": true,\n    "parent_supergroup_id": "88lhZMucgxNbpK9GkelY",\n    "instance_id": "435NDwI1vIXcCIOSnFuQ",\n    "tenant_id": "KettleOrganisation",\n    "created_at": "2025-08-03T17:35:46.453",\n    "updated_at": "2025-08-03T17:35:46.453",\n    "deleted_at": null,\n    "tracker_name": null,\n    "hardware_id": null,\n    "route_id": null,\n    "last_activity_at": null,\n    "is_vehicle": false\n  }\n}` },
+      { method: "POST", path: "/instances/:instanceId/supergroups/:sgId/subgroups", description: "Create subgroup",
         exampleBody: `{\n  "name": "Team Bravo"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-new",\n    "name": "Team Bravo",\n    "supergroup_id": "sg-01",\n    "instance_id": "inst-001"\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup",
+      { method: "PATCH", path: "/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Update subgroup",
         exampleBody: `{\n  "name": "Team Charlie"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "sub-01",\n    "name": "Team Charlie"\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup",
+      { method: "DELETE", path: "/instances/:instanceId/supergroups/:sgId/subgroups/:subId", description: "Soft-delete subgroup",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -178,17 +179,17 @@ const endpointGroups = [
     title: "Blocks",
     description: "Filter with ?instance_id= or ?site_id=. Soft-delete.",
     endpoints: [
-      { method: "GET", path: "/api/v1/blocks", description: "List blocks (?instance_id=, ?site_id=)",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "block-a",\n      "name": "Block A - Main Building",\n      "instance_id": "inst-001",\n      "description": "Main accommodation block"\n    }\n  ],\n  "meta": { "total": 3, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/blocks/:blockId", description: "Get block by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-a",\n    "name": "Block A - Main Building",\n    "description": "Main accommodation block"\n  }\n}` },
-      { method: "POST", path: "/api/v1/blocks", description: "Create block",
+      { method: "GET", path: "/blocks", description: "List blocks (?instance_id=, ?site_id=)",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "4zPD9247496iZuFnYGLj",\n      "name": "Village 2",\n      "description": "Auto-created block: Village 2",\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "tenant_id": "KettleOrganisation",\n      "created_at": "2025-08-03T17:35:46.453",\n      "updated_at": "2025-08-03T17:35:46.453",\n      "deleted_at": null,\n      "site_id": null,\n      "geo_polygon": null\n    }\n  ],\n  "meta": {\n    "total": 37,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/blocks/:blockId", description: "Get block by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "4zPD9247496iZuFnYGLj",\n    "name": "Village 2",\n    "description": "Auto-created block: Village 2",\n    "instance_id": "435NDwI1vIXcCIOSnFuQ",\n    "tenant_id": "KettleOrganisation",\n    "created_at": "2025-08-03T17:35:46.453",\n    "updated_at": "2025-08-03T17:35:46.453",\n    "deleted_at": null,\n    "site_id": null,\n    "geo_polygon": null\n  }\n}` },
+      { method: "POST", path: "/blocks", description: "Create block",
         exampleBody: `{\n  "name": "Block C - Annexe",\n  "instance_id": "inst-001",\n  "description": "Overflow accommodation"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-new",\n    "name": "Block C - Annexe",\n    "instance_id": "inst-001"\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/blocks/:blockId", description: "Update block",
+      { method: "PATCH", path: "/blocks/:blockId", description: "Update block",
         exampleBody: `{\n  "name": "Block A - Updated"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "block-a",\n    "name": "Block A - Updated"\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/blocks/:blockId", description: "Soft-delete block",
+      { method: "DELETE", path: "/blocks/:blockId", description: "Soft-delete block",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -196,17 +197,17 @@ const endpointGroups = [
     title: "Rooms",
     description: "Filter with ?block_id=, ?instance_id=, or ?site_id=.",
     endpoints: [
-      { method: "GET", path: "/api/v1/rooms", description: "List rooms (?block_id=, ?instance_id=)",
-        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "room-101",\n      "room_number": "101",\n      "name": "Room 101",\n      "block_id": "block-a",\n      "capacity": 4,\n      "room_type": "room"\n    }\n  ],\n  "meta": { "total": 20, "limit": 50, "offset": 0 }\n}` },
-      { method: "GET", path: "/api/v1/rooms/:roomId", description: "Get room by ID",
-        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-101",\n    "room_number": "101",\n    "name": "Room 101",\n    "block_id": "block-a",\n    "capacity": 4,\n    "room_type": "room"\n  }\n}` },
-      { method: "POST", path: "/api/v1/rooms", description: "Create room",
+      { method: "GET", path: "/rooms", description: "List rooms (?block_id=, ?instance_id=)",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "JtPQG9R4mdnmqDIurUdl",\n      "room_number": "9",\n      "name": "9",\n      "block_id": "344rZ2npxulvFFhrVjtY",\n      "capacity": 1,\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "tenant_id": "KettleOrganisation",\n      "created_at": "2025-08-03T17:35:46.453",\n      "updated_at": "2025-08-03T17:35:46.453",\n      "deleted_at": null,\n      "site_id": null,\n      "geo_position": null,\n      "room_type": "room"\n    }\n  ],\n  "meta": {\n    "total": 392,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "GET", path: "/rooms/:roomId", description: "Get room by ID",
+        exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "JtPQG9R4mdnmqDIurUdl",\n    "room_number": "9",\n    "name": "9",\n    "block_id": "344rZ2npxulvFFhrVjtY",\n    "capacity": 1,\n    "instance_id": "435NDwI1vIXcCIOSnFuQ",\n    "tenant_id": "KettleOrganisation",\n    "created_at": "2025-08-03T17:35:46.453",\n    "updated_at": "2025-08-03T17:35:46.453",\n    "deleted_at": null,\n    "site_id": null,\n    "geo_position": null,\n    "room_type": "room"\n  }\n}` },
+      { method: "POST", path: "/rooms", description: "Create room",
         exampleBody: `{\n  "room_number": "205",\n  "name": "Room 205",\n  "block_id": "block-a",\n  "capacity": 6,\n  "room_type": "room",\n  "instance_id": "inst-001"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-new",\n    "room_number": "205",\n    "name": "Room 205",\n    "block_id": "block-a",\n    "capacity": 6\n  }\n}` },
-      { method: "PATCH", path: "/api/v1/rooms/:roomId", description: "Update room",
+      { method: "PATCH", path: "/rooms/:roomId", description: "Update room",
         exampleBody: `{\n  "capacity": 8,\n  "name": "Large Room 101"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": {\n    "id": "room-101",\n    "capacity": 8,\n    "name": "Large Room 101"\n  }\n}` },
-      { method: "DELETE", path: "/api/v1/rooms/:roomId", description: "Soft-delete room",
+      { method: "DELETE", path: "/rooms/:roomId", description: "Soft-delete room",
         exampleResponse: `{\n  "success": true\n}` },
     ],
   },
@@ -214,14 +215,14 @@ const endpointGroups = [
     title: "Groups (Legacy)",
     description: "Backward-compatible. Prefer instance-scoped routes.",
     endpoints: [
-      { method: "GET", path: "/api/v1/groups/supergroups", description: "List supergroups (?instance_id=)",
-        exampleResponse: `{\n  "success": true,\n  "data": [],\n  "meta": { "total": 4, "limit": 50, "offset": 0 }\n}` },
-      { method: "POST", path: "/api/v1/groups/supergroups", description: "Create supergroup",
+      { method: "GET", path: "/groups/supergroups", description: "List supergroups (?instance_id=)",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "Realm of Chaos",\n      "name": "Unnamed Group",\n      "description": null,\n      "type": "supergroup",\n      "purpose": null,\n      "notifications": true,\n      "instance_id": "5jYJX2Esfj4pVd8RUn6Q",\n      "tenant_id": "KettleOrganisation",\n      "created_at": "2025-11-03T18:41:17.076",\n      "updated_at": "2025-11-03T18:51:14.863",\n      "deleted_at": null\n    }\n  ],\n  "meta": {\n    "total": 33,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "POST", path: "/groups/supergroups", description: "Create supergroup",
         exampleBody: `{\n  "name": "Green House",\n  "instance_id": "inst-001"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": { "id": "sg-new", "name": "Green House" }\n}` },
-      { method: "GET", path: "/api/v1/groups/subgroups", description: "List subgroups (?instance_id=)",
-        exampleResponse: `{\n  "success": true,\n  "data": [],\n  "meta": { "total": 12, "limit": 50, "offset": 0 }\n}` },
-      { method: "POST", path: "/api/v1/groups/subgroups", description: "Create subgroup",
+      { method: "GET", path: "/groups/subgroups", description: "List subgroups (?instance_id=)",
+        exampleResponse: `{\n  "success": true,\n  "data": [\n    {\n      "id": "5U6smhNoDXbd4QSMbcu4",\n      "name": "Unicorn",\n      "description": "Auto-created subgroup: Unicorn",\n      "type": "staff",\n      "purpose": "general",\n      "notifications": true,\n      "parent_supergroup_id": "88lhZMucgxNbpK9GkelY",\n      "instance_id": "435NDwI1vIXcCIOSnFuQ",\n      "tenant_id": "KettleOrganisation",\n      "created_at": "2025-08-03T17:35:46.453",\n      "updated_at": "2025-08-03T17:35:46.453",\n      "deleted_at": null,\n      "tracker_name": null,\n      "hardware_id": null,\n      "route_id": null,\n      "last_activity_at": null,\n      "is_vehicle": false\n    }\n  ],\n  "meta": {\n    "total": 104,\n    "limit": 1,\n    "offset": 0\n  }\n}` },
+      { method: "POST", path: "/groups/subgroups", description: "Create subgroup",
         exampleBody: `{\n  "name": "Team Delta",\n  "supergroup_id": "sg-01",\n  "instance_id": "inst-001"\n}`,
         exampleResponse: `{\n  "success": true,\n  "data": { "id": "sub-new", "name": "Team Delta" }\n}` },
     ],
@@ -324,7 +325,7 @@ const AdminDeveloperTab = () => {
 
   // Playground state
   const [pgMethod, setPgMethod] = useState("GET");
-  const [pgPath, setPgPath] = useState("/api/v1/instances");
+  const [pgPath, setPgPath] = useState("/instances");
   const [pgApiKey, setPgApiKey] = useState("");
   const [pgBody, setPgBody] = useState("");
   const [pgResponse, setPgResponse] = useState<string | null>(null);
@@ -646,7 +647,12 @@ const AdminDeveloperTab = () => {
       const start = Date.now();
       const headers: Record<string, string> = { "X-API-Key": pgApiKey };
       if (pgBody && ["POST", "PATCH", "PUT"].includes(pgMethod)) headers["Content-Type"] = "application/json";
-      const res = await fetch(`${API_INTERNAL_URL}${resolvedPath}`, {
+      const internalPath = resolvedPath === "/health"
+        ? "/health"
+        : resolvedPath.startsWith("/api/")
+          ? resolvedPath
+          : `/api/v1${resolvedPath}`;
+      const res = await fetch(`${API_INTERNAL_URL}${internalPath}`, {
         method: pgMethod, headers,
         body: ["POST", "PATCH", "PUT"].includes(pgMethod) && pgBody ? pgBody : undefined,
       });
@@ -874,7 +880,7 @@ const AdminDeveloperTab = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Input value={pgPath} onChange={(e) => updatePgPath(e.target.value)} placeholder="/api/v1/instances" className="font-mono text-xs flex-1" />
+                <Input value={pgPath} onChange={(e) => updatePgPath(e.target.value)} placeholder="/instances" className="font-mono text-xs flex-1" />
                 <Button onClick={sendRequest} disabled={pgLoading || !pgApiKey} className="gap-1.5">
                   <Send className="w-3.5 h-3.5" />{pgLoading ? "Sending…" : "Send"}
                 </Button>
