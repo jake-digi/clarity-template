@@ -3,17 +3,19 @@ import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Activity, Code2, Users, Wrench } from "lucide-react";
+import { Shield, Activity, Code2, Users, Database } from "lucide-react";
 import AdminRolesTab from "@/components/admin/AdminRolesTab";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminActivityTab from "@/components/admin/AdminActivityTab";
 import AdminDeveloperTab from "@/components/admin/AdminDeveloperTab";
+import AdminBackupsTab from "@/components/admin/AdminBackupsTab";
 
 const tabs = [
   { value: "users", label: "Users", icon: Users },
   { value: "roles", label: "Roles & Permissions", icon: Shield },
   { value: "activity", label: "Activity Log", icon: Activity },
   { value: "developer", label: "Developer", icon: Code2 },
+  { value: "backups", label: "Backups", icon: Database },
 ];
 
 const AdministrationPage = () => {
@@ -71,6 +73,9 @@ const AdministrationPage = () => {
               </TabsContent>
               <TabsContent value="developer" className="mt-0">
                 <AdminDeveloperTab />
+              </TabsContent>
+              <TabsContent value="backups" className="mt-0 p-6">
+                <AdminBackupsTab />
               </TabsContent>
             </div>
           </Tabs>
