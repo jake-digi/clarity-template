@@ -557,7 +557,11 @@ const CustomerProfile = () => {
                               </TableRow>
                             ) : (
                               orders.map((o) => (
-                                <TableRow key={o.id} className="hover:bg-muted/40">
+                                <TableRow
+                                  key={o.id}
+                                  className="hover:bg-muted/40 cursor-pointer"
+                                  onClick={() => navigate(`/orders/${o.id}`)}
+                                >
                                   <TableCell className="font-mono text-sm">{o.order_number ?? "—"}</TableCell>
                                   <TableCell className="text-sm text-muted-foreground">{o.customer_order_number ?? "—"}</TableCell>
                                   <TableCell className="text-sm text-muted-foreground">

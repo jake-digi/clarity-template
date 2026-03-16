@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,10 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Search, Download, MoreHorizontal, ArrowUpDown, ChevronRight, ChevronLeft,
+  Search, Download, ArrowUpDown, ChevronRight, ChevronLeft,
 } from "lucide-react";
 
 type Order = {
@@ -47,6 +45,7 @@ const statusStyle = (status: string) => {
 };
 
 const OrdersPage = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -263,7 +262,11 @@ const OrdersPage = () => {
                       </TableRow>
                     ) : (
                       orders.map((o) => (
-                        <TableRow key={o.id} className="hover:bg-muted/50">
+                        <TableRow
+                          key={o.id}
+                          className="hover:bg-muted/50 cursor-pointer"
+                          onClick={() => navigate(`/orders/${o.id}`)}
+                        >
                           <TableCell className="font-mono text-sm text-foreground">{o.order_number ?? "—"}</TableCell>
                           <TableCell className="font-medium text-foreground">{o.customer_name}</TableCell>
                           <TableCell className="font-mono text-sm text-muted-foreground">{o.account_ref}</TableCell>
@@ -282,19 +285,7 @@ const OrdersPage = () => {
                               {o.status}
                             </span>
                           </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                <DropdownMenuItem>View Customer</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
+                          <TableCell className="w-[50px]" />
                         </TableRow>
                       ))
                     )}

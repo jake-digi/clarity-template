@@ -18,6 +18,7 @@ import InstanceDetailPage from "./pages/InstanceDetailPage.tsx";
 import CustomersPage from "./pages/CustomersPage.tsx";
 import CustomerProfile from "./pages/CustomerProfile.tsx";
 import OrdersPage from "./pages/OrdersPage.tsx";
+import OrderDetailPage from "./pages/OrderDetailPage.tsx";
 import CataloguePage from "./pages/CataloguePage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
               <Route path="/customers/:accountRef" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
               <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+              <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
               <Route path="/catalogue" element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
               <Route path="/instances" element={<ProtectedRoute><InstancesPage /></ProtectedRoute>} />
               <Route path="/instances/new" element={<ProtectedRoute><NewInstancePage /></ProtectedRoute>} />
