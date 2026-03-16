@@ -238,7 +238,15 @@ const CustomersPage = () => {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); c.account_ref && navigate(`/customers/${encodeURIComponent(c.account_ref)}`); }}>Open Profile</DropdownMenuItem>
                                   <DropdownMenuItem>View Orders</DropdownMenuItem>
-                                  <DropdownMenuItem>View Pricing</DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      c.account_ref &&
+                                        navigate(`/pricing?account=${encodeURIComponent(c.account_ref)}`);
+                                    }}
+                                  >
+                                    View Pricing
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
