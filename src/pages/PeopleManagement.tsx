@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import InviteUserDialog from "@/components/admin/InviteUserDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,7 @@ const PeopleManagement = () => {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -124,9 +126,9 @@ const PeopleManagement = () => {
                   <Download className="w-4 h-4" />
                   Export
                 </Button>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setInviteOpen(true)}>
                   <Plus className="w-4 h-4" />
-                  Add User
+                  Invite User
                 </Button>
               </div>
             </div>
@@ -164,6 +166,8 @@ const PeopleManagement = () => {
               </div>
             )}
           </div>
+
+          <InviteUserDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 
           {/* Scrollable table area */}
           <div className="flex-1 overflow-auto">
