@@ -1,4 +1,4 @@
-import { Home, Users, Building2, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, Bus, Package, CalendarDays, Heart, CheckSquare, Megaphone, FileText, X } from "lucide-react";
+import { Home, Users, Building2, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, Bus, Package, CalendarDays, Heart, CheckSquare, Megaphone, FileText, X, ShoppingCart, LayoutGrid, RefreshCw, Tag } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -6,28 +6,18 @@ import { useSidebarState } from "@/contexts/SidebarContext";
 
 const coreItems = [
   { icon: Home, label: "Dashboard", path: "/" },
-  { icon: Building2, label: "Instances", path: "/instances" },
-  { icon: CalendarDays, label: "Schedule", path: "/schedule" },
+  { icon: Building2, label: "Customers", path: "/customers" },
+  { icon: ShoppingCart, label: "Orders", path: "/orders" },
 ];
 
-const peopleItems = [
-  { icon: Users, label: "Participants", path: "/participants" },
-  { icon: Users, label: "Staff / Users", path: "/people" },
-];
-
-const opsItems = [
-  { icon: CheckSquare, label: "Check-ins", path: "/checkins" },
-  { icon: Bus, label: "Transport", path: "/transport" },
-  { icon: Package, label: "Equipment", path: "/equipment" },
-  { icon: Heart, label: "Medical", path: "/medical" },
-  { icon: Megaphone, label: "Announcements", path: "/announcements" },
-  { icon: FileText, label: "Documents", path: "/documents" },
-  { icon: Tent, label: "Sites", path: "/sites" },
+const catalogueItems = [
+  { icon: LayoutGrid, label: "Catalogue", path: "/catalogue" },
+  { icon: Tag, label: "Pricing", path: "/pricing" },
 ];
 
 const caseItems = [
-  { icon: FileWarning, label: "Cases", path: "/cases" },
   { icon: FileBarChart, label: "Reports", path: "/reports" },
+  { icon: RefreshCw, label: "Sync", path: "/sync" },
 ];
 
 const adminItems = [
@@ -116,13 +106,10 @@ const DashboardSidebar = () => {
       {(isMobile || expanded) ? <SectionLabel>Core</SectionLabel> : <Separator className="w-6 my-1" />}
       {coreItems.map((item) => <NavButton key={item.path} {...item} />)}
 
-      <SectionLabel>People</SectionLabel>
-      {peopleItems.map((item) => <NavButton key={item.path} {...item} />)}
+      <SectionLabel>Products</SectionLabel>
+      {catalogueItems.map((item) => <NavButton key={item.path} {...item} />)}
 
-      <SectionLabel>Operations</SectionLabel>
-      {opsItems.map((item) => <NavButton key={item.path} {...item} />)}
-
-      <SectionLabel>Cases & Reports</SectionLabel>
+      <SectionLabel>Reports & Sync</SectionLabel>
       {caseItems.map((item) => <NavButton key={item.path} {...item} />)}
 
       <div className="flex-1" />

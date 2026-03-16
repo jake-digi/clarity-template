@@ -15,6 +15,10 @@ import ParticipantInstancePage from "./pages/ParticipantInstancePage.tsx";
 import InstancesPage from "./pages/InstancesPage.tsx";
 import NewInstancePage from "./pages/NewInstancePage.tsx";
 import InstanceDetailPage from "./pages/InstanceDetailPage.tsx";
+import CustomersPage from "./pages/CustomersPage.tsx";
+import CustomerProfile from "./pages/CustomerProfile.tsx";
+import OrdersPage from "./pages/OrdersPage.tsx";
+import CataloguePage from "./pages/CataloguePage.tsx";
 import TrackingPage from "./pages/TrackingPage.tsx";
 import UserProfile from "./pages/UserProfile.tsx";
 import Login from "./pages/Login.tsx";
@@ -55,6 +59,10 @@ const App = () => (
               <Route path="/participants" element={<ProtectedRoute><Participants /></ProtectedRoute>} />
               <Route path="/participants/:id" element={<ProtectedRoute><ParticipantProfile /></ProtectedRoute>} />
               <Route path="/participants/:id/instances/:instanceId" element={<ProtectedRoute><ParticipantInstancePage /></ProtectedRoute>} />
+              <Route path="/customers" element={<ProtectedRoute><CustomersPage /></ProtectedRoute>} />
+              <Route path="/customers/:accountRef" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
+              <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+              <Route path="/catalogue" element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
               <Route path="/instances" element={<ProtectedRoute><InstancesPage /></ProtectedRoute>} />
               <Route path="/instances/new" element={<ProtectedRoute><NewInstancePage /></ProtectedRoute>} />
               <Route path="/instances/:instanceId" element={<ProtectedRoute><InstanceDetailPage /></ProtectedRoute>} />
