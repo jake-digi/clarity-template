@@ -57,6 +57,7 @@ import {
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import InviteUserDialog from "@/components/admin/InviteUserDialog";
+import CustomerPortalInsights from "@/components/CustomerPortalInsights";
 
 type CustomerSummary = {
   id: string;
@@ -1339,6 +1340,13 @@ const CustomerProfile = () => {
                         </p>
                       </div>
                     </div>
+
+                    {customer && (
+                      <CustomerPortalInsights
+                        customerId={customer.id}
+                        customerName={customer.name}
+                      />
+                    )}
                   </TabsContent>
                 </div>
               </Tabs>
