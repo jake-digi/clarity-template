@@ -77,6 +77,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
 
   const [summary, setSummary] = useState<ProductSummary | null>(null);
+  const [catalogueDescription, setCatalogueDescription] = useState<string | null>(null);
   const [monthly, setMonthly] = useState<MonthlyPoint[]>([]);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [productImageUrl, setProductImageUrl] = useState<string | null>(null);
@@ -97,6 +98,9 @@ const ProductDetailPage = () => {
       .then((json) => {
         const products = json?.products ?? [];
         const match = products.find((p: any) => (p.code ?? p.stock_code) === productCode);
+        if (match?.description) {
+          setCatalogueDescription(String(match.description));
+        }
         const path = match?.imageUrl ?? match?.image_url ?? null;
         setProductImagePath(path && String(path).trim() ? String(path).trim() : null);
         setProductImageUrl(path ? getProductImageUrl(path, { width: PRODUCT_IMAGE_SIZE, height: PRODUCT_IMAGE_SIZE }) : getProductImageUrl(null));
@@ -403,9 +407,9 @@ const ProductDetailPage = () => {
                     <Package className="w-5 h-5 text-primary" />
                     {summary.code}
                   </h1>
-                  {summary.description && (
+                  {(summary.description ?? catalogueDescription) && (
                     <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                      {summary.description}
+                      {summary.description ?? catalogueDescription}
                     </p>
                   )}
                 </div>

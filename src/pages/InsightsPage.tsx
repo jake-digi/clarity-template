@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { usePortalAnalyticsRealtime } from "@/hooks/usePortalAnalyticsRealtime";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,6 +92,7 @@ function usePortalAnalytics(since: Date) {
       if (error) throw error;
       return (data ?? []) as AnalyticsRow[];
     },
+    refetchInterval: 15_000, // fallback refresh every 15s if Realtime doesn’t fire
   });
 }
 
@@ -129,6 +131,7 @@ function InsightsPage() {
   const [days, setDays] = useState("30");
   const since = useMemo(() => getSinceDays(days), [days]);
 
+  usePortalAnalyticsRealtime();
   const { data: rows = [], isLoading: analyticsLoading } = usePortalAnalytics(since);
   const { data: orderedCodes = [], isLoading: orderedLoading } = useOrderedProductCodes();
 

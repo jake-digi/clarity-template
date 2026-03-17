@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { usePortalAnalyticsRealtime } from "@/hooks/usePortalAnalyticsRealtime";
 import {
   Table,
   TableBody,
@@ -87,6 +88,7 @@ function useCustomerPortalAnalytics(customerId: string | null, since: Date) {
       return (data ?? []) as AnalyticsRow[];
     },
     enabled: userIds.length > 0,
+    refetchInterval: 15_000, // fallback refresh every 15s if Realtime doesn’t fire
   });
 
   return { ...query, isLoading: idsLoading || query.isLoading };
@@ -118,6 +120,7 @@ export default function CustomerPortalInsights({ customerId, customerName }: Pro
   const [days, setDays] = useState("30");
   const since = useMemo(() => getSinceDays(days), [days]);
 
+  usePortalAnalyticsRealtime();
   const { data: rows = [], isLoading } = useCustomerPortalAnalytics(customerId, since);
   const mostViewed = useMemo(() => {
     const byCode: Record<string, number> = {};
