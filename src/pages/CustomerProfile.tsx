@@ -90,6 +90,13 @@ type SortDir = "asc" | "desc";
 
 type OrdersByMonthPoint = {
   month: string;
+  monthKey: string; // "YYYY-MM" for drill-down
+  orderCount: number;
+  totalSpent: number;
+};
+
+type OrdersByDayPoint = {
+  day: string;
   orderCount: number;
   totalSpent: number;
 };
@@ -106,6 +113,22 @@ type RecentOrder = {
   order_number: string | null;
   order_date: string | null;
   items_gross: number;
+};
+
+type OrderLineItem = {
+  order_id: string;
+  stock_code: string | null;
+  description: string | null;
+  qty_order: number;
+  gross_amount: number;
+};
+
+type OrderWithItems = {
+  id: string;
+  order_number: string | null;
+  order_date: string | null;
+  items_gross: number;
+  items: OrderLineItem[];
 };
 
 const STATUS_OPTIONS = ["injected", "processing", "failed", "pending"];
@@ -129,6 +152,11 @@ const CustomerProfile = () => {
   const [customer, setCustomer] = useState<CustomerSummary | null>(null);
   const [orderStats, setOrderStats] = useState<OrderStat | null>(null);
   const [ordersByMonth, setOrdersByMonth] = useState<OrdersByMonthPoint[]>([]);
+  const [monthToOrders, setMonthToOrders] = useState<Record<string, { order_id: string; order_date: string; items_gross: number }[]>>({});
+  const [drillDownMonthKey, setDrillDownMonthKey] = useState<string | null>(null);
+  const [drillDownDay, setDrillDownDay] = useState<{ monthKey: string; day: string } | null>(null);
+  const [dayOrderDetails, setDayOrderDetails] = useState<OrderWithItems[]>([]);
+  const [dayOrderDetailsLoading, setDayOrderDetailsLoading] = useState(false);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -157,6 +185,8 @@ const CustomerProfile = () => {
       if (!accountRef) return;
       setLoading(true);
       setError(null);
+      setDrillDownMonthKey(null);
+      setDrillDownDay(null);
       const db = supabase as any;
       try {
         const { data: c, error: cErr } = await db
@@ -221,8 +251,9 @@ const CustomerProfile = () => {
               : null,
           });
 
-          // Orders by month (last 12 months)
+          // Orders by month (last 12 months) + per-month order list for drill-down
           const monthBuckets: Record<string, { orderCount: number; totalSpent: number }> = {};
+          const monthToOrdersMap: Record<string, { order_id: string; order_date: string; items_gross: number }[]> = {};
           const cutoff = new Date();
           cutoff.setMonth(cutoff.getMonth() - 12);
           for (const o of orderList) {
@@ -233,6 +264,12 @@ const CustomerProfile = () => {
             if (!monthBuckets[key]) monthBuckets[key] = { orderCount: 0, totalSpent: 0 };
             monthBuckets[key].orderCount += 1;
             monthBuckets[key].totalSpent += o.items_gross ?? 0;
+            if (!monthToOrdersMap[key]) monthToOrdersMap[key] = [];
+            monthToOrdersMap[key].push({
+              order_id: o.id,
+              order_date: o.order_date,
+              items_gross: o.items_gross ?? 0,
+            });
           }
           const monthly = Object.entries(monthBuckets)
             .sort(([a], [b]) => (a < b ? -1 : 1))
@@ -240,11 +277,13 @@ const CustomerProfile = () => {
               const [y, m] = key.split("-");
               return {
                 month: `${MONTH_ABBR[parseInt(m, 10) - 1]} ${y.slice(2)}`,
+                monthKey: key,
                 orderCount: val.orderCount,
                 totalSpent: Math.round(val.totalSpent * 100) / 100,
               };
             });
           setOrdersByMonth(monthly);
+          setMonthToOrders(monthToOrdersMap);
 
           // Recent orders (last 5)
           setRecentOrders(
@@ -298,6 +337,7 @@ const CustomerProfile = () => {
             lastOrderDate: null,
           });
           setOrdersByMonth([]);
+          setMonthToOrders({});
           setRecentOrders([]);
           setTopProducts([]);
         }
@@ -336,6 +376,49 @@ const CustomerProfile = () => {
 
   // Reset page when filters change
   useEffect(() => { setOrdersPage(0); }, [debouncedOrdersSearch, ordersStatusFilter]);
+
+  // Fetch order details + line items when user drills into a specific day
+  useEffect(() => {
+    if (!drillDownDay || !monthToOrders[drillDownDay.monthKey]) {
+      setDayOrderDetails([]);
+      return;
+    }
+    const ordersInMonth = monthToOrders[drillDownDay.monthKey];
+    const orderIdsOnDay = ordersInMonth
+      .filter((o) => String(new Date(o.order_date).getDate()) === drillDownDay.day)
+      .map((o) => o.order_id);
+    if (orderIdsOnDay.length === 0) {
+      setDayOrderDetails([]);
+      return;
+    }
+    const fetch = async () => {
+      setDayOrderDetailsLoading(true);
+      const db = supabase as any;
+      const [ordersRes, itemsRes] = await Promise.all([
+        db.from("sales_orders").select("id, order_number, order_date, items_gross").in("id", orderIdsOnDay),
+        db.from("sales_order_items").select("order_id, stock_code, description, qty_order, gross_amount").in("order_id", orderIdsOnDay),
+      ]);
+      const orders = (ordersRes.data ?? []) as { id: string; order_number: string | null; order_date: string | null; items_gross: number }[];
+      const items = (itemsRes.data ?? []) as OrderLineItem[];
+      const itemsByOrder = items.reduce((acc, row) => {
+        if (!acc[row.order_id]) acc[row.order_id] = [];
+        acc[row.order_id].push({ ...row, qty_order: Number(row.qty_order), gross_amount: Number(row.gross_amount) });
+        return acc;
+      }, {} as Record<string, OrderLineItem[]>);
+      const withItems: OrderWithItems[] = orders
+        .sort((a, b) => (a.order_date && b.order_date ? a.order_date.localeCompare(b.order_date) : 0))
+        .map((o) => ({
+          id: o.id,
+          order_number: o.order_number,
+          order_date: o.order_date,
+          items_gross: o.items_gross,
+          items: itemsByOrder[o.id] ?? [],
+        }));
+      setDayOrderDetails(withItems);
+      setDayOrderDetailsLoading(false);
+    };
+    fetch();
+  }, [drillDownDay, monthToOrders]);
 
   const fetchOrders = useCallback(async () => {
     if (!customer) return;
@@ -570,76 +653,270 @@ const CustomerProfile = () => {
                       <Users className="w-3.5 h-3.5" />
                       Users
                     </TabsTrigger>
+                    <TabsTrigger
+                      value="insights"
+                      className="rounded-none h-full px-5 text-sm gap-1.5 border-b-2 border-transparent text-muted-foreground data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none hover:text-foreground hover:bg-background/50 transition-colors shrink-0"
+                    >
+                      <BarChart className="w-3.5 h-3.5" />
+                      Insights
+                    </TabsTrigger>
                   </TabsList>
                 </div>
 
-                <div className="px-6 space-y-6">
+                <div className="px-6 pt-[30px] pb-[30px] space-y-6">
                   <TabsContent value="overview" className="space-y-6">
                     {/* Orders over time */}
                     <div className="bg-card border border-border rounded-lg p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4" />
-                            Orders over time
-                          </h2>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Order count and spend by month (last 12 months)
-                          </p>
-                        </div>
-                        {ordersByMonth.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-1 text-xs h-7"
-                            onClick={() => setTab("orders")}
-                          >
-                            View all orders <ArrowRight className="w-3 h-3" />
-                          </Button>
-                        )}
-                      </div>
-                      {ordersByMonth.length === 0 ? (
-                        <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-lg">
-                          No order history in the last 12 months.
-                        </div>
-                      ) : (
-                        <div className="h-[200px]">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                              data={ordersByMonth}
-                              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
-                              <XAxis
-                                dataKey="month"
-                                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                                tickLine={false}
-                                axisLine={false}
-                              />
-                              <YAxis
-                                tickFormatter={(v) => `£${Number(v).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`}
-                                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                                tickLine={false}
-                                axisLine={false}
-                                width={48}
-                              />
-                              <Tooltip
-                                content={({ active, payload }) => {
-                                  if (!active || !payload?.length) return null;
-                                  const d = payload[0].payload as OrdersByMonthPoint;
-                                  return (
-                                    <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-md text-xs">
-                                      <p className="font-semibold text-foreground mb-1">{d.month}</p>
-                                      <p className="text-muted-foreground">Orders: <span className="font-medium text-foreground">{d.orderCount}</span></p>
-                                      <p className="text-muted-foreground">Spent: <span className="font-medium text-foreground">£{d.totalSpent.toFixed(2)}</span></p>
+                      {drillDownDay ? (() => {
+                        const [y, m] = drillDownDay.monthKey.split("-");
+                        const drillDownTitle = `${MONTH_ABBR[parseInt(m, 10) - 1]} ${y}`;
+                        return (
+                          <>
+                            <div className="flex items-center justify-between mb-4">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1 text-xs h-7 -ml-1"
+                                onClick={() => setDrillDownDay(null)}
+                              >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                Back to days
+                              </Button>
+                            </div>
+                            <div className="mb-4">
+                              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                <Package className="w-4 h-4" />
+                                Orders on day {drillDownDay.day} — {drillDownTitle}
+                              </h2>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                What was ordered on this day
+                              </p>
+                            </div>
+                            {dayOrderDetailsLoading ? (
+                              <div className="space-y-3">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                              </div>
+                            ) : dayOrderDetails.length === 0 ? (
+                              <div className="py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-lg">
+                                No orders on this day.
+                              </div>
+                            ) : (
+                              <div className="space-y-6">
+                                {dayOrderDetails.map((order) => (
+                                  <div key={order.id} className="border border-border rounded-lg overflow-hidden">
+                                    <div className="bg-muted/50 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                                      <span className="text-xs font-medium text-foreground">
+                                        Order {order.order_number ?? order.id.slice(0, 8)}
+                                        {order.order_date && (
+                                          <span className="text-muted-foreground font-normal ml-2">
+                                            {new Date(order.order_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="text-xs font-semibold text-foreground">
+                                        £{order.items_gross.toFixed(2)}
+                                      </span>
                                     </div>
-                                  );
-                                }}
-                              />
-                              <Bar dataKey="totalSpent" name="Spend" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow className="border-border">
+                                          <TableHead className="text-xs">Product</TableHead>
+                                          <TableHead className="text-xs w-20">Code</TableHead>
+                                          <TableHead className="text-xs w-16 text-right">Qty</TableHead>
+                                          <TableHead className="text-xs w-24 text-right">Amount</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {order.items.map((line, idx) => (
+                                          <TableRow key={`${order.id}-${idx}`} className="border-border">
+                                            <TableCell className="text-xs py-1.5">{line.description ?? "—"}</TableCell>
+                                            <TableCell className="text-xs py-1.5 font-mono">{line.stock_code ?? "—"}</TableCell>
+                                            <TableCell className="text-xs py-1.5 text-right">{line.qty_order}</TableCell>
+                                            <TableCell className="text-xs py-1.5 text-right">£{line.gross_amount.toFixed(2)}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })() : drillDownMonthKey ? (() => {
+                        const ordersInMonth = monthToOrders[drillDownMonthKey] ?? [];
+                        const dayBuckets: Record<string, { orderCount: number; totalSpent: number }> = {};
+                        for (const o of ordersInMonth) {
+                          const d = new Date(o.order_date);
+                          const dayKey = d.getDate();
+                          const key = String(dayKey);
+                          if (!dayBuckets[key]) dayBuckets[key] = { orderCount: 0, totalSpent: 0 };
+                          dayBuckets[key].orderCount += 1;
+                          dayBuckets[key].totalSpent += o.items_gross;
+                        }
+                        const ordersByDay: OrdersByDayPoint[] = Object.entries(dayBuckets)
+                          .sort(([a], [b]) => Number(a) - Number(b))
+                          .map(([day, val]) => ({
+                            day,
+                            orderCount: val.orderCount,
+                            totalSpent: Math.round(val.totalSpent * 100) / 100,
+                          }));
+                        const [y, m] = drillDownMonthKey.split("-");
+                        const drillDownTitle = `${MONTH_ABBR[parseInt(m, 10) - 1]} ${y}`;
+                        return (
+                          <>
+                            <div className="flex items-center justify-between mb-4">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1 text-xs h-7 -ml-1"
+                                onClick={() => { setDrillDownMonthKey(null); setDrillDownDay(null); }}
+                              >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                                Back to months
+                              </Button>
+                            </div>
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                  <Calendar className="w-4 h-4" />
+                                  Orders in {drillDownTitle}
+                                </h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Order count and spend by day. Click a day to see what was ordered.
+                                </p>
+                              </div>
+                            </div>
+                            {ordersByDay.length === 0 ? (
+                              <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-lg">
+                                No orders in this month.
+                              </div>
+                            ) : (
+                              <div className="h-[200px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart
+                                    data={ordersByDay}
+                                    margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                                  >
+                                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
+                                    <XAxis
+                                      dataKey="day"
+                                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                                      tickLine={false}
+                                      axisLine={false}
+                                    />
+                                    <YAxis
+                                      tickFormatter={(v) => `£${Number(v).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`}
+                                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                                      tickLine={false}
+                                      axisLine={false}
+                                      width={48}
+                                    />
+                                    <Tooltip
+                                      content={({ active, payload }) => {
+                                        if (!active || !payload?.length) return null;
+                                        const d = payload[0].payload as OrdersByDayPoint;
+                                        return (
+                                          <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-md text-xs">
+                                            <p className="font-semibold text-foreground mb-1">Day {d.day}</p>
+                                            <p className="text-muted-foreground">Orders: <span className="font-medium text-foreground">{d.orderCount}</span></p>
+                                            <p className="text-muted-foreground">Spent: <span className="font-medium text-foreground">£{d.totalSpent.toFixed(2)}</span></p>
+                                            <p className="text-muted-foreground/80 mt-1">Click to see what was ordered</p>
+                                          </div>
+                                        );
+                                      }}
+                                    />
+                                    <Bar
+                                      dataKey="totalSpent"
+                                      name="Spend"
+                                      fill="hsl(var(--primary))"
+                                      radius={[3, 3, 0, 0]}
+                                      cursor="pointer"
+                                      onClick={(data: OrdersByDayPoint) => setDrillDownDay({ monthKey: drillDownMonthKey, day: data.day })}
+                                    />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })() : (
+                        <>
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                <TrendingUp className="w-4 h-4" />
+                                Orders over time
+                              </h2>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Order count and spend by month (last 12 months). Click a month to see daily breakdown.
+                              </p>
+                            </div>
+                            {ordersByMonth.length > 0 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1 text-xs h-7"
+                                onClick={() => setTab("orders")}
+                              >
+                                View all orders <ArrowRight className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
+                          {ordersByMonth.length === 0 ? (
+                            <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground border border-dashed border-border rounded-lg">
+                              No order history in the last 12 months.
+                            </div>
+                          ) : (
+                            <div className="h-[200px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                  data={ordersByMonth}
+                                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                                >
+                                  <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
+                                  <XAxis
+                                    dataKey="month"
+                                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                  />
+                                  <YAxis
+                                    tickFormatter={(v) => `£${Number(v).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`}
+                                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    width={48}
+                                  />
+                                  <Tooltip
+                                    content={({ active, payload }) => {
+                                      if (!active || !payload?.length) return null;
+                                      const d = payload[0].payload as OrdersByMonthPoint;
+                                      return (
+                                        <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-md text-xs">
+                                          <p className="font-semibold text-foreground mb-1">{d.month}</p>
+                                          <p className="text-muted-foreground">Orders: <span className="font-medium text-foreground">{d.orderCount}</span></p>
+                                          <p className="text-muted-foreground">Spent: <span className="font-medium text-foreground">£{d.totalSpent.toFixed(2)}</span></p>
+                                          <p className="text-muted-foreground/80 mt-1">Click to see daily breakdown</p>
+                                        </div>
+                                      );
+                                    }}
+                                  />
+                                  <Bar
+                                    dataKey="totalSpent"
+                                    name="Spend"
+                                    fill="hsl(var(--primary))"
+                                    radius={[3, 3, 0, 0]}
+                                    cursor="pointer"
+                                    onClick={(data: OrdersByMonthPoint) => setDrillDownMonthKey(data.monthKey)}
+                                  />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
@@ -775,7 +1052,7 @@ const CustomerProfile = () => {
 
                     {/* Table area */}
                     <div className="flex-1 overflow-auto">
-                      <div className="bg-card border border-border rounded-lg overflow-hidden">
+                      <div className="bg-card border border-border rounded-none overflow-hidden">
                         {ordersLoading ? (
                           <div className="p-6 space-y-2">
                             {Array.from({ length: 8 }).map((_, i) => (
@@ -1003,6 +1280,65 @@ const CustomerProfile = () => {
                       onOpenChange={setInviteOpen}
                       prefilledCustomer={customer ? { id: customer.id, name: customer.name, account_ref: customer.account_ref } : null}
                     />
+                  </TabsContent>
+
+                  <TabsContent value="insights" className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="bg-card border border-border rounded-lg p-4 space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Lifetime spend
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground">
+                          £{(orderStats?.totalSpent ?? 0).toFixed(2)}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Across {orderStats?.totalOrders ?? 0} orders to date
+                        </p>
+                      </div>
+
+                      <div className="bg-card border border-border rounded-lg p-4 space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Last order
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground">
+                          {orderStats?.lastOrderDate ?? "Never"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Most recent completed order date
+                        </p>
+                      </div>
+
+                      <div className="bg-card border border-border rounded-lg p-4 space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Credit utilization
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground">
+                          {customer.credit_limit
+                            ? `${Math.min(
+                                100,
+                                customer.balance && customer.credit_limit
+                                  ? Math.round((customer.balance / customer.credit_limit) * 100)
+                                  : 0
+                              )}%`
+                            : "N/A"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Balance vs. credit limit
+                        </p>
+                      </div>
+
+                      <div className="bg-card border border-border rounded-lg p-4 space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Orders in last 12 months
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground">
+                          {ordersByMonth.reduce((sum, m) => sum + m.orderCount, 0)}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          Based on monthly order history
+                        </p>
+                      </div>
+                    </div>
                   </TabsContent>
                 </div>
               </Tabs>

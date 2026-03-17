@@ -26,8 +26,11 @@ import {
   Users,
   ArrowRight,
 } from "lucide-react";
+import { getProductImageUrl } from "@/lib/productImage";
 
 const db = supabase as any;
+
+const PRODUCT_IMAGE_SIZE = 96;
 
 type ProductSummary = {
   code: string;
@@ -60,8 +63,25 @@ const ProductDetailPage = () => {
   const [summary, setSummary] = useState<ProductSummary | null>(null);
   const [monthly, setMonthly] = useState<MonthlyPoint[]>([]);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
+  const [productImageUrl, setProductImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch product image from catalogue API (list-products) when we have a product code
+  useEffect(() => {
+    if (!productCode) return;
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const params = new URLSearchParams({ q: productCode, pageSize: "1", page: "0" });
+    fetch(`${baseUrl}/functions/v1/list-products?${params.toString()}`)
+      .then((res) => res.json())
+      .then((json) => {
+        const products = json?.products ?? [];
+        const match = products.find((p: any) => (p.code ?? p.stock_code) === productCode);
+        const path = match?.imageUrl ?? match?.image_url ?? null;
+        setProductImageUrl(path ? getProductImageUrl(path, { width: PRODUCT_IMAGE_SIZE, height: PRODUCT_IMAGE_SIZE }) : getProductImageUrl(null));
+      })
+      .catch(() => setProductImageUrl(getProductImageUrl(null)));
+  }, [productCode]);
 
   useEffect(() => {
     if (!productCode) return;
@@ -256,23 +276,32 @@ const ProductDetailPage = () => {
           {/* Header */}
           <div className="bg-card border-b border-border px-6 py-5">
             <div className="flex items-center justify-between mb-3">
-              <div>
-                <button
-                  className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 mb-1"
-                  onClick={() => navigate("/catalogue")}
-                >
-                  <ArrowLeft className="w-3 h-3" />
-                  Catalogue
-                </button>
-                <h1 className="text-2xl font-semibold text-foreground tracking-tight flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary" />
-                  {summary.code}
-                </h1>
-                {summary.description && (
-                  <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                    {summary.description}
-                  </p>
-                )}
+              <div className="flex items-start gap-4">
+                <div className="w-[96px] h-[96px] rounded-lg border border-border bg-muted overflow-hidden shrink-0 flex items-center justify-center">
+                  <img
+                    src={productImageUrl ?? getProductImageUrl(null)}
+                    alt=""
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <button
+                    className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 mb-1"
+                    onClick={() => navigate("/catalogue")}
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    Catalogue
+                  </button>
+                  <h1 className="text-2xl font-semibold text-foreground tracking-tight flex items-center gap-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    {summary.code}
+                  </h1>
+                  {summary.description && (
+                    <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+                      {summary.description}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

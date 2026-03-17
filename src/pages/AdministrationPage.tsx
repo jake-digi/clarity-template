@@ -2,13 +2,15 @@ import { useSearchParams } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Mail } from "lucide-react";
+import { Users, Mail, ImageIcon } from "lucide-react";
 import AdminUsersTab from "@/components/admin/AdminUsersTab";
 import AdminEmailTemplatesTab from "@/components/admin/AdminEmailTemplatesTab";
+import AdminProductImagesTab from "@/components/admin/AdminProductImagesTab";
 
 const tabs = [
   { value: "users", label: "Users", icon: Users },
   { value: "email_templates", label: "Email Templates", icon: Mail },
+  { value: "product_images", label: "Product Images", icon: ImageIcon },
 ];
 
 const AdministrationPage = () => {
@@ -29,7 +31,7 @@ const AdministrationPage = () => {
             {/* Page banner */}
             <div className="border-b border-border bg-card px-6 py-5 shrink-0">
               <h1 className="text-2xl font-semibold text-foreground tracking-tight">Administration</h1>
-              <p className="text-sm text-muted-foreground mt-1">Manage users and email templates</p>
+              <p className="text-sm text-muted-foreground mt-1">Manage users, email templates, and product images</p>
             </div>
 
             {/* Tab bar */}
@@ -55,6 +57,9 @@ const AdministrationPage = () => {
               </TabsContent>
               <TabsContent value="email_templates" className="mt-0 p-6">
                 <AdminEmailTemplatesTab />
+              </TabsContent>
+              <TabsContent value="product_images" className="mt-0">
+                <AdminProductImagesTab />
               </TabsContent>
             </div>
           </Tabs>

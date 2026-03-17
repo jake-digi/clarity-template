@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY as string;
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +24,18 @@ const Login = () => {
   const [mode, setMode] = useState<"login" | "reset">("login");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const captchaRef = useRef<HCaptcha>(null);
+
+  useEffect(() => {
+    const state = location.state as { from?: string } | null;
+    if (state?.from === "management_access_denied") {
+      toast({
+        title: "Access denied",
+        description: "This sign-in is for the management platform. Your account is for the orders platform only.",
+        variant: "destructive",
+      });
+      navigate("/login", { replace: true, state: {} });
+    }
+  }, [location.state, toast, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

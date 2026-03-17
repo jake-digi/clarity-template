@@ -12,8 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Search, Plus, Download, MoreHorizontal, Filter, Calendar, Share2, Star,
-  Play, History, Timer, Zap, FileText, TrendingUp, Users, Building2, Shield,
-  BedDouble, AlertTriangle, BarChart3, Tag,
+  Play, History, Timer, Zap, FileText, Tag, ShoppingCart,
 } from "lucide-react";
 
 interface Report {
@@ -30,55 +29,28 @@ interface Report {
 const reports: Report[] = [
   {
     id: "r1",
-    name: "Participant Summary",
-    description: "Participant counts broken down by instance, group, gender, and current status.",
-    type: "templated",
-    lastRun: "2 hours ago",
-    frequency: "Weekly",
-    category: "Participants",
+    name: "Orders Summary",
+    description: "All sales orders with status, customer, gross/net totals and key dates.",
+    type: "real-time",
+    lastRun: "—",
+    category: "Orders",
     status: "active",
   },
   {
     id: "r2",
-    name: "Attendance & Check-in Report",
-    description: "Real-time check-in session data and attendance rates across all active instances.",
-    type: "real-time",
-    category: "Operations",
+    name: "Customer Revenue Report",
+    description: "Customers with total orders, total spent and last order date.",
+    type: "templated",
+    category: "Orders",
     status: "active",
   },
   {
     id: "r3",
-    name: "Cases & Incidents Report",
-    description: "Behavior cases analysed by severity, status, and category with trend data.",
-    type: "templated",
-    lastRun: "1 day ago",
-    category: "Safeguarding",
-    status: "scheduled",
-  },
-  {
-    id: "r4",
-    name: "Accommodation Occupancy",
-    description: "Room and block utilization rates with vacancy forecasts per instance.",
+    name: "Order Line Items",
+    description: "Line-level order items with product, quantity, unit price and amounts.",
     type: "real-time",
-    category: "Accommodation",
+    category: "Orders",
     status: "active",
-  },
-  {
-    id: "r5",
-    name: "Formal Warnings Summary",
-    description: "Overview of warnings issued across instances with acknowledgement tracking.",
-    type: "custom",
-    lastRun: "30 mins ago",
-    category: "Safeguarding",
-    status: "active",
-  },
-  {
-    id: "r6",
-    name: "Instance Comparison",
-    description: "Cross-instance metrics comparison covering headcount, cases, and completion rates.",
-    type: "custom",
-    category: "Analytics",
-    status: "draft",
   },
 ];
 
@@ -95,11 +67,7 @@ const typeIcons: Record<Report["type"], React.ReactNode> = {
 };
 
 const categoryIcons: Record<string, React.ElementType> = {
-  Participants: Users,
-  Operations: BarChart3,
-  Safeguarding: Shield,
-  Accommodation: BedDouble,
-  Analytics: TrendingUp,
+  Orders: ShoppingCart,
 };
 
 const ReportTypeBadge = ({ type }: { type: Report["type"] }) => (
@@ -203,7 +171,7 @@ const ReportsPage = () => {
                   <Badge variant="secondary" className="text-sm font-medium">{reports.length}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Produce, run, and schedule analytics across your organisation.
+                  Run and export order and customer reports.
                 </p>
               </div>
               <div className="flex gap-2">

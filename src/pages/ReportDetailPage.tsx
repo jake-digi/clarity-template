@@ -15,12 +15,9 @@ import {
 } from "lucide-react";
 
 const reportMeta: Record<string, { name: string; description: string }> = {
-  r1: { name: "Participant Summary", description: "Participant counts by instance, group, gender, and status." },
-  r2: { name: "Attendance & Check-in Report", description: "Check-in session data and attendance rates." },
-  r3: { name: "Cases & Incidents Report", description: "Behavior cases by severity, status, and category." },
-  r4: { name: "Accommodation Occupancy", description: "Room and block utilization rates." },
-  r5: { name: "Formal Warnings Summary", description: "Warnings issued across instances." },
-  r6: { name: "Instance Comparison", description: "Cross-instance metrics comparison." },
+  r1: { name: "Orders Summary", description: "Sales orders with status, customer and gross/net totals." },
+  r2: { name: "Customer Revenue Report", description: "Customers with total orders, total spent and last order date." },
+  r3: { name: "Order Line Items", description: "Line-level order items with product, quantity and amounts." },
 };
 
 const ReportDetailPage = () => {

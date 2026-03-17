@@ -21,12 +21,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Search,
   Download,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  ImageIcon,
+  BarChart3,
 } from "lucide-react";
+import { getProductImageUrl } from "@/lib/productImage";
+
+const THUMB_SIZE = 48;
+
+function getProductImagePath(p: Product): string | null {
+  const url = (p as { imageUrl?: string | null; image_url?: string | null }).imageUrl
+    ?? (p as { image_url?: string | null }).image_url
+    ?? null;
+  return url && String(url).trim() ? String(url).trim() : null;
+}
+
+function hasProductImage(p: Product): boolean {
+  return !!getProductImagePath(p);
+}
 
 type Product = {
   id: string;
@@ -60,6 +81,9 @@ const CataloguePage = () => {
   const [pageSize, setPageSize] = useState(25);
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [imageStats, setImageStats] = useState<{ withImage: number; withoutImage: number; total: number } | null>(null);
+  const [imageStatsLoading, setImageStatsLoading] = useState(false);
+
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 350);
     return () => clearTimeout(t);
@@ -68,6 +92,47 @@ const CataloguePage = () => {
   useEffect(() => {
     setPage(0);
   }, [debouncedSearch, categoryFilter, pageSize]);
+
+  // Fetch catalogue-wide image stats (all products, background)
+  useEffect(() => {
+    let cancelled = false;
+    const baseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const run = async () => {
+      setImageStatsLoading(true);
+      let withImage = 0;
+      let withoutImage = 0;
+      let page = 0;
+      const pageSize = 500;
+      try {
+        while (true) {
+          const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            q: "",
+            category: "all",
+          });
+          const res = await fetch(`${baseUrl}/functions/v1/list-products?${params.toString()}`);
+          const json = await res.json();
+          if (!res.ok || cancelled) break;
+          const list = (json.products ?? []) as Product[];
+          for (const p of list) {
+            if (hasProductImage(p)) withImage += 1;
+            else withoutImage += 1;
+          }
+          const total = json.totalCount ?? 0;
+          if (list.length === 0 || list.length + page * pageSize >= total) break;
+          page += 1;
+        }
+        if (!cancelled) setImageStats({ withImage, withoutImage, total: withImage + withoutImage });
+      } finally {
+        if (!cancelled) setImageStatsLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -259,6 +324,7 @@ const CataloguePage = () => {
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
+                      <TableHead className="w-[60px]">Image</TableHead>
                       <SortableHeader field="code">Code</SortableHeader>
                       <SortableHeader field="description">
                         Description
@@ -272,7 +338,7 @@ const CataloguePage = () => {
                     {sortedProducts.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={5}
+                          colSpan={6}
                           className="text-center py-8 text-muted-foreground"
                         >
                           No products found matching your filters.
@@ -285,6 +351,16 @@ const CataloguePage = () => {
                           className="hover:bg-muted/50 cursor-pointer"
                           onClick={() => navigate(`/products/${encodeURIComponent(p.code)}`)}
                         >
+                          <TableCell className="w-[60px] py-1.5">
+                            <div className="w-10 h-10 rounded border border-border bg-muted overflow-hidden flex items-center justify-center shrink-0">
+                              <img
+                                src={getProductImageUrl(getProductImagePath(p), { width: THUMB_SIZE, height: THUMB_SIZE })}
+                                alt=""
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                              />
+                            </div>
+                          </TableCell>
                           <TableCell className="font-mono text-sm">
                             {p.code}
                           </TableCell>
@@ -311,10 +387,59 @@ const CataloguePage = () => {
 
           {!error && (
             <div className="shrink-0 bg-card border-t border-border px-6 py-2.5 flex items-center justify-between">
-              <div className="text-xs text-muted-foreground">
-                {isLoading
-                  ? "Loading…"
-                  : `Showing ${start}–${end} of ${totalCount.toLocaleString()} products`}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">
+                  {isLoading
+                    ? "Loading…"
+                    : `Showing ${start}–${end} of ${totalCount.toLocaleString()} products`}
+                </span>
+                {!isLoading && (imageStats || imageStatsLoading) && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        <span>
+                          {imageStatsLoading
+                            ? "Loading…"
+                            : imageStats
+                              ? `${imageStats.withImage.toLocaleString()} with image · ${imageStats.withoutImage.toLocaleString()} without`
+                              : "—"}
+                        </span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64" align="start" onClick={(e) => e.stopPropagation()}>
+                      <div className="space-y-2">
+                        <p className="font-medium text-sm text-foreground">Image stats</p>
+                        <p className="text-xs text-muted-foreground">
+                          Across entire catalogue:
+                        </p>
+                        {imageStatsLoading && !imageStats ? (
+                          <p className="text-sm text-muted-foreground">Loading…</p>
+                        ) : imageStats ? (
+                          <ul className="text-sm space-y-1">
+                            <li className="flex items-center gap-2">
+                              <ImageIcon className="w-4 h-4 text-green-600" />
+                              <span>{imageStats.withImage.toLocaleString()} with image</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                              <span className="w-4 h-4 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs">—</span>
+                              <span>{imageStats.withoutImage.toLocaleString()} without image</span>
+                            </li>
+                          </ul>
+                        ) : null}
+                        {imageStats && (
+                          <p className="text-xs text-muted-foreground pt-1 border-t border-border">
+                            Total products: {imageStats.total.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">

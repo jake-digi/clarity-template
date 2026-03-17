@@ -7,278 +7,125 @@ export interface ReportResult {
   summary: { label: string; value: string | number }[];
 }
 
-async function runParticipantSummary(): Promise<ReportResult> {
-  const { data, error } = await supabase
-    .from("participants")
-    .select("id, full_name, gender, status, instance_id, sub_group_id, super_group_id, created_at");
+async function runOrdersSummary(): Promise<ReportResult> {
+  const { data: orders, error } = await supabase
+    .from("sales_orders")
+    .select("id, order_number, order_date, customer_order_number, status, items_gross, items_net, account_ref, name, del_name, created_at")
+    .order("order_date", { ascending: false })
+    .limit(2000);
   if (error) throw error;
-  const rows = data ?? [];
+  const rows = orders ?? [];
 
-  // Resolve instance names
-  const instanceIds = [...new Set(rows.map((r) => r.instance_id).filter(Boolean))];
-  const iRes = instanceIds.length
-    ? await supabase.from("instances").select("id, name").in("id", instanceIds)
-    : { data: [] };
-  const iMap = Object.fromEntries((iRes.data ?? []).map((i) => [i.id, i.name]));
-
-  // Summary stats
-  const genderCounts: Record<string, number> = {};
   const statusCounts: Record<string, number> = {};
-  const instanceCounts: Record<string, number> = {};
+  let totalGross = 0;
+  let totalNet = 0;
   rows.forEach((r) => {
-    const g = r.gender || "Not specified";
-    genderCounts[g] = (genderCounts[g] ?? 0) + 1;
-    const s = r.status || "active";
-    statusCounts[s] = (statusCounts[s] ?? 0) + 1;
-    const inst = iMap[r.instance_id] || r.instance_id || "Unassigned";
-    instanceCounts[inst] = (instanceCounts[inst] ?? 0) + 1;
-  });
-
-  const summary = [
-    { label: "Total Participants", value: rows.length },
-    ...Object.entries(genderCounts).map(([k, v]) => ({ label: `Gender: ${k}`, value: v })),
-    ...Object.entries(statusCounts).map(([k, v]) => ({ label: `Status: ${k}`, value: v })),
-  ];
-
-  return {
-    columns: ["Name", "Gender", "Status", "Instance", "Created"],
-    rows: rows.map((r) => [
-      r.full_name,
-      r.gender || "—",
-      r.status || "active",
-      iMap[r.instance_id] || "—",
-      new Date(r.created_at).toLocaleDateString(),
-    ]),
-    summary,
-  };
-}
-
-async function runAttendanceReport(): Promise<ReportResult> {
-  const { data, error } = await supabase
-    .from("checkin_sessions")
-    .select("*")
-    .order("started_at", { ascending: false });
-  if (error) throw error;
-  const rows = data ?? [];
-
-  const instanceIds = [...new Set(rows.map((r) => r.instance_id))];
-  const iRes = instanceIds.length
-    ? await supabase.from("instances").select("id, name").in("id", instanceIds)
-    : { data: [] };
-  const iMap = Object.fromEntries((iRes.data ?? []).map((i) => [i.id, i.name]));
-
-  const completed = rows.filter((r) => r.completed_at);
-
-  return {
-    columns: ["Session Name", "Type", "Instance", "Started", "Completed", "Attendee Count"],
-    rows: rows.map((r) => {
-      const attendees = Array.isArray(r.attendees) ? r.attendees : [];
-      return [
-        r.session_name,
-        r.session_type || "—",
-        iMap[r.instance_id] || "—",
-        new Date(r.started_at).toLocaleString(),
-        r.completed_at ? new Date(r.completed_at).toLocaleString() : "In Progress",
-        String(attendees.length),
-      ];
-    }),
-    summary: [
-      { label: "Total Sessions", value: rows.length },
-      { label: "Completed", value: completed.length },
-      { label: "In Progress", value: rows.length - completed.length },
-    ],
-  };
-}
-
-async function runCasesReport(): Promise<ReportResult> {
-  const { data, error } = await supabase
-    .from("behavior_cases")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  const rows = data ?? [];
-
-  const participantIds = [...new Set(rows.map((r) => r.participant_id))];
-  const instanceIds = [...new Set(rows.map((r) => r.instance_id))];
-  const [pRes, iRes] = await Promise.all([
-    participantIds.length
-      ? supabase.from("participants").select("id, full_name").in("id", participantIds)
-      : { data: [] },
-    instanceIds.length
-      ? supabase.from("instances").select("id, name").in("id", instanceIds)
-      : { data: [] },
-  ]);
-  const pMap = Object.fromEntries((pRes.data ?? []).map((p) => [p.id, p.full_name]));
-  const iMap = Object.fromEntries((iRes.data ?? []).map((i) => [i.id, i.name]));
-
-  const severityCounts: Record<string, number> = {};
-  const statusCounts: Record<string, number> = {};
-  const categoryCounts: Record<string, number> = {};
-  rows.forEach((r) => {
-    severityCounts[r.severity_level] = (severityCounts[r.severity_level] ?? 0) + 1;
     statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
-    categoryCounts[r.category] = (categoryCounts[r.category] ?? 0) + 1;
+    totalGross += Number(r.items_gross) || 0;
+    totalNet += Number(r.items_net) || 0;
   });
 
+  const fmt = (n: number) =>
+    `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
   return {
-    columns: ["Participant", "Instance", "Category", "Severity", "Status", "Date"],
+    columns: ["Order Number", "Order Date", "Customer Ref", "Status", "Gross", "Net", "Account Ref", "Customer Name", "Delivery Name", "Created"],
     rows: rows.map((r) => [
-      pMap[r.participant_id] ?? r.participant_id,
-      iMap[r.instance_id] ?? r.instance_id,
-      r.category,
-      r.severity_level,
-      r.status,
-      new Date(r.created_at).toLocaleDateString(),
+      r.order_number ?? "—",
+      r.order_date ? new Date(r.order_date).toLocaleDateString() : "—",
+      r.customer_order_number ?? "—",
+      r.status ?? "—",
+      fmt(Number(r.items_gross) || 0),
+      fmt(Number(r.items_net) || 0),
+      r.account_ref ?? "—",
+      r.name ?? "—",
+      r.del_name ?? "—",
+      r.created_at ? new Date(r.created_at).toLocaleString() : "—",
     ]),
     summary: [
-      { label: "Total Cases", value: rows.length },
-      ...Object.entries(severityCounts).map(([k, v]) => ({ label: `Severity: ${k}`, value: v })),
+      { label: "Total Orders", value: rows.length },
       ...Object.entries(statusCounts).map(([k, v]) => ({ label: `Status: ${k}`, value: v })),
+      { label: "Total Gross", value: fmt(totalGross) },
+      { label: "Total Net", value: fmt(totalNet) },
     ],
   };
 }
 
-async function runAccommodationReport(): Promise<ReportResult> {
-  const { data: rooms, error: rErr } = await supabase
-    .from("rooms")
-    .select("*")
-    .is("deleted_at", null)
-    .order("room_number");
-  if (rErr) throw rErr;
-
-  const { data: blocks } = await supabase.from("blocks").select("id, name").is("deleted_at", null);
-  const blockMap = Object.fromEntries((blocks ?? []).map((b) => [b.id, b.name]));
-
-  // Count occupants per room
-  const { data: assignments } = await supabase
-    .from("participant_instance_assignments")
-    .select("room_id");
-  const roomOccupancy: Record<string, number> = {};
-  (assignments ?? []).forEach((a) => {
-    if (a.room_id) roomOccupancy[a.room_id] = (roomOccupancy[a.room_id] ?? 0) + 1;
-  });
-
-  const allRooms = rooms ?? [];
-  const totalCapacity = allRooms.reduce((s, r) => s + (r.capacity ?? 0), 0);
-  const totalOccupied = allRooms.reduce((s, r) => s + (roomOccupancy[r.id] ?? 0), 0);
-
-  return {
-    columns: ["Room", "Block", "Type", "Capacity", "Occupants", "Utilisation"],
-    rows: allRooms.map((r) => {
-      const occ = roomOccupancy[r.id] ?? 0;
-      const cap = r.capacity ?? 0;
-      const util = cap > 0 ? `${Math.round((occ / cap) * 100)}%` : "—";
-      return [r.room_number, blockMap[r.block_id] ?? "—", r.room_type, String(cap), String(occ), util];
-    }),
-    summary: [
-      { label: "Total Rooms", value: allRooms.length },
-      { label: "Total Capacity", value: totalCapacity },
-      { label: "Total Occupants", value: totalOccupied },
-      { label: "Overall Utilisation", value: totalCapacity > 0 ? `${Math.round((totalOccupied / totalCapacity) * 100)}%` : "—" },
-    ],
-  };
-}
-
-async function runWarningsReport(): Promise<ReportResult> {
-  const { data, error } = await supabase
-    .from("formal_warnings")
-    .select("*")
-    .order("created_at", { ascending: false });
+async function runCustomerRevenueReport(): Promise<ReportResult> {
+  const { data: customers, error } = await supabase
+    .from("customer_stats")
+    .select("name, account_ref, total_orders, total_spent, last_order_date")
+    .order("total_spent", { ascending: false });
   if (error) throw error;
-  const rows = data ?? [];
+  const rows = customers ?? [];
 
-  const participantIds = [...new Set(rows.map((r) => r.participant_id))];
-  const instanceIds = [...new Set(rows.map((r) => r.instance_id))];
-  const [pRes, iRes] = await Promise.all([
-    participantIds.length
-      ? supabase.from("participants").select("id, full_name").in("id", participantIds)
-      : { data: [] },
-    instanceIds.length
-      ? supabase.from("instances").select("id, name").in("id", instanceIds)
-      : { data: [] },
-  ]);
-  const pMap = Object.fromEntries((pRes.data ?? []).map((p) => [p.id, p.full_name]));
-  const iMap = Object.fromEntries((iRes.data ?? []).map((i) => [i.id, i.name]));
-
-  const levelCounts: Record<number, number> = {};
-  const ackCount = rows.filter((r) => r.acknowledged_by_participant).length;
-  rows.forEach((r) => {
-    levelCounts[r.warning_level] = (levelCounts[r.warning_level] ?? 0) + 1;
-  });
+  const fmt = (n: number) =>
+    `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const totalSpent = rows.reduce((s, r) => s + (Number(r.total_spent) || 0), 0);
+  const totalOrders = rows.reduce((s, r) => s + (Number(r.total_orders) || 0), 0);
 
   return {
-    columns: ["Participant", "Instance", "Level", "Reason", "Issued By", "Acknowledged", "Date"],
+    columns: ["Customer Name", "Account Ref", "Total Orders", "Total Spent", "Last Order Date"],
     rows: rows.map((r) => [
-      pMap[r.participant_id] ?? r.participant_id,
-      iMap[r.instance_id] ?? r.instance_id,
-      String(r.warning_level),
-      r.reason,
-      r.issued_by_name ?? "—",
-      r.acknowledged_by_participant ? "Yes" : "No",
-      new Date(r.created_at).toLocaleDateString(),
+      r.name ?? "—",
+      r.account_ref ?? "—",
+      String(r.total_orders ?? 0),
+      fmt(Number(r.total_spent) || 0),
+      r.last_order_date ? new Date(r.last_order_date).toLocaleDateString() : "—",
     ]),
     summary: [
-      { label: "Total Warnings", value: rows.length },
-      { label: "Acknowledged", value: ackCount },
-      { label: "Unacknowledged", value: rows.length - ackCount },
-      ...Object.entries(levelCounts).map(([k, v]) => ({ label: `Level ${k}`, value: v })),
+      { label: "Total Customers", value: rows.length },
+      { label: "Total Orders (all customers)", value: totalOrders },
+      { label: "Total Revenue", value: fmt(totalSpent) },
     ],
   };
 }
 
-async function runInstanceComparison(): Promise<ReportResult> {
-  const { data: instances, error } = await supabase
-    .from("instances")
-    .select("*")
-    .is("deleted_at", null)
-    .order("start_date", { ascending: false });
-  if (error) throw error;
-  const rows = instances ?? [];
-  const ids = rows.map((i) => i.id);
+async function runOrderLineItemsReport(): Promise<ReportResult> {
+  const { data: items, error: itemsErr } = await supabase
+    .from("sales_order_items")
+    .select("order_id, stock_code, description, qty_order, qty_delivered, unit_price, net_amount, tax_amount, gross_amount")
+    .order("order_id", { ascending: false })
+    .limit(2000);
+  if (itemsErr) throw itemsErr;
+  const rows = items ?? [];
 
-  const [pRes, cRes, wRes] = await Promise.all([
-    ids.length
-      ? supabase.from("participant_instance_assignments").select("instance_id").in("instance_id", ids)
-      : { data: [] },
-    ids.length
-      ? supabase.from("behavior_cases").select("instance_id").in("instance_id", ids)
-      : { data: [] },
-    ids.length
-      ? supabase.from("formal_warnings").select("instance_id").in("instance_id", ids)
-      : { data: [] },
-  ]);
+  const orderIds = [...new Set(rows.map((r) => r.order_id).filter(Boolean))];
+  const { data: orders } = orderIds.length
+    ? await supabase.from("sales_orders").select("id, order_number").in("id", orderIds)
+    : { data: [] };
+  const orderMap = Object.fromEntries((orders ?? []).map((o) => [o.id, o.order_number]));
 
-  const count = (arr: { instance_id: string }[] | null, id: string) =>
-    (arr ?? []).filter((r) => r.instance_id === id).length;
+  const fmt = (n: number) =>
+    `£${n.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const totalGross = rows.reduce((s, r) => s + (Number(r.gross_amount) || 0), 0);
+  const totalQty = rows.reduce((s, r) => s + (Number(r.qty_order) || 0), 0);
 
   return {
-    columns: ["Instance", "Status", "Location", "Start Date", "End Date", "Participants", "Cases", "Warnings"],
-    rows: rows.map((i) => [
-      i.name,
-      i.status,
-      i.location ?? "—",
-      i.start_date ? new Date(i.start_date).toLocaleDateString() : "—",
-      i.end_date ? new Date(i.end_date).toLocaleDateString() : "—",
-      String(count(pRes.data, i.id)),
-      String(count(cRes.data, i.id)),
-      String(count(wRes.data, i.id)),
+    columns: ["Order Number", "Stock Code", "Description", "Qty Ordered", "Qty Delivered", "Unit Price", "Net", "Tax", "Gross"],
+    rows: rows.map((r) => [
+      orderMap[r.order_id] ?? r.order_id ?? "—",
+      r.stock_code ?? "—",
+      (r.description ?? "—").slice(0, 50),
+      String(r.qty_order ?? 0),
+      String(r.qty_delivered ?? 0),
+      fmt(Number(r.unit_price) || 0),
+      fmt(Number(r.net_amount) || 0),
+      fmt(Number(r.tax_amount) || 0),
+      fmt(Number(r.gross_amount) || 0),
     ]),
     summary: [
-      { label: "Total Instances", value: rows.length },
-      { label: "Active", value: rows.filter((i) => i.status === "active").length },
-      { label: "Total Participants", value: (pRes.data ?? []).length },
-      { label: "Total Cases", value: (cRes.data ?? []).length },
+      { label: "Total Line Items", value: rows.length },
+      { label: "Total Qty Ordered", value: totalQty.toLocaleString("en-GB") },
+      { label: "Total Gross Value", value: fmt(totalGross) },
     ],
   };
 }
 
 const reportRunners: Record<string, () => Promise<ReportResult>> = {
-  r1: runParticipantSummary,
-  r2: runAttendanceReport,
-  r3: runCasesReport,
-  r4: runAccommodationReport,
-  r5: runWarningsReport,
-  r6: runInstanceComparison,
+  r1: runOrdersSummary,
+  r2: runCustomerRevenueReport,
+  r3: runOrderLineItemsReport,
 };
 
 export function useReportData(reportId: string | undefined, enabled: boolean) {
