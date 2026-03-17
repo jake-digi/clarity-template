@@ -1,4 +1,4 @@
-import { Home, Users, Building2, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, Bus, Package, CalendarDays, Heart, CheckSquare, Megaphone, FileText, X, ShoppingCart, LayoutGrid, RefreshCw, Tag } from "lucide-react";
+import { Home, Users, Building2, PanelLeftClose, PanelLeft, FileWarning, Tent, Wrench, FileBarChart, BarChart3, Bus, Package, CalendarDays, Heart, CheckSquare, Megaphone, FileText, X, ShoppingCart, LayoutGrid, RefreshCw, Tag } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -17,6 +17,7 @@ const catalogueItems = [
 
 const caseItems = [
   { icon: FileBarChart, label: "Reports", path: "/reports" },
+  { icon: BarChart3, label: "Insights", path: "/insights" },
   { icon: RefreshCw, label: "Sync", path: "/sync" },
 ];
 

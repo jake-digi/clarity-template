@@ -58,7 +58,7 @@ const AdministrationPage = () => {
               <TabsContent value="email_templates" className="mt-0 p-6">
                 <AdminEmailTemplatesTab />
               </TabsContent>
-              <TabsContent value="product_images" className="mt-0">
+              <TabsContent value="product_images" className="mt-0 flex flex-col flex-1 min-h-0 data-[state=inactive]:hidden">
                 <AdminProductImagesTab />
               </TabsContent>
             </div>

@@ -1,7 +1,7 @@
 /**
  * Match uploaded image file names to products by:
  * 1. Exact: filename (without ext) equals product code
- * 2. SKU in title: product code appears anywhere in the filename
+ * 2. SKU in title: product code appears as a whole token in the filename (e.g. "SKU123" in "SKU123-photo.jpg", not "in" in "icon-linkedin")
  * 3. Description: filename (normalized) matches or is contained in product description
  */
 
@@ -54,12 +54,13 @@ export function matchFileToProduct(
   const exact = products.find((p) => p.code?.toLowerCase() === codeLower);
   if (exact) return { type: "exact", product: exact };
 
-  // 2. SKU in title: product code appears in the filename (with word boundaries so "AB1" doesn't match "AB12")
+  // 2. SKU in title: product code appears as a whole token in the filename (tokenize by non-alphanumeric)
+  const stemTokens = nameStem.split(/[^a-zA-Z0-9]+/).filter(Boolean).map((t) => t.toLowerCase());
   for (const p of products) {
     const code = (p.code ?? "").trim();
     if (!code) continue;
-    const inFilename = nameStem.toLowerCase().includes(code.toLowerCase());
-    if (inFilename) return { type: "sku_in_title", product: p };
+    const codeLower = code.toLowerCase();
+    if (stemTokens.includes(codeLower)) return { type: "sku_in_title", product: p };
   }
 
   // 3. Description: filename (normalized) is contained in description or vice versa

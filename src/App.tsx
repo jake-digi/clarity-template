@@ -42,6 +42,7 @@ import SchedulePage from "./pages/SchedulePage.tsx";
 import MedicalPage from "./pages/MedicalPage.tsx";
 import AnnouncementsPage from "./pages/AnnouncementsPage.tsx";
 import DocumentsPage from "./pages/DocumentsPage.tsx";
+import InsightsPage from "./pages/InsightsPage.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
               <Route path="/reports/builder" element={<ProtectedRoute><CustomReportBuilderPage /></ProtectedRoute>} />
               <Route path="/reports/:reportId" element={<ProtectedRoute><ReportDetailPage /></ProtectedRoute>} />
+              <Route path="/insights" element={<ProtectedRoute><InsightsPage /></ProtectedRoute>} />
               <Route path="/transport" element={<ProtectedRoute><TransportPage /></ProtectedRoute>} />
               <Route path="/equipment" element={<ProtectedRoute><EquipmentPage /></ProtectedRoute>} />
               <Route path="/schedule" element={<ProtectedRoute><SchedulePage /></ProtectedRoute>} />

@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   ComposedChart,
   Area,
@@ -25,12 +31,22 @@ import {
   PoundSterling,
   Users,
   ArrowRight,
+  ImagePlus,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { getProductImageUrl } from "@/lib/productImage";
+import { useToast } from "@/hooks/use-toast";
 
 const db = supabase as any;
 
 const PRODUCT_IMAGE_SIZE = 96;
+const PRODUCT_IMAGE_BUCKET = "freemans-storage-bucket";
+
+function getImageExtension(filename: string): string {
+  const m = filename.match(/\.([^.]+)$/);
+  return m ? m[1].toLowerCase() : "jpg";
+}
 
 type ProductSummary = {
   code: string;
@@ -64,8 +80,12 @@ const ProductDetailPage = () => {
   const [monthly, setMonthly] = useState<MonthlyPoint[]>([]);
   const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [productImageUrl, setProductImageUrl] = useState<string | null>(null);
+  const [productImagePath, setProductImagePath] = useState<string | null>(null);
+  const [imageActionLoading, setImageActionLoading] = useState(false);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch product image from catalogue API (list-products) when we have a product code
   useEffect(() => {
@@ -78,10 +98,67 @@ const ProductDetailPage = () => {
         const products = json?.products ?? [];
         const match = products.find((p: any) => (p.code ?? p.stock_code) === productCode);
         const path = match?.imageUrl ?? match?.image_url ?? null;
+        setProductImagePath(path && String(path).trim() ? String(path).trim() : null);
         setProductImageUrl(path ? getProductImageUrl(path, { width: PRODUCT_IMAGE_SIZE, height: PRODUCT_IMAGE_SIZE }) : getProductImageUrl(null));
       })
-      .catch(() => setProductImageUrl(getProductImageUrl(null)));
+      .catch(() => {
+        setProductImagePath(null);
+        setProductImageUrl(getProductImageUrl(null));
+      });
   }, [productCode]);
+
+  const handleRemoveImage = async () => {
+    if (!summary?.code || imageActionLoading) return;
+    setImageActionLoading(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("update-product-image", {
+        body: { code: summary.code, image_url: null },
+      });
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.altError ?? data.error);
+      setProductImagePath(null);
+      setProductImageUrl(getProductImageUrl(null));
+      toast({ title: "Image removed" });
+    } catch (e: any) {
+      toast({ title: "Failed to remove image", description: e?.message, variant: "destructive" });
+    } finally {
+      setImageActionLoading(false);
+    }
+  };
+
+  const handleReplaceImage = () => {
+    replaceInputRef.current?.click();
+  };
+
+  const onReplaceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !summary?.code) return;
+    if (!file.type.startsWith("image/") || file.type === "image/gif") {
+      toast({ title: "Please choose a JPEG, PNG or WebP image (no GIFs)", variant: "destructive" });
+      return;
+    }
+    setImageActionLoading(true);
+    try {
+      const path = `product-images/${summary.code}.${getImageExtension(file.name)}`;
+      const { error: uploadError } = await supabase.storage
+        .from(PRODUCT_IMAGE_BUCKET)
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data, error: fnError } = await supabase.functions.invoke("update-product-image", {
+        body: { code: summary.code, image_url: path },
+      });
+      if (fnError) throw fnError;
+      if (data?.error) throw new Error(data.altError ?? data.error);
+      setProductImagePath(path);
+      setProductImageUrl(getProductImageUrl(path, { width: PRODUCT_IMAGE_SIZE, height: PRODUCT_IMAGE_SIZE }));
+      toast({ title: "Image updated" });
+    } catch (e: any) {
+      toast({ title: "Failed to replace image", description: e?.message, variant: "destructive" });
+    } finally {
+      setImageActionLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!productCode) return;
@@ -277,13 +354,43 @@ const ProductDetailPage = () => {
           <div className="bg-card border-b border-border px-6 py-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-start gap-4">
-                <div className="w-[96px] h-[96px] rounded-lg border border-border bg-muted overflow-hidden shrink-0 flex items-center justify-center">
-                  <img
-                    src={productImageUrl ?? getProductImageUrl(null)}
-                    alt=""
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                <input
+                  ref={replaceInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/svg+xml,image/bmp"
+                  className="hidden"
+                  onChange={onReplaceFile}
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-[96px] h-[96px] rounded-lg border border-border bg-muted overflow-hidden shrink-0 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      {imageActionLoading ? (
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                      ) : (
+                        <img
+                          src={productImageUrl ?? getProductImageUrl(null)}
+                          alt=""
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {productImagePath && (
+                      <DropdownMenuItem onClick={handleRemoveImage} disabled={imageActionLoading}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove image
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleReplaceImage} disabled={imageActionLoading}>
+                      <ImagePlus className="w-4 h-4 mr-2" />
+                      Replace image
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div>
                   <button
                     className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground gap-1 mb-1"
