@@ -39,7 +39,10 @@ export function useCurrentPortalUser(authUserId: string | undefined) {
   const canAccessManagement =
     !!portalUser &&
     portalUser.is_active !== false &&
-    (portalUser.is_admin === true || portalUser.customer_id == null);
+    // Admins can always access, even if linked to a customer account
+    (portalUser.is_admin === true ||
+      // Non-admin staff can also be allowed in future via role
+      (portalUser.role && portalUser.role !== "customer"));
 
   return {
     portalUser,

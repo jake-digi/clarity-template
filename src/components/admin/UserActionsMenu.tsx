@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -37,6 +44,7 @@ import {
   X,
   Pencil,
   KeyRound,
+  Shield,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -76,6 +84,9 @@ const UserActionsMenu = ({ user }: Props) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
+  const [roleDraft, setRoleDraft] = useState(user.role ?? "customer");
+  const [isAdminDraft, setIsAdminDraft] = useState<boolean>(user.is_admin);
 
   // Dialog state
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -150,8 +161,10 @@ const UserActionsMenu = ({ user }: Props) => {
     try {
       await callManageUser(action, user.id, extra);
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      return true;
     } catch (err: any) {
       toast({ title: "Action failed", description: err.message, variant: "destructive" });
+      return false;
     } finally {
       setBusy(false);
     }
@@ -159,7 +172,8 @@ const UserActionsMenu = ({ user }: Props) => {
 
   const handleRename = async () => {
     if (!editName.trim() || editName.trim() === user.name) { setRenameOpen(false); return; }
-    await run("rename", { name: editName.trim() });
+    const ok = await run("rename", { name: editName.trim() });
+    if (!ok) return;
     setRenameOpen(false);
     toast({ title: "Name updated", description: `User renamed to ${editName.trim()}.` });
   };
@@ -177,7 +191,8 @@ const UserActionsMenu = ({ user }: Props) => {
   };
 
   const handleToggleActive = () =>
-    run(user.is_active ? "disable" : "enable").then(() => {
+    run(user.is_active ? "disable" : "enable").then((ok) => {
+      if (!ok) return;
       toast({
         title: user.is_active ? "User disabled" : "User enabled",
         description: `${user.name} has been ${user.is_active ? "disabled and can no longer sign in" : "re-enabled"}.`,
@@ -186,18 +201,30 @@ const UserActionsMenu = ({ user }: Props) => {
 
   const handleDelete = async () => {
     setConfirmDelete(false);
-    await run("delete");
+    const ok = await run("delete");
+    if (!ok) return;
     toast({ title: "User deleted", description: `${user.name} has been permanently removed.` });
   };
 
   const handleChangeCustomer = async () => {
-    await run("change_customer", { customer_id: selectedCustomer?.id ?? null });
+    const ok = await run("change_customer", { customer_id: selectedCustomer?.id ?? null });
+    if (!ok) return;
     setChangeCustomerOpen(false);
     toast({
       title: "Customer updated",
       description: selectedCustomer
         ? `${user.name} is now linked to ${selectedCustomer.name}.`
         : `${user.name} has been unlinked from their customer account.`,
+    });
+  };
+
+  const handleSavePermissions = async () => {
+    const ok = await run("set_permissions", { role: roleDraft, is_admin: isAdminDraft });
+    if (!ok) return;
+    setPermissionsOpen(false);
+    toast({
+      title: "Permissions updated",
+      description: `${user.name} is now ${isAdminDraft ? "an admin" : roleDraft || "customer"}.`,
     });
   };
 
@@ -234,6 +261,14 @@ const UserActionsMenu = ({ user }: Props) => {
           >
             <Building2 className="w-4 h-4" />
             Change customer
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); setRoleDraft(user.role ?? "customer"); setIsAdminDraft(user.is_admin); setPermissionsOpen(true); }}
+            className="gap-2"
+          >
+            <Shield className="w-4 h-4" />
+            Edit role & admin
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -385,6 +420,50 @@ const UserActionsMenu = ({ user }: Props) => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setChangeCustomerOpen(false)}>Cancel</Button>
             <Button onClick={handleChangeCustomer} disabled={busy}>
+              {busy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Permissions dialog */}
+      <Dialog open={permissionsOpen} onOpenChange={setPermissionsOpen}>
+        <DialogContent className="sm:max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Permissions — {user.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Role</Label>
+                <Select value={roleDraft} onValueChange={setRoleDraft}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer">Customer</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Admin access</Label>
+                <Select value={isAdminDraft ? "yes" : "no"} onValueChange={(v) => setIsAdminDraft(v === "yes")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="yes">Yes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Admins can always access the management platform, even when linked to a customer account.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPermissionsOpen(false)}>Cancel</Button>
+            <Button onClick={handleSavePermissions} disabled={busy}>
               {busy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Save
             </Button>

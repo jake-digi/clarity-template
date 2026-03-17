@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get("RESEND_API_KEY");
 
     const body = await req.json();
-    const { action, portal_user_id, customer_id, name: newName } = body;
+    const { action, portal_user_id, customer_id, name: newName, role, is_admin: newIsAdmin } = body;
 
     if (!action || !portal_user_id) {
       return json({ error: "action and portal_user_id are required" }, 400);
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     // Fetch the target user's portal record
     const { data: target, error: fetchErr } = await adminClient
       .from("portal_users")
-      .select("id, auth_id, email, name")
+      .select("id, auth_id, email, name, role, is_admin")
       .eq("id", portal_user_id)
       .single();
 
@@ -129,6 +129,28 @@ Deno.serve(async (req) => {
           .eq("id", portal_user_id);
         if (dbErr) return json({ error: dbErr.message }, 500);
         return json({ success: true, action: "customer_changed" });
+      }
+
+      case "set_permissions": {
+        const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (typeof role === "string") updates.role = role;
+        if (typeof newIsAdmin === "boolean") updates.is_admin = newIsAdmin;
+
+        if (Object.keys(updates).length === 1) {
+          return json({ error: "No permission changes supplied" }, 400);
+        }
+
+        const { error: dbErr } = await adminClient
+          .from("portal_users")
+          .update(updates)
+          .eq("id", portal_user_id);
+        if (dbErr) return json({ error: dbErr.message }, 500);
+        return json({
+          success: true,
+          action: "permissions_updated",
+          role: updates.role ?? target.role,
+          is_admin: updates.is_admin ?? target.is_admin,
+        });
       }
 
       case "rename": {
